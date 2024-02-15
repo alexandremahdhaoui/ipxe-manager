@@ -56,11 +56,11 @@ func awaitShutdown(servers map[int]*echo.Echo) error {
 		}
 	})
 
-	close(errChan)
 	wg.Wait()
+	close(errChan)
 
 	for err := range errChan {
-		errs = errors.Join(err)
+		errs = errors.Join(errs, err)
 	}
 
 	return errs

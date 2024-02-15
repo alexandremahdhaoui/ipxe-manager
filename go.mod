@@ -7,6 +7,7 @@ require (
 	github.com/labstack/echo-contrib v0.15.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/oapi-codegen/runtime v1.1.1
+	k8s.io/api v0.29.0
 	k8s.io/apimachinery v0.29.1
 	sigs.k8s.io/controller-runtime v0.17.0
 )

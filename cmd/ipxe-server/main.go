@@ -1,8 +1,9 @@
 package main
 
 import (
+	"errors"
 	"github.com/alexandremahdhaoui/ipxe-api/internal/cmd"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/server"
+	"github.com/alexandremahdhaoui/ipxe-api/internal/interface/server"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -27,12 +28,13 @@ func main() {
 	metrics.GET("/metrics", echoprometheus.NewHandler())
 
 	//TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
+
 	probes := echo.New()
 	probes.GET("/healthz", func(c echo.Context) error {
-		return c.NoContent(http.StatusOK)
+		return wrapErr(c.NoContent(http.StatusOK), "health probe error")
 	})
 	probes.GET("/readyz", func(c echo.Context) error {
-		return c.NoContent(http.StatusOK)
+		return wrapErr(c.NoContent(http.StatusOK), "readiness probe error")
 	})
 
 	if err := cmd.Serve(map[int]*echo.Echo{
@@ -44,4 +46,12 @@ func main() {
 	}
 
 	api.Logger.Infof("Successfully stopped %s server", Name)
+}
+
+func wrapErr(err error, s string) error {
+	if err != nil {
+		return errors.Join(err, errors.New(s))
+	}
+
+	return nil
 }

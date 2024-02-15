@@ -2,12 +2,12 @@
 
 ## iPXE booting workflow
 
-| Phase             | Action                          | Description                                                                        |
-|-------------------|---------------------------------|------------------------------------------------------------------------------------|
-| `[BOOTSTRAPPING]` | Call `/boot.ipxe`               | Machine starts and DHCP rule 67 specifies next server as this ipxe-api.            |
-| `[ASSIGNMENT]`    | Chainload `/ipxe?labels=values` | Machine chainload to this endpoint specifying labels for scheduling/assignment.    |
-| `[BOOT]`          | Run `#ipxe...`                  | Contains an optional uuid reference to a config such as an ignition or cloud-init. |
-| `[OPTIONAL]`      | Fetch `/config/{uuid}`          | Fetch the optional config identified by a UUID.                                    |
+| Phase             | Action                          | Description                                                                                                                                       |
+|-------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `[BOOTSTRAPPING]` | Call `/boot.ipxe`               | Machine starts and DHCP rule 67 specifies next server as this ipxe-api.                                                                           |
+| `[ASSIGNMENT]`    | Chainload `/ipxe?labels=values` | Machine chain load this endpoint specifying labels for scheduling/assignment.                                                                     |
+| `[BOOT]`          | Run `#ipxe...`                  | Machine runs the retrieved iPXE manifest, optionally containing uuid references to additional configuration files such as ignition or cloud-init. |
+| `[OPTIONAL]`      | Fetch `/config/{uuid}`          | Fetch the optional config identified by a UUID.                                                                                                   |
 
 ## Custom Resource Definitions
 
@@ -21,8 +21,8 @@ kind: Profile
 metadata:
   name: your-profile
   labels:
-    assignment/ipxe/buildarch: aarch64
-    assignment/extrinsic/region: us-cal
+    assignment/ipxe-buildarch: aarch64
+    assignment/extrinsic-region: us-cal
 spec:
   # ipxe string
   ipxe: |
@@ -60,9 +60,11 @@ metadata:
 spec:
   # subjectSelector map[string]string
   # the specified labels selects a subject that iPXE boots.
-  subjectSelector:
-    serialNumber: c4a94672-05a1-4eda-a186-b4aa4544b146
-    uuid: 47c6da67-7477-4970-aa03-84e48ff4f6ad
+  subjectSelectors:
+    serialNumbers: 
+      - c4a94672-05a1-4eda-a186-b4aa4544b146
+    uuids: 
+     - 47c6da67-7477-4970-aa03-84e48ff4f6ad
   # profileSelectors map[string]string
   # the specified labels selects which profile should be used.
   profileSelectors:
@@ -84,6 +86,31 @@ The **REST API** is an iPXE server that only serves GET requests. The API endpoi
 information.
 
 **Controllers** maintain datastructures queried by the REST API.
+
+### Scaling Storage and indexing
+
+To horizontally scale our system and ensure top performances at any scale; we will use in-memory indexing for fast
+retrieval of information, and use multiple levels of partitioning to ensure in-memory indexes never exceeds defined
+limits.
+
+#### Storage
+
+The storage backend will be done through dedicated CRDs, and or ConfigMaps. There are no reason to use databases.
+Even though we need to ensure great performances, we do not need such complex systems. The key-value store from etcd
+with the Kubernetes API frontend is more than enough.
+
+In case too many resources are created in the same Kubernetes cluster, we might want to create partition keys for the
+kubernetes resources (CRs or CMs). That is using multiple Kubernetes and splitting CRs between them.
+It's a very unlikely scenario, but at least we're ready.
+
+#### Indexing - (partitioning)
+
+Indexing will be done in-memory, therefore it's important to design a distributed system that distributes these in-mem
+datastructures via partitioning.
+
+Horizontally scaling indexes using partition keys can be easily achieved within the same Kubernetes cluster. If 
+partitioning kubernetes cluster is required, one partition key will never span multiple clusters, therefore ensuring a
+full separation of concern.
 
 ## Deployment
 
