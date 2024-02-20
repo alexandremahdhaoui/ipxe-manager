@@ -28,45 +28,19 @@ spec:
           items:
             items:
               properties:
-                apiVersion:
-                  description: |-
-                    APIVersion defines the versioned schema of this representation of an object.
-                    Servers should convert recognized schemas to the latest internal value, and
-                    may reject unrecognized values.
-                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-                  type: string
-                items:
-                  items: {}
-                  type: array
-                kind:
-                  description: |-
-                    Kind is a string value representing the REST resource this object represents.
-                    Servers may infer this from the endpoint the client submits requests to.
-                    Cannot be updated.
-                    In CamelCase.
-                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-                  type: string
-                metadata:
-                  properties:
-                    annotations:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    finalizers:
-                      items:
-                        type: string
-                      type: array
-                    labels:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    name:
+                profileSelectors:
+                  additionalProperties:
+                    type: string
+                  type: object
+                subjectSelectors:
+                  additionalProperties:
+                    items:
                       type: string
-                    namespace:
-                      type: string
+                    type: array
                   type: object
               required:
-              - items
+              - profileSelectors
+              - subjectSelectors
               type: object
             type: array
           kind:

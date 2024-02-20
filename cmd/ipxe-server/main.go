@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"github.com/alexandremahdhaoui/ipxe-api/internal/cmd"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/interface/server"
+	"github.com/alexandremahdhaoui/ipxe-api/internal/server"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"net/http"

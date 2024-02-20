@@ -5,8 +5,8 @@ CONTROLLER_GEN := go run sigs.k8s.io/controller-tools/cmd/controller-gen@latest
 
 OAPI_SPEC := ./api/ipxe.v1.yaml
 OAPI_SERVER_PKG := server
+OAPI_SERVER_FILE := ./internal/server/zz_generated.server.go
 OAPI_CLIENT_PKG := ipxeclient
-OAPI_SERVER_FILE := ./internal/interface/server/zz_generated.server.go
 OAPI_CLIENT_FILE := ./pkg/ipxeclient/zz_generated.ipxeclient.go
 
 OAPI_CODEGEN := go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@latest

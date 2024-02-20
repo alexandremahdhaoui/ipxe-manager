@@ -11,7 +11,7 @@ func init() {
 }
 
 // TODO: User should be able to template their AdditionalConfig w/ dynamic information from the intrinsic (ipxe)
-//  parameters .
+//  parameters.
 
 // apiVersion: ipxe.cloud.alexandre.mahdhaoui.com/v1alpha1
 // kind: Profile
@@ -27,7 +27,8 @@ func init() {
 //     command ... \
 //       --with-parameter "{{ .AdditionalConfig.parameter-0 }}" \
 //       --ignition-url "{{ .AdditionalConfig.ignitionFile }}" \
-//       --or-cloud-init "{{ .AdditionalConfig.cloudInit }}"
+//       --or-cloud-init "{{ .AdditionalConfig.cloudInit }}" \
+//       --secret-token "{{ .AdditionalConfig.secretToken }}"
 //   # additionalConfig: []AdditionalConfig.
 //   additionalConfig:
 //     - name: parameter-0
@@ -47,7 +48,7 @@ func init() {
 //
 // status:
 //   # UUIDs that are used to fetch "exposed" files.
-//   additionalConfig:
+//   exposedAdditionalConfig:
 //     config0: 89952e35-2a85-4f03-a6b2-7f9526bfafc0
 //     ignitionFile: 445a4753-3d59-4429-8cea-7db9febdeca
 
@@ -96,13 +97,7 @@ type (
 )
 
 type (
-	ProfileSpec struct {
-		IPXE             string             `json:"ipxe"`
-		AdditionalConfig []AdditionalConfig `json:"additionalConfig,omitempty"`
-	}
-
-	ProfileStatus struct{} //+kubebuilder:object:root=true
-
+	//+kubebuilder:object:root=true
 	//+kubebuilder:subresources:status
 
 	Profile struct { //nolint:maligned
@@ -113,12 +108,21 @@ type (
 		Status ProfileStatus `json:"status,omitempty"`
 	}
 
+	ProfileSpec struct {
+		IPXE             string             `json:"ipxe"`
+		AdditionalConfig []AdditionalConfig `json:"additionalConfig,omitempty"`
+	}
+
+	ProfileStatus struct {
+		ExposedAdditionalConfig map[string]string `json:"exposedAdditionalConfig"`
+	}
+
 	//+kubebuilder:object:root=true
 
 	ProfileList struct {
-		metav1.TypeMeta   `json:",inline"`
-		metav1.ObjectMeta `json:"metadata,omitempty"`
+		metav1.TypeMeta `json:",inline"`
+		metav1.ListMeta `json:"metadata,omitempty"`
 
-		Items []ProfileList `json:"items"`
+		Items []Profile `json:"items"`
 	}
 )

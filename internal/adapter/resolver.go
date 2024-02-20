@@ -1,12 +1,4 @@
-package service
-
-type Config interface {
-	Read()
-}
-
-type IPXE interface {
-	Read()
-}
+package adapter
 
 //TODO:
 // When recursively templating:
