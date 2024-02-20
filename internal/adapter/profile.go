@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/alexandremahdhaoui/ipxe-api/internal/dsa"
 	"github.com/alexandremahdhaoui/ipxe-api/pkg/v1alpha1"
@@ -10,43 +11,55 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type Profile interface {
-	FindByLabelSelectorsAndRender(ctx context.Context, selectors dsa.IpxeSelectors) ([]byte, error)
+type ProfileModel struct{}
 
-	// NB: CRUD operations are done via the controller-runtime client.Client; only FindByLabelSelectorsAndRender is
+type Profile interface {
+	FindBySelectors(ctx context.Context, selectors dsa.IpxeSelectors) (ProfileModel, error)
+
+	// NB: CRUD operations are done via the controller-runtime client.Client; only FindBySelectorsAndRender is
 	// required.
 }
 
-func NewProfile(c client.Client) Profile {
-	return profile{client: c}
+func NewProfile(c client.Client, namespace string) Profile {
+	return profile{
+		client:    c,
+		namespace: namespace,
+	}
 }
 
 type profile struct {
-	client client.Client
+	client    client.Client
+	namespace string
 }
 
-func (p profile) FindByLabelSelectorsAndRender(ctx context.Context, selectors dsa.IpxeSelectors) ([]byte, error) {
+func (p profile) FindBySelectors(ctx context.Context, selectors dsa.IpxeSelectors) (ProfileModel, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 	if err := p.client.List(ctx, list, toListOptions(selectors)...); err != nil {
-		return nil, err //TODO: wrap this err.
+		return ProfileModel{}, err //TODO: wrap this err.
 	}
 
 	if list == nil || len(list.Items) == 0 {
 		// Get the list of default matching the buildarch
 		if err := p.client.List(ctx, list, toDefaultListOptions(selectors.Buildarch)...); err != nil {
-			return nil, err //TODO: wrap this err.
+			return ProfileModel{}, err //TODO: wrap this err.
 		}
 
 		if list == nil || len(list.Items) == 0 {
-			return nil, errors.New("TODO") //TODO: err
+			return ProfileModel{}, errors.New("TODO") //TODO: err
 		}
 	}
 
-	//TODO: 1. Select the right Profile or choose the Default assignment;
-	//      2. Render the Profile associated with that Assignment. (render recursively if required).
+	profileName := list.Items[0].Spec.ProfileName
+	prof := new(v1alpha1.Profile)
 
-	return nil, nil
+	if err := p.client.Get(ctx, types.NamespacedName{Namespace: p.namespace, Name: profileName}, prof); err != nil {
+		return ProfileModel{}, err //TODO: wrap err
+	}
+
+	//TODO: convert profile to a ProfileModel && return it.
+
+	return toProfileModel(prof), nil
 }
 
 func toListOptions(selectors dsa.IpxeSelectors) []client.ListOption {
@@ -69,4 +82,8 @@ func toDefaultListOptions(buildarch string) []client.ListOption {
 			v1alpha1.DefaultAssignmentLabel,
 		},
 	}
+}
+
+func toProfileModel(input *v1alpha1.Profile) ProfileModel {
+	return ProfileModel{}
 }

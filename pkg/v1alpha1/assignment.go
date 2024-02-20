@@ -46,11 +46,8 @@ func init() {
 //       - c4a94672-05a1-4eda-a186-b4aa4544b146
 //     uuid:
 //       - 47c6da67-7477-4970-aa03-84e48ff4f6ad
-//   # profileSelectors map[string]string
-//   # the specified labels selects which profile should be used.
-//   profileSelectors:
-//     ipxe/buildarch: arm64
-//     profile-uuid: 819f1859-a669-410b-adfc-d0bc128e2d7a
+//   # profileName string
+//   profileName: 819f1859-a669-410b-adfc-d0bc128e2d7a
 // status:
 //   conditions: []
 
@@ -77,7 +74,7 @@ type (
 
 	AssignmentSpec struct {
 		SubjectSelectors map[string][]string `json:"subjectSelectors"`
-		ProfileSelectors map[string]string   `json:"profileSelectors"`
+		ProfileName      string
 	}
 
 	AssignmentStatus struct{}
