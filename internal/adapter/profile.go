@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/alexandremahdhaoui/ipxe-api/pkg/v1alpha1"
+	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// --------------------------------------------------- INTERFACES --------------------------------------------------- //
 
 type Profile interface {
 	FindBySelectors(ctx context.Context, selectors IpxeSelectors) (ProfileType, error)
@@ -23,6 +26,8 @@ func NewProfile(c client.Client, namespace string) Profile {
 	}
 }
 
+// --------------------------------------------- CONCRETE IMPLEMENTATION -------------------------------------------- //
+
 type profile struct {
 	client    client.Client
 	namespace string
@@ -32,13 +37,13 @@ func (p profile) FindBySelectors(ctx context.Context, selectors IpxeSelectors) (
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 	if err := p.client.List(ctx, list, toListOptions(selectors)...); err != nil {
-		return ProfileType{}, err //TODO: wrap this err.
+		return ProfileType{}, err //TODO: wrap err.
 	}
 
 	if list == nil || len(list.Items) == 0 {
 		// Get the list of default matching the buildarch
 		if err := p.client.List(ctx, list, toDefaultListOptions(selectors.Buildarch)...); err != nil {
-			return ProfileType{}, err //TODO: wrap this err.
+			return ProfileType{}, err //TODO: wrap err.
 		}
 
 		if list == nil || len(list.Items) == 0 {
@@ -53,9 +58,12 @@ func (p profile) FindBySelectors(ctx context.Context, selectors IpxeSelectors) (
 		return ProfileType{}, err //TODO: wrap err
 	}
 
-	//TODO: convert profile to a ProfileType && return it.
+	profileType, err := convertProfileType(prof)
+	if err != nil {
+		return ProfileType{}, err //TODO: wrap err
+	}
 
-	return toProfileModel(prof), nil
+	return profileType, nil
 }
 
 func toListOptions(selectors IpxeSelectors) []client.ListOption {
@@ -82,25 +90,97 @@ func toDefaultListOptions(buildarch string) []client.ListOption {
 
 // ------------------------------------------------ TO PROFILE MODEL ------------------------------------------------ //
 
-func toProfileModel(input *v1alpha1.Profile) (ProfileType, error) {
+func convertProfileType(input *v1alpha1.Profile) (ProfileType, error) {
 	out := ProfileType{}
 	out.IPXETemplate = input.Spec.IPXETemplate
 	out.AdditionalContent = make([]Content, 0)
 
 	for _, cntSpec := range input.Spec.AdditionalContent {
-		var content Content
+		id, err := convertProfileID(cntSpec.Name, input.Status)
+		if err != nil {
+			return ProfileType{}, err //TODO: wrap err
+		}
 
+		transformers := convertTransformers(cntSpec.PostTransformations)
+
+		var content Content
 		switch {
 		case cntSpec.Inline != nil:
-			content = NewInlineContent(cntSpec.Inline)
+			content = NewInlineContent(id, cntSpec.Name, *cntSpec.Inline, transformers...)
 		case cntSpec.ObjectRef != nil:
-			content = NewObjectRefContent()
+			content = NewObjectRefContent(id, cntSpec.Name, convertObjectRef(cntSpec.ObjectRef), transformers...)
 		case cntSpec.Webhook != nil:
-			content = NewWebhookContent()
+			content = NewWebhookContent(id, cntSpec.Name, convertWebhookConfig(cntSpec.Webhook), transformers...)
 		}
 
 		out.AdditionalContent = append(out.AdditionalContent, content)
 	}
 
 	return out, nil
+}
+
+func convertProfileID(name string, status v1alpha1.ProfileStatus) (uuid.UUID, error) {
+	id, ok := status.ExposedAdditionalContent[name]
+	if !ok {
+		return uuid.Nil, errors.New("TODO") //TODO: err
+	}
+
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return uuid.Nil, err //TODO: wrap err
+	}
+
+	return uid, nil
+}
+
+func convertObjectRef(objectRef *v1alpha1.ObjectRef) ObjectRef {
+	return ObjectRef{
+		Ref:  objectRef.TypedObjectReference,
+		Path: objectRef.Path,
+	}
+}
+
+func convertTransformers(input []v1alpha1.Transformer) []TransformerConfig {
+	out := make([]TransformerConfig, 0)
+
+	for _, t := range input {
+		var cfg TransformerConfig
+
+		switch {
+		case t.ButaneToIgnition:
+			cfg.Kind = ButaneTransformerKind
+		case t.Webhook != nil:
+			cfg.Kind = WebhookTransformerKind
+			cfg.Webhook = ptr(convertWebhookConfig(t.Webhook))
+		}
+
+		out = append(out, cfg)
+	}
+
+	return out
+}
+
+func convertWebhookConfig(input *v1alpha1.WebhookConfig) WebhookConfig {
+	out := WebhookConfig{
+		URL: input.URL,
+	}
+
+	if input.MTLSObjectRef != nil {
+		out.MTLSObjectRef = &MTLSObjectRef{
+			Ref:            input.MTLSObjectRef.TypedObjectReference,
+			ClientKeyPath:  input.MTLSObjectRef.ClientKeyPath,
+			ClientCertPath: input.MTLSObjectRef.ClientCertPath,
+			CaBundlePath:   input.MTLSObjectRef.CaBundlePath,
+		}
+	}
+
+	if input.BasicAuthObjectRef != nil {
+		out.BasicAuthObjectRef = &BasicAuthObjectRef{
+			Ref:          input.BasicAuthObjectRef.TypedObjectReference,
+			UsernamePath: input.BasicAuthObjectRef.UsernamePath,
+			PasswordPath: input.BasicAuthObjectRef.PasswordPath,
+		}
+	}
+
+	return out
 }

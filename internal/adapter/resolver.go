@@ -6,12 +6,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type ContentResolverType int
+// ----------------------------------------------------- TYPES ------------------------------------------------------ //
+
+type ContentResolverKind int
 
 const (
-	InlineResolverType ContentResolverType = iota
-	ObjectRefResolverType
-	WebhookResolverType
+	InlineResolverKind ContentResolverKind = iota
+	ObjectRefResolverKind
+	WebhookResolverKind
 )
 
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
@@ -30,7 +32,7 @@ func NewInlineContent(
 	return Content{
 		ID:               id,
 		Name:             name,
-		ResolverType:     InlineResolverType,
+		ResolverKind:     InlineResolverKind,
 		PostTransformers: postTransformers,
 		Inline:           inline,
 	}
@@ -45,7 +47,7 @@ func NewObjectRefContent(
 	return Content{
 		ID:               id,
 		Name:             name,
-		ResolverType:     ObjectRefResolverType,
+		ResolverKind:     ObjectRefResolverKind,
 		PostTransformers: postTransformers,
 		ObjectRef:        &objectRef,
 	}
@@ -60,7 +62,7 @@ func NewWebhookContent(
 	return Content{
 		ID:               id,
 		Name:             name,
-		ResolverType:     WebhookResolverType,
+		ResolverKind:     WebhookResolverKind,
 		PostTransformers: postTransformers,
 		WebhookConfig:    &cfg,
 	}

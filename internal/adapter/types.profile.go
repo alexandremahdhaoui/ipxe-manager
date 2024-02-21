@@ -19,7 +19,7 @@ type Content struct {
 	ID   uuid.UUID
 
 	PostTransformers []TransformerConfig
-	ResolverType     ContentResolverType
+	ResolverKind     ContentResolverKind
 
 	Inline        string
 	ObjectRef     *ObjectRef
@@ -36,7 +36,7 @@ type ObjectRef struct {
 type WebhookConfig struct {
 	URL string
 
-	MtlsObjectRef      *MTLSObjectRef
+	MTLSObjectRef      *MTLSObjectRef
 	BasicAuthObjectRef *BasicAuthObjectRef
 }
 

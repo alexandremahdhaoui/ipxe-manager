@@ -7,22 +7,28 @@ import (
 	_ "github.com/coreos/butane/config/common"
 )
 
-type TransformerType int
+type TransformerKind int
 
 const (
-	ButaneTransformerType TransformerType = iota
-	WebhookTransformerType
+	ButaneTransformerKind TransformerKind = iota
+	WebhookTransformerKind
 )
 
+// ----------------------------------------------------- TYPES ------------------------------------------------------ //
+
 type TransformerConfig struct {
-	Type TransformerType
+	Kind TransformerKind
 
 	Webhook *WebhookConfig
 }
 
+// --------------------------------------------------- INTERFACE ---------------------------------------------------- //
+
 type Transformer interface {
 	Transform(content []byte) ([]byte, error)
 }
+
+// ----------------------------------------------- BUTANE TRANSFORMER ----------------------------------------------- //
 
 func NewButaneTransformer() Transformer {
 	return &butaneTransformer{}
@@ -38,6 +44,8 @@ func (t *butaneTransformer) Transform(content []byte) ([]byte, error) {
 
 	return b, nil
 }
+
+// ---------------------------------------------- WEBHOOK TRANSFORMER ----------------------------------------------- //
 
 func NewWebhookTransformer() Transformer {
 	return &webhookTransformer{}

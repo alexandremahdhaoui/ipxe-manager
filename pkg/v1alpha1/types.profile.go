@@ -124,7 +124,7 @@ type (
 	WebhookConfig struct {
 		URL string `json:"url"`
 
-		MtlsObjectRef      *MTLSObjectRef      `json:"mTLSRef,omitempty"`
+		MTLSObjectRef      *MTLSObjectRef      `json:"mTLSRef,omitempty"`
 		BasicAuthObjectRef *BasicAuthObjectRef `json:"basicAuthRef,omitempty"`
 	}
 
