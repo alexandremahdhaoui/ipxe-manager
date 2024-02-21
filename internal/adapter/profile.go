@@ -5,7 +5,6 @@ import (
 	"errors"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/alexandremahdhaoui/ipxe-api/internal/dsa"
 	"github.com/alexandremahdhaoui/ipxe-api/pkg/v1alpha1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -14,7 +13,7 @@ import (
 type ProfileModel struct{}
 
 type Profile interface {
-	FindBySelectors(ctx context.Context, selectors dsa.IpxeSelectors) (ProfileModel, error)
+	FindBySelectors(ctx context.Context, selectors IpxeSelectors) (ProfileModel, error)
 
 	// NB: CRUD operations are done via the controller-runtime client.Client; only FindBySelectorsAndRender is
 	// required.
@@ -32,7 +31,7 @@ type profile struct {
 	namespace string
 }
 
-func (p profile) FindBySelectors(ctx context.Context, selectors dsa.IpxeSelectors) (ProfileModel, error) {
+func (p profile) FindBySelectors(ctx context.Context, selectors IpxeSelectors) (ProfileModel, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 	if err := p.client.List(ctx, list, toListOptions(selectors)...); err != nil {
@@ -62,7 +61,7 @@ func (p profile) FindBySelectors(ctx context.Context, selectors dsa.IpxeSelector
 	return toProfileModel(prof), nil
 }
 
-func toListOptions(selectors dsa.IpxeSelectors) []client.ListOption {
+func toListOptions(selectors IpxeSelectors) []client.ListOption {
 	return []client.ListOption{
 		client.MatchingLabels{
 			v1alpha1.BuildarchAssignmentLabel: selectors.Buildarch,

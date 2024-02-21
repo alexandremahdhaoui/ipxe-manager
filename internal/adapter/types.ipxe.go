@@ -1,15 +1,14 @@
-package dsa
+package adapter
 
 import (
 	"encoding"
 	"encoding/hex"
 	"errors"
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"net"
 	"strconv"
 	"strings"
-
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 )
 
 // -------------------------------------------------- PARAMETERS ---------------------------------------------------- //
