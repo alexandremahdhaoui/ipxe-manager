@@ -1,5 +1,12 @@
 package adapter
 
+import (
+	"github.com/coreos/butane/config"
+	_ "github.com/coreos/butane/config"
+	"github.com/coreos/butane/config/common"
+	_ "github.com/coreos/butane/config/common"
+)
+
 type TransformerType int
 
 const (
@@ -24,8 +31,12 @@ func NewButaneTransformer() Transformer {
 type butaneTransformer struct{}
 
 func (t *butaneTransformer) Transform(content []byte) ([]byte, error) {
-	//TODO: implement me
-	panic("implement me")
+	b, _, err := config.TranslateBytes(content, common.TranslateBytesOptions{Raw: true})
+	if err != nil {
+		return nil, err //TODO: wrap me
+	}
+
+	return b, nil
 }
 
 func NewWebhookTransformer() Transformer {
