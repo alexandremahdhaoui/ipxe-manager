@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"github.com/google/uuid"
+	"context"
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -19,61 +19,15 @@ const (
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
 type Resolver interface {
-	Resolve(cfg Content) []byte
-}
-
-// -------------------------------------------------- CONSTRUCTORS -------------------------------------------------- //
-
-func NewInlineContent(
-	id uuid.UUID,
-	name, inline string,
-	postTransformers ...TransformerConfig,
-) Content {
-	return Content{
-		ID:               id,
-		Name:             name,
-		ResolverKind:     InlineResolverKind,
-		PostTransformers: postTransformers,
-		Inline:           inline,
-	}
-}
-
-func NewObjectRefContent(
-	id uuid.UUID,
-	name string,
-	objectRef ObjectRef,
-	postTransformers ...TransformerConfig,
-) Content {
-	return Content{
-		ID:               id,
-		Name:             name,
-		ResolverKind:     ObjectRefResolverKind,
-		PostTransformers: postTransformers,
-		ObjectRef:        &objectRef,
-	}
-}
-
-func NewWebhookContent(
-	id uuid.UUID,
-	name string,
-	cfg WebhookConfig,
-	postTransformers ...TransformerConfig,
-) Content {
-	return Content{
-		ID:               id,
-		Name:             name,
-		ResolverKind:     WebhookResolverKind,
-		PostTransformers: postTransformers,
-		WebhookConfig:    &cfg,
-	}
+	Resolve(ctx context.Context, c Content) ([]byte, error)
 }
 
 // ------------------------------------------------- INLINE RESOLVER ------------------------------------------------ //
 
 type inlineResolver struct{}
 
-func (r *inlineResolver) Resolve(cfg Content) []byte {
-	return []byte(cfg.Inline)
+func (r *inlineResolver) Resolve(ctx context.Context, c Content) ([]byte, error) {
+	return []byte(c.Inline), nil
 }
 
 func NewInlineResolver() Resolver {
@@ -86,7 +40,7 @@ type objectRefResolver struct {
 	client client.Client
 }
 
-func (r *objectRefResolver) Resolve(cfg Content) []byte {
+func (r *objectRefResolver) Resolve(ctx context.Context, c Content) ([]byte, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -101,7 +55,7 @@ type webhookResolver struct {
 	client http.Client
 }
 
-func (r *webhookResolver) Resolve(cfg Content) []byte {
+func (r *webhookResolver) Resolve(ctx context.Context, c Content) ([]byte, error) {
 	//TODO implement me
 	panic("implement me")
 }

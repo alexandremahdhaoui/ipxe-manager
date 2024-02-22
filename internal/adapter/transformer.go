@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"context"
 	"github.com/coreos/butane/config"
 	_ "github.com/coreos/butane/config"
 	"github.com/coreos/butane/config/common"
@@ -25,7 +26,7 @@ type TransformerConfig struct {
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
 type Transformer interface {
-	Transform(content []byte) ([]byte, error)
+	Transform(ctx context.Context, content []byte, cfg TransformerConfig) ([]byte, error)
 }
 
 // ----------------------------------------------- BUTANE TRANSFORMER ----------------------------------------------- //
@@ -36,7 +37,7 @@ func NewButaneTransformer() Transformer {
 
 type butaneTransformer struct{}
 
-func (t *butaneTransformer) Transform(content []byte) ([]byte, error) {
+func (t *butaneTransformer) Transform(ctx context.Context, content []byte, cfg TransformerConfig) ([]byte, error) {
 	b, _, err := config.TranslateBytes(content, common.TranslateBytesOptions{Raw: true})
 	if err != nil {
 		return nil, err //TODO: wrap me
@@ -53,7 +54,7 @@ func NewWebhookTransformer() Transformer {
 
 type webhookTransformer struct{}
 
-func (t *webhookTransformer) Transform(content []byte) ([]byte, error) {
+func (t *webhookTransformer) Transform(ctx context.Context, content []byte, cfg TransformerConfig) ([]byte, error) {
 	//TODO: implement me
 	panic("implement me")
 }

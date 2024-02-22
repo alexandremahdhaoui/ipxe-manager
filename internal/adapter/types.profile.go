@@ -54,3 +54,49 @@ type MTLSObjectRef struct {
 	ClientCertPath string
 	CaBundlePath   *string
 }
+
+// ---------------------------------------------- CONTENT CONSTRUCTORS ---------------------------------------------- //
+
+func NewInlineContent(
+	id uuid.UUID,
+	name, inline string,
+	postTransformers ...TransformerConfig,
+) Content {
+	return Content{
+		ID:               id,
+		Name:             name,
+		ResolverKind:     InlineResolverKind,
+		PostTransformers: postTransformers,
+		Inline:           inline,
+	}
+}
+
+func NewObjectRefContent(
+	id uuid.UUID,
+	name string,
+	objectRef ObjectRef,
+	postTransformers ...TransformerConfig,
+) Content {
+	return Content{
+		ID:               id,
+		Name:             name,
+		ResolverKind:     ObjectRefResolverKind,
+		PostTransformers: postTransformers,
+		ObjectRef:        &objectRef,
+	}
+}
+
+func NewWebhookContent(
+	id uuid.UUID,
+	name string,
+	cfg WebhookConfig,
+	postTransformers ...TransformerConfig,
+) Content {
+	return Content{
+		ID:               id,
+		Name:             name,
+		ResolverKind:     WebhookResolverKind,
+		PostTransformers: postTransformers,
+		WebhookConfig:    &cfg,
+	}
+}
