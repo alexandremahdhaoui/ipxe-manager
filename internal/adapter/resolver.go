@@ -2,31 +2,22 @@ package adapter
 
 import (
 	"context"
+	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-// ----------------------------------------------------- TYPES ------------------------------------------------------ //
-
-type ContentResolverKind int
-
-const (
-	InlineResolverKind ContentResolverKind = iota
-	ObjectRefResolverKind
-	WebhookResolverKind
 )
 
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
 type Resolver interface {
-	Resolve(ctx context.Context, c Content) ([]byte, error)
+	Resolve(ctx context.Context, c types.Content) ([]byte, error)
 }
 
 // ------------------------------------------------- INLINE RESOLVER ------------------------------------------------ //
 
 type inlineResolver struct{}
 
-func (r *inlineResolver) Resolve(ctx context.Context, c Content) ([]byte, error) {
+func (r *inlineResolver) Resolve(ctx context.Context, c types.Content) ([]byte, error) {
 	return []byte(c.Inline), nil
 }
 
@@ -40,7 +31,7 @@ type objectRefResolver struct {
 	client client.Client
 }
 
-func (r *objectRefResolver) Resolve(ctx context.Context, c Content) ([]byte, error) {
+func (r *objectRefResolver) Resolve(ctx context.Context, c types.Content) ([]byte, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -55,7 +46,7 @@ type webhookResolver struct {
 	client http.Client
 }
 
-func (r *webhookResolver) Resolve(ctx context.Context, c Content) ([]byte, error) {
+func (r *webhookResolver) Resolve(ctx context.Context, c types.Content) ([]byte, error) {
 	//TODO implement me
 	panic("implement me")
 }

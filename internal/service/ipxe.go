@@ -5,17 +5,18 @@ import (
 	"context"
 	"errors"
 	"github.com/alexandremahdhaoui/ipxe-api/internal/adapter"
+	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
 	"text/template"
 )
 
 // ---------------------------------------------------- INTERFACES -------------------------------------------------- //
 
 type IPXE interface {
-	FindProfileAndRender(ctx context.Context, selectors adapter.IpxeSelectors) ([]byte, error)
+	FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error)
 }
 
 type ResolveTransformerMux interface {
-	ResolveAndTransformBatch(ctx context.Context, batch []adapter.Content) (map[string][]byte, error)
+	ResolveAndTransformBatch(ctx context.Context, batch []types.Content) (map[string][]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -27,8 +28,8 @@ func NewIPXE(profile adapter.Profile, mux ResolveTransformerMux) IPXE {
 	}
 }
 func NewResolveTransformerMux(
-	resolvers map[adapter.ContentResolverKind]adapter.Resolver,
-	transformers map[adapter.TransformerKind]adapter.Transformer,
+	resolvers map[types.ResolverKind]adapter.Resolver,
+	transformers map[types.TransformerKind]adapter.Transformer,
 ) ResolveTransformerMux {
 	return &resolveTransformerMux{
 		resolvers:    resolvers,
@@ -43,7 +44,7 @@ type ipxe struct {
 	mux     ResolveTransformerMux
 }
 
-func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors adapter.IpxeSelectors) ([]byte, error) {
+func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error) {
 	p, err := svc.profile.FindBySelectors(ctx, selectors)
 	if err != nil {
 		return nil, err //TODO: wrap
@@ -56,7 +57,7 @@ func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors adapter.Ipx
 
 	output, err := templateIPXEProfile(p.IPXETemplate, data)
 	if err != nil {
-		return nil, err
+		return nil, err //TODO: wrap
 	}
 
 	return output, nil
@@ -79,13 +80,13 @@ func templateIPXEProfile(ipxeTemplate string, data map[string][]byte) ([]byte, e
 // ---------------------------------------------------- MULTIPLEXER ------------------------------------------------- //
 
 type resolveTransformerMux struct {
-	resolvers    map[adapter.ContentResolverKind]adapter.Resolver
-	transformers map[adapter.TransformerKind]adapter.Transformer
+	resolvers    map[types.ResolverKind]adapter.Resolver
+	transformers map[types.TransformerKind]adapter.Transformer
 }
 
 func (r *resolveTransformerMux) ResolveAndTransformBatch(
 	ctx context.Context,
-	batch []adapter.Content,
+	batch []types.Content,
 ) (map[string][]byte, error) {
 	output := make(map[string][]byte)
 

@@ -1,4 +1,4 @@
-package adapter
+package types
 
 import (
 	"github.com/google/uuid"
@@ -7,7 +7,7 @@ import (
 
 // ---------------------------------------------------- PROFILE ----------------------------------------------------- //
 
-type ProfileType struct {
+type Profile struct {
 	IPXETemplate      string
 	AdditionalContent []Content
 }
@@ -19,7 +19,7 @@ type Content struct {
 	ID   uuid.UUID
 
 	PostTransformers []TransformerConfig
-	ResolverKind     ContentResolverKind
+	ResolverKind     ResolverKind
 
 	Inline        string
 	ObjectRef     *ObjectRef
@@ -53,6 +53,31 @@ type MTLSObjectRef struct {
 	ClientKeyPath  string
 	ClientCertPath string
 	CaBundlePath   *string
+}
+
+// --------------------------------------------------- RESOLVER ----------------------------------------------------- //
+
+type ResolverKind int
+
+const (
+	InlineResolverKind ResolverKind = iota
+	ObjectRefResolverKind
+	WebhookResolverKind
+)
+
+// -------------------------------------------------- TRANSFORMER --------------------------------------------------- //
+
+type TransformerKind int
+
+const (
+	ButaneTransformerKind TransformerKind = iota
+	WebhookTransformerKind
+)
+
+type TransformerConfig struct {
+	Kind TransformerKind
+
+	Webhook *WebhookConfig
 }
 
 // ---------------------------------------------- CONTENT CONSTRUCTORS ---------------------------------------------- //

@@ -3,9 +3,10 @@ package adapter
 import (
 	"context"
 	"errors"
+	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
 	"github.com/alexandremahdhaoui/ipxe-api/pkg/v1alpha1"
 	"github.com/google/uuid"
-	"k8s.io/apimachinery/pkg/types"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -13,11 +14,13 @@ import (
 // --------------------------------------------------- INTERFACES --------------------------------------------------- //
 
 type Profile interface {
-	FindBySelectors(ctx context.Context, selectors IpxeSelectors) (ProfileType, error)
+	FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Profile, error)
 
 	// NB: CRUD operations are done via the controller-runtime client.Client; only FindBySelectorsAndRender is
 	// required.
 }
+
+// --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
 func NewProfile(c client.Client, namespace string) Profile {
 	return profile{
@@ -33,40 +36,40 @@ type profile struct {
 	namespace string
 }
 
-func (p profile) FindBySelectors(ctx context.Context, selectors IpxeSelectors) (ProfileType, error) {
+func (p profile) FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Profile, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 	if err := p.client.List(ctx, list, toListOptions(selectors)...); err != nil {
-		return ProfileType{}, err //TODO: wrap err.
+		return types.Profile{}, err //TODO: wrap err.
 	}
 
 	if list == nil || len(list.Items) == 0 {
 		// Get the list of default matching the buildarch
 		if err := p.client.List(ctx, list, toDefaultListOptions(selectors.Buildarch)...); err != nil {
-			return ProfileType{}, err //TODO: wrap err.
+			return types.Profile{}, err //TODO: wrap err.
 		}
 
 		if list == nil || len(list.Items) == 0 {
-			return ProfileType{}, errors.New("TODO") //TODO: err
+			return types.Profile{}, errors.New("TODO") //TODO: err
 		}
 	}
 
 	profileName := list.Items[0].Spec.ProfileName
 	prof := new(v1alpha1.Profile)
 
-	if err := p.client.Get(ctx, types.NamespacedName{Namespace: p.namespace, Name: profileName}, prof); err != nil {
-		return ProfileType{}, err //TODO: wrap err
+	if err := p.client.Get(ctx, k8stypes.NamespacedName{Namespace: p.namespace, Name: profileName}, prof); err != nil {
+		return types.Profile{}, err //TODO: wrap err
 	}
 
-	profileType, err := convertProfileType(prof)
+	profileType, err := fromV1alpha1.toProfile(prof)
 	if err != nil {
-		return ProfileType{}, err //TODO: wrap err
+		return types.Profile{}, err //TODO: wrap err
 	}
 
 	return profileType, nil
 }
 
-func toListOptions(selectors IpxeSelectors) []client.ListOption {
+func toListOptions(selectors types.IpxeSelectors) []client.ListOption {
 	return []client.ListOption{
 		client.MatchingLabels{
 			v1alpha1.BuildarchAssignmentLabel: selectors.Buildarch,
@@ -88,29 +91,35 @@ func toDefaultListOptions(buildarch string) []client.ListOption {
 	}
 }
 
-// ------------------------------------------------ TO PROFILE MODEL ------------------------------------------------ //
+// --------------------------------------------------- CONVERSION --------------------------------------------------- //
 
-func convertProfileType(input *v1alpha1.Profile) (ProfileType, error) {
-	out := ProfileType{}
+var fromV1alpha1 ipxev1a1
+
+type ipxev1a1 struct{}
+
+func (_ ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
+	out := types.Profile{}
 	out.IPXETemplate = input.Spec.IPXETemplate
-	out.AdditionalContent = make([]Content, 0)
+	out.AdditionalContent = make([]types.Content, 0)
 
 	for _, cntSpec := range input.Spec.AdditionalContent {
-		id, err := convertProfileID(cntSpec.Name, input.Status)
+		id, err := fromV1alpha1.toProfileID(cntSpec.Name, input.Status)
 		if err != nil {
-			return ProfileType{}, err //TODO: wrap err
+			return types.Profile{}, err //TODO: wrap err
 		}
 
-		transformers := convertTransformers(cntSpec.PostTransformations)
+		transformers := fromV1alpha1.toTransformerConfig(cntSpec.PostTransformations)
 
-		var content Content
+		var content types.Content
 		switch {
 		case cntSpec.Inline != nil:
-			content = NewInlineContent(id, cntSpec.Name, *cntSpec.Inline, transformers...)
+			content = types.NewInlineContent(id, cntSpec.Name, *cntSpec.Inline, transformers...)
 		case cntSpec.ObjectRef != nil:
-			content = NewObjectRefContent(id, cntSpec.Name, convertObjectRef(cntSpec.ObjectRef), transformers...)
+			content = types.NewObjectRefContent(id, cntSpec.Name, fromV1alpha1.toObjectRef(cntSpec.ObjectRef),
+				transformers...)
 		case cntSpec.Webhook != nil:
-			content = NewWebhookContent(id, cntSpec.Name, convertWebhookConfig(cntSpec.Webhook), transformers...)
+			content = types.NewWebhookContent(id, cntSpec.Name, fromV1alpha1.toWebhookConfig(cntSpec.Webhook),
+				transformers...)
 		}
 
 		out.AdditionalContent = append(out.AdditionalContent, content)
@@ -119,7 +128,7 @@ func convertProfileType(input *v1alpha1.Profile) (ProfileType, error) {
 	return out, nil
 }
 
-func convertProfileID(name string, status v1alpha1.ProfileStatus) (uuid.UUID, error) {
+func (_ ipxev1a1) toProfileID(name string, status v1alpha1.ProfileStatus) (uuid.UUID, error) {
 	id, ok := status.ExposedAdditionalContent[name]
 	if !ok {
 		return uuid.Nil, errors.New("TODO") //TODO: err
@@ -133,25 +142,25 @@ func convertProfileID(name string, status v1alpha1.ProfileStatus) (uuid.UUID, er
 	return uid, nil
 }
 
-func convertObjectRef(objectRef *v1alpha1.ObjectRef) ObjectRef {
-	return ObjectRef{
+func (_ ipxev1a1) toObjectRef(objectRef *v1alpha1.ObjectRef) types.ObjectRef {
+	return types.ObjectRef{
 		Ref:  objectRef.TypedObjectReference,
 		Path: objectRef.Path,
 	}
 }
 
-func convertTransformers(input []v1alpha1.Transformer) []TransformerConfig {
-	out := make([]TransformerConfig, 0)
+func (_ ipxev1a1) toTransformerConfig(input []v1alpha1.Transformer) []types.TransformerConfig {
+	out := make([]types.TransformerConfig, 0)
 
 	for _, t := range input {
-		var cfg TransformerConfig
+		var cfg types.TransformerConfig
 
 		switch {
 		case t.ButaneToIgnition:
-			cfg.Kind = ButaneTransformerKind
+			cfg.Kind = types.ButaneTransformerKind
 		case t.Webhook != nil:
-			cfg.Kind = WebhookTransformerKind
-			cfg.Webhook = ptr(convertWebhookConfig(t.Webhook))
+			cfg.Kind = types.WebhookTransformerKind
+			cfg.Webhook = types.Ptr(ipxev1a1{}.toWebhookConfig(t.Webhook))
 		}
 
 		out = append(out, cfg)
@@ -160,13 +169,13 @@ func convertTransformers(input []v1alpha1.Transformer) []TransformerConfig {
 	return out
 }
 
-func convertWebhookConfig(input *v1alpha1.WebhookConfig) WebhookConfig {
-	out := WebhookConfig{
+func (_ ipxev1a1) toWebhookConfig(input *v1alpha1.WebhookConfig) types.WebhookConfig {
+	out := types.WebhookConfig{
 		URL: input.URL,
 	}
 
 	if input.MTLSObjectRef != nil {
-		out.MTLSObjectRef = &MTLSObjectRef{
+		out.MTLSObjectRef = &types.MTLSObjectRef{
 			Ref:            input.MTLSObjectRef.TypedObjectReference,
 			ClientKeyPath:  input.MTLSObjectRef.ClientKeyPath,
 			ClientCertPath: input.MTLSObjectRef.ClientCertPath,
@@ -175,7 +184,7 @@ func convertWebhookConfig(input *v1alpha1.WebhookConfig) WebhookConfig {
 	}
 
 	if input.BasicAuthObjectRef != nil {
-		out.BasicAuthObjectRef = &BasicAuthObjectRef{
+		out.BasicAuthObjectRef = &types.BasicAuthObjectRef{
 			Ref:          input.BasicAuthObjectRef.TypedObjectReference,
 			UsernamePath: input.BasicAuthObjectRef.UsernamePath,
 			PasswordPath: input.BasicAuthObjectRef.PasswordPath,

@@ -1,4 +1,4 @@
-package adapter
+package types
 
 import (
 	"encoding"
@@ -379,7 +379,7 @@ func getParam[T any](c echo.Context, key string) (*T, error) {
 			return nil, err // TODO: wrap this err
 		}
 
-		return any(ptr(int32(i))).(*T), nil
+		return any(Ptr(int32(i))).(*T), nil
 	case uint32:
 
 		i, err := strconv.Atoi(s)
@@ -387,7 +387,7 @@ func getParam[T any](c echo.Context, key string) (*T, error) {
 			return nil, err // TODO: wrap this err
 		}
 
-		return any(ptr(uint32(i))).(*T), nil
+		return any(Ptr(uint32(i))).(*T), nil
 	case int8:
 
 		i, err := strconv.Atoi(s)
@@ -395,20 +395,20 @@ func getParam[T any](c echo.Context, key string) (*T, error) {
 			return nil, err // TODO: wrap this err
 		}
 
-		return any(ptr(int8(i))).(*T), nil
+		return any(Ptr(int8(i))).(*T), nil
 	case uint8:
 		i, err := strconv.Atoi(s)
 		if err != nil {
 			return nil, err // TODO: wrap this err
 		}
 
-		return any(ptr(uint8(i))).(*T), nil
+		return any(Ptr(uint8(i))).(*T), nil
 	default:
 		return nil, errors.New("TODO ERROR") // TODO: write this err.
 	}
 }
 
-func ptr[T any](v T) *T {
+func Ptr[T any](v T) *T {
 	return &v
 }
 
