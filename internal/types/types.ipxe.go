@@ -451,3 +451,17 @@ func NewIpxeSelectors(params IpxeParams) (IpxeSelectors, error) {
 		Buildarch: *params.Buildarch,
 	}, nil
 }
+
+func NewIpxeSelectorsFromContext(c echo.Context) (IpxeSelectors, error) {
+	params, err := NewIpxeParamsFromContext(c)
+	if err != nil {
+		return IpxeSelectors{}, err //TODO: wrap
+	}
+
+	selectors, err := NewIpxeSelectors(params)
+	if err != nil {
+		return IpxeSelectors{}, err //TODO: wrap
+	}
+
+	return selectors, nil
+}
