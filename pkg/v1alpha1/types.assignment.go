@@ -74,7 +74,7 @@ type (
 
 	AssignmentSpec struct {
 		SubjectSelectors map[string][]string `json:"subjectSelectors"`
-		ProfileName      string
+		ProfileName      string              `json:"profileName"`
 	}
 
 	AssignmentStatus struct{}

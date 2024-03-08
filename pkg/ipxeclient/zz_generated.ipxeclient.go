@@ -52,13 +52,13 @@ type N500 = Error
 // N503 defines model for 503.
 type N503 = Error
 
-// GetConfigByIDParams defines parameters for GetConfigByID.
-type GetConfigByIDParams struct {
+// GetIpxeByLabelsParams defines parameters for GetIpxeByLabels.
+type GetIpxeByLabelsParams struct {
 	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
 }
 
-// GetIpxeByLabelsParams defines parameters for GetIpxeByLabels.
-type GetIpxeByLabelsParams struct {
+// GetConfigByIDParams defines parameters for GetConfigByID.
+type GetConfigByIDParams struct {
 	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
 }
 
@@ -138,11 +138,11 @@ type ClientInterface interface {
 	// GetBootIpxe request
 	GetBootIpxe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetConfigByID request
-	GetConfigByID(ctx context.Context, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetIpxeByLabels request
 	GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetConfigByID request
+	GetConfigByID(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetBootIpxe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -157,8 +157,8 @@ func (c *Client) GetBootIpxe(ctx context.Context, reqEditors ...RequestEditorFn)
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetConfigByID(ctx context.Context, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetConfigByIDRequest(c.Server, configID, params)
+func (c *Client) GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetIpxeByLabelsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -169,8 +169,8 @@ func (c *Client) GetConfigByID(ctx context.Context, configID UUID, params *GetCo
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetIpxeByLabelsRequest(c.Server, params)
+func (c *Client) GetConfigByID(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetConfigByIDRequest(c.Server, profileID, configID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -208,23 +208,16 @@ func NewGetBootIpxeRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetConfigByIDRequest generates requests for GetConfigByID
-func NewGetConfigByIDRequest(server string, configID UUID, params *GetConfigByIDParams) (*http.Request, error) {
+// NewGetIpxeByLabelsRequest generates requests for GetIpxeByLabels
+func NewGetIpxeByLabelsRequest(server string, params *GetIpxeByLabelsParams) (*http.Request, error) {
 	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "configID", runtime.ParamLocationPath, configID)
-	if err != nil {
-		return nil, err
-	}
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/config/%s", pathParam0)
+	operationPath := fmt.Sprintf("/ipxe")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -264,16 +257,30 @@ func NewGetConfigByIDRequest(server string, configID UUID, params *GetConfigByID
 	return req, nil
 }
 
-// NewGetIpxeByLabelsRequest generates requests for GetIpxeByLabels
-func NewGetIpxeByLabelsRequest(server string, params *GetIpxeByLabelsParams) (*http.Request, error) {
+// NewGetConfigByIDRequest generates requests for GetConfigByID
+func NewGetConfigByIDRequest(server string, profileID UUID, configID UUID, params *GetConfigByIDParams) (*http.Request, error) {
 	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "profileID", runtime.ParamLocationPath, profileID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "configID", runtime.ParamLocationPath, configID)
+	if err != nil {
+		return nil, err
+	}
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/ipxe")
+	operationPath := fmt.Sprintf("/profile/%s/config/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -359,11 +366,11 @@ type ClientWithResponsesInterface interface {
 	// GetBootIpxeWithResponse request
 	GetBootIpxeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBootIpxeResponse, error)
 
-	// GetConfigByIDWithResponse request
-	GetConfigByIDWithResponse(ctx context.Context, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error)
-
 	// GetIpxeByLabelsWithResponse request
 	GetIpxeByLabelsWithResponse(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*GetIpxeByLabelsResponse, error)
+
+	// GetConfigByIDWithResponse request
+	GetConfigByIDWithResponse(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error)
 }
 
 type GetBootIpxeResponse struct {
@@ -387,33 +394,6 @@ func (r GetBootIpxeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetBootIpxeResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetConfigByIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON503      *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r GetConfigByIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetConfigByIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -447,6 +427,33 @@ func (r GetIpxeByLabelsResponse) StatusCode() int {
 	return 0
 }
 
+type GetConfigByIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON503      *N503
+}
+
+// Status returns HTTPResponse.Status
+func (r GetConfigByIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetConfigByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // GetBootIpxeWithResponse request returning *GetBootIpxeResponse
 func (c *ClientWithResponses) GetBootIpxeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBootIpxeResponse, error) {
 	rsp, err := c.GetBootIpxe(ctx, reqEditors...)
@@ -456,15 +463,6 @@ func (c *ClientWithResponses) GetBootIpxeWithResponse(ctx context.Context, reqEd
 	return ParseGetBootIpxeResponse(rsp)
 }
 
-// GetConfigByIDWithResponse request returning *GetConfigByIDResponse
-func (c *ClientWithResponses) GetConfigByIDWithResponse(ctx context.Context, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error) {
-	rsp, err := c.GetConfigByID(ctx, configID, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetConfigByIDResponse(rsp)
-}
-
 // GetIpxeByLabelsWithResponse request returning *GetIpxeByLabelsResponse
 func (c *ClientWithResponses) GetIpxeByLabelsWithResponse(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*GetIpxeByLabelsResponse, error) {
 	rsp, err := c.GetIpxeByLabels(ctx, params, reqEditors...)
@@ -472,6 +470,15 @@ func (c *ClientWithResponses) GetIpxeByLabelsWithResponse(ctx context.Context, p
 		return nil, err
 	}
 	return ParseGetIpxeByLabelsResponse(rsp)
+}
+
+// GetConfigByIDWithResponse request returning *GetConfigByIDResponse
+func (c *ClientWithResponses) GetConfigByIDWithResponse(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error) {
+	rsp, err := c.GetConfigByID(ctx, profileID, configID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetConfigByIDResponse(rsp)
 }
 
 // ParseGetBootIpxeResponse parses an HTTP response from a GetBootIpxeWithResponse call
@@ -535,15 +542,15 @@ func ParseGetBootIpxeResponse(rsp *http.Response) (*GetBootIpxeResponse, error) 
 	return response, nil
 }
 
-// ParseGetConfigByIDResponse parses an HTTP response from a GetConfigByIDWithResponse call
-func ParseGetConfigByIDResponse(rsp *http.Response) (*GetConfigByIDResponse, error) {
+// ParseGetIpxeByLabelsResponse parses an HTTP response from a GetIpxeByLabelsWithResponse call
+func ParseGetIpxeByLabelsResponse(rsp *http.Response) (*GetIpxeByLabelsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetConfigByIDResponse{
+	response := &GetIpxeByLabelsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -596,15 +603,15 @@ func ParseGetConfigByIDResponse(rsp *http.Response) (*GetConfigByIDResponse, err
 	return response, nil
 }
 
-// ParseGetIpxeByLabelsResponse parses an HTTP response from a GetIpxeByLabelsWithResponse call
-func ParseGetIpxeByLabelsResponse(rsp *http.Response) (*GetIpxeByLabelsResponse, error) {
+// ParseGetConfigByIDResponse parses an HTTP response from a GetConfigByIDWithResponse call
+func ParseGetConfigByIDResponse(rsp *http.Response) (*GetConfigByIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetIpxeByLabelsResponse{
+	response := &GetConfigByIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

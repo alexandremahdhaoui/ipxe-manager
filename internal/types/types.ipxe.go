@@ -17,7 +17,7 @@ const (
 	Mac        = "mac"         //	MAC address
 	BusType    = "bustype"     // Bus type
 	BusLoc     = "busloc"      // Bus location
-	BusID      = "busid"       // Bus ID
+	BusID      = "busid"       // Bus ExposedConfigID
 	Chip       = "chip"        // Chip type
 	Ssid       = "ssid"        // Wireless SSID
 	ActiveScan = "active-scan" // Actively scan for wireless orks
@@ -91,7 +91,7 @@ type IpxeParams struct {
 	Mac        *hexa   //	MAC address
 	BusType    *string // Bus type
 	BusLoc     *uint32 // Bus location
-	BusID      *hexa   // Bus ID
+	BusID      *hexa   // Bus ExposedConfigID
 	Chip       *string // Chip type
 	Ssid       *string // Wireless SSID
 	ActiveScan *int8   // Actively scan for wireless orks

@@ -37,10 +37,8 @@ spec:
             type: object
           spec:
             properties:
-              profileSelectors:
-                additionalProperties:
-                  type: string
-                type: object
+              profileName:
+                type: string
               subjectSelectors:
                 additionalProperties:
                   items:
@@ -48,7 +46,7 @@ spec:
                   type: array
                 type: object
             required:
-            - profileSelectors
+            - profileName
             - subjectSelectors
             type: object
           status:

@@ -21,7 +21,7 @@ func NewInlineResolver() Resolver {
 
 type inlineResolver struct{}
 
-func (r *inlineResolver) Resolve(ctx context.Context, c types.Content) ([]byte, error) {
+func (r *inlineResolver) Resolve(_ context.Context, c types.Content) ([]byte, error) {
 	return []byte(c.Inline), nil
 }
 

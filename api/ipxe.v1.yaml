@@ -44,7 +44,7 @@ paths:
 
   # ---------------------------------------------------------- /ipxe ---------------------------------------------------
   /ipxe:  # what about required parameters such as Arch/Location...
-          # -> wait location maybe specified by an authoritative process, such as the iPXE server itself.
+          # -> location maybe specified by an authoritative process, such as the iPXE server itself.
           # NB: a lot of information cannot be obtained on pxe boot and require the physical server to pass information,
           #     during the registration phase, to the state of the PSM.
     get:
@@ -70,14 +70,20 @@ paths:
         503:
           $ref: '#/components/responses/503'
 
-  # ---------------------------------------------------------- /config/{configID} --------------------------------------
-  /config/{configID}:
+  # ---------------------------------------------------------- /profile/{profileID}/config/{configID} ------------------
+  /profile/{profileID}/config/{configID}:
     get:
-      summary: Retrieve dynamically a configuration file by ID
+      summary: Retrieve dynamically a configuration file by its profile and config ID
       operationId: getConfigByID
       tags:
         - config
       parameters:
+        - in: path
+          name: profileID
+          description: Unique identifier of the profile.
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
         - in: path
           name: configID
           description: Unique identifier of the config.

@@ -55,13 +55,13 @@ type N500 = Error
 // N503 defines model for 503.
 type N503 = Error
 
-// GetConfigByIDParams defines parameters for GetConfigByID.
-type GetConfigByIDParams struct {
+// GetIpxeByLabelsParams defines parameters for GetIpxeByLabels.
+type GetIpxeByLabelsParams struct {
 	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
 }
 
-// GetIpxeByLabelsParams defines parameters for GetIpxeByLabels.
-type GetIpxeByLabelsParams struct {
+// GetConfigByIDParams defines parameters for GetConfigByID.
+type GetConfigByIDParams struct {
 	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
 }
 
@@ -70,12 +70,12 @@ type ServerInterface interface {
 	// Retrieve an iPXE config to chainload to "/ipxe?labels=values"
 	// (GET /boot.ipxe)
 	GetBootIpxe(ctx echo.Context) error
-	// Retrieve dynamically a configuration file by ID
-	// (GET /config/{configID})
-	GetConfigByID(ctx echo.Context, configID UUID, params GetConfigByIDParams) error
 	// Retrieve an iPXE manifest by labels
 	// (GET /ipxe)
 	GetIpxeByLabels(ctx echo.Context, params GetIpxeByLabelsParams) error
+	// Retrieve dynamically a configuration file by its profile and config ID
+	// (GET /profile/{profileID}/config/{configID})
+	GetConfigByID(ctx echo.Context, profileID UUID, configID UUID, params GetConfigByIDParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -89,31 +89,6 @@ func (w *ServerInterfaceWrapper) GetBootIpxe(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetBootIpxe(ctx)
-	return err
-}
-
-// GetConfigByID converts echo context to params.
-func (w *ServerInterfaceWrapper) GetConfigByID(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "configID" -------------
-	var configID UUID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "configID", ctx.Param("configID"), &configID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter configID: %s", err))
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetConfigByIDParams
-	// ------------- Optional query parameter "labels" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "labels", ctx.QueryParams(), &params.Labels)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter labels: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetConfigByID(ctx, configID, params)
 	return err
 }
 
@@ -132,6 +107,39 @@ func (w *ServerInterfaceWrapper) GetIpxeByLabels(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetIpxeByLabels(ctx, params)
+	return err
+}
+
+// GetConfigByID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetConfigByID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "profileID" -------------
+	var profileID UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "profileID", ctx.Param("profileID"), &profileID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter profileID: %s", err))
+	}
+
+	// ------------- Path parameter "configID" -------------
+	var configID UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configID", ctx.Param("configID"), &configID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter configID: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetConfigByIDParams
+	// ------------- Optional query parameter "labels" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "labels", ctx.QueryParams(), &params.Labels)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter labels: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetConfigByID(ctx, profileID, configID, params)
 	return err
 }
 
@@ -164,39 +172,40 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/boot.ipxe", wrapper.GetBootIpxe)
-	router.GET(baseURL+"/config/:configID", wrapper.GetConfigByID)
 	router.GET(baseURL+"/ipxe", wrapper.GetIpxeByLabels)
+	router.GET(baseURL+"/profile/:profileID/config/:configID", wrapper.GetConfigByID)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"gCaj6mhfVlVV/RMAAP//w9ZMkb0TAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -1,4 +1,4 @@
-package controller
+package reconciler
 
 // ProfileReconciler takes care of maintaining datastructures queried by the REST API.
 type ProfileReconciler struct{}

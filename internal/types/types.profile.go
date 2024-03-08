@@ -16,14 +16,14 @@ type Profile struct {
 
 type Content struct {
 	Name string
-	ID   uuid.UUID
 
 	PostTransformers []TransformerConfig
 	ResolverKind     ResolverKind
 
-	Inline        string
-	ObjectRef     *ObjectRef
-	WebhookConfig *WebhookConfig
+	Inline          string
+	ObjectRef       *ObjectRef
+	WebhookConfig   *WebhookConfig
+	ExposedConfigID uuid.UUID
 }
 
 type ObjectRef struct {
@@ -83,12 +83,10 @@ type TransformerConfig struct {
 // ---------------------------------------------- CONTENT CONSTRUCTORS ---------------------------------------------- //
 
 func NewInlineContent(
-	id uuid.UUID,
 	name, inline string,
 	postTransformers ...TransformerConfig,
 ) Content {
 	return Content{
-		ID:               id,
 		Name:             name,
 		ResolverKind:     InlineResolverKind,
 		PostTransformers: postTransformers,
@@ -97,13 +95,11 @@ func NewInlineContent(
 }
 
 func NewObjectRefContent(
-	id uuid.UUID,
 	name string,
 	objectRef ObjectRef,
 	postTransformers ...TransformerConfig,
 ) Content {
 	return Content{
-		ID:               id,
 		Name:             name,
 		ResolverKind:     ObjectRefResolverKind,
 		PostTransformers: postTransformers,
@@ -112,16 +108,21 @@ func NewObjectRefContent(
 }
 
 func NewWebhookContent(
-	id uuid.UUID,
 	name string,
 	cfg WebhookConfig,
 	postTransformers ...TransformerConfig,
 ) Content {
 	return Content{
-		ID:               id,
 		Name:             name,
 		ResolverKind:     WebhookResolverKind,
 		PostTransformers: postTransformers,
 		WebhookConfig:    &cfg,
+	}
+}
+
+func NewExposedContent(id uuid.UUID, name string) Content {
+	return Content{
+		Name:            name,
+		ExposedConfigID: id,
 	}
 }

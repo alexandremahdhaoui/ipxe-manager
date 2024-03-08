@@ -92,7 +92,7 @@ type (
 		Exposed bool `json:"exposed,omitempty"`
 
 		// PostTransformations is a list of Transformers
-		PostTransformations []Transformer
+		PostTransformations []Transformer `json:"postTransformations"`
 
 		// ObjectRef allow users to specify any reference to a resource holding the desired configuration.
 		// Such resources can be ContentMap, Secrets or any other kind of (custom) resources.
@@ -108,7 +108,7 @@ type (
 
 	Transformer struct {
 		// ButaneToIgnition transforms a butane yaml document into a proper ignition one.
-		ButaneToIgnition bool
+		ButaneToIgnition bool `json:"butaneToIgnition"`
 
 		// Webhook allows users to specify a webhook configuration to a post transformation.
 		Webhook *WebhookConfig `json:"webhook,omitempty"`
