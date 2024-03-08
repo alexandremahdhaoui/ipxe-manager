@@ -20,12 +20,16 @@ type server struct {
 }
 
 func (s *server) GetBootIpxe(c echo.Context) error {
-	// convert into type
 	// call controllers
-	// write response
+	b := s.ipxe.Boostrap()
 
-	//TODO implement me
-	panic("implement me")
+	// write response
+	if _, err := c.Response().Write(b); err != nil {
+		return err //TODO: wrap me
+	}
+	c.Response().Status = 200
+
+	return nil
 }
 
 func (s *server) GetConfigByID(c echo.Context, profileID UUID, configID UUID, _ GetConfigByIDParams) error {
