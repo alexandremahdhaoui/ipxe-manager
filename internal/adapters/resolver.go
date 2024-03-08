@@ -1,8 +1,8 @@
-package adapter
+package adapters
 
 import (
 	"context"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

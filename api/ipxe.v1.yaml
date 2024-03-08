@@ -6,7 +6,7 @@ info:
   # termsOfService: http://example.com/terms/
   contact:
     name: Alexandre Mahdhaoui
-    url: https://github.com/alexandremahdhaoui/ipxe-api
+    url: https://github.com/alexandremahdhaoui/ipxer
     email: mahdhaoui.alexandre@gmail.com
   license:
     name: Apache 2.0

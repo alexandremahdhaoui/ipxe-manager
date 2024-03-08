@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/adapter"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"text/template"
 )
 
@@ -18,7 +18,7 @@ type IPXE interface {
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
-func NewIPXE(profile adapter.Profile, mux ResolveTransformerMux) IPXE {
+func NewIPXE(profile adapters.Profile, mux ResolveTransformerMux) IPXE {
 	return &ipxe{
 		profile: profile,
 		mux:     mux,
@@ -28,7 +28,7 @@ func NewIPXE(profile adapter.Profile, mux ResolveTransformerMux) IPXE {
 // -------------------------------------------------------- IPXE ---------------------------------------------------- //
 
 type ipxe struct {
-	profile adapter.Profile
+	profile adapters.Profile
 	mux     ResolveTransformerMux
 
 	bootstrap []byte

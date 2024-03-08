@@ -2,15 +2,15 @@ package main
 
 import (
 	"errors"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/cmd"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/drivers/server"
+	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
+	"github.com/alexandremahdhaoui/ipxer/internal/drivers/server"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 const (
-	Name = "ipxe-api"
+	Name = "ipxer"
 
 	APIServerPort     = 8080
 	MetricsServerPort = 8081

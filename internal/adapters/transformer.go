@@ -1,8 +1,8 @@
-package adapter
+package adapters
 
 import (
 	"context"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	butaneconfig "github.com/coreos/butane/config"
 	butanecommon "github.com/coreos/butane/config/common"
 )

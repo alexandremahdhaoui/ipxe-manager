@@ -1,6 +1,6 @@
-module github.com/alexandremahdhaoui/ipxe-api
+module github.com/alexandremahdhaoui/ipxer
 
-go 1.21.6
+go 1.22.0
 
 require (
 	github.com/coreos/butane v0.19.0

@@ -1,4 +1,4 @@
-PROJECT := ipxe-api
+PROJECT := ipxer
 
 GO_GEN := go generate
 CONTROLLER_GEN := go run sigs.k8s.io/controller-tools/cmd/controller-gen@latest
@@ -10,6 +10,10 @@ OAPI_CLIENT_PKG := ipxeclient
 OAPI_CLIENT_FILE := ./pkg/ipxeclient/zz_generated.ipxeclient.go
 
 OAPI_CODEGEN := go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@latest
+
+MOCKS_CLEAN := rm -rf ./internal/util/mocks
+MOCKS_INSTALL := go install github.com/vektra/mockery/v2@v2.42.0
+MOCKS_GEN := mockery
 
 .PHONY: generate
 generate: ## Generate REST API server/client code, CRDs and other go generators.
@@ -23,8 +27,13 @@ generate: ## Generate REST API server/client code, CRDs and other go generators.
 	$(CONTROLLER_GEN) paths="./..." \
 		crd:generateEmbeddedObjectMeta=true \
 		output:crd:artifacts:config=charts/$(PROJECT)/templates/crds
+
 	$(CONTROLLER_GEN) paths="./..." \
 		rbac:roleName=$(PROJCET) \
 		webhook \
 		output:rbac:dir=charts/$(PROJECT)/templates/rbac \
 		output:webhook:dir=charts/$(PROJECT)/templates/webhook
+
+	$(MOCKS_CLEAN)
+	$(MOCKS_INSTALL)
+	$(MOCKS_GEN)

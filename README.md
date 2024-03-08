@@ -1,10 +1,10 @@
-# ipxe-api
+# ipxer
 
 ## iPXE booting workflow
 
 | Phase             | Action                          | Description                                                                                                                                       |
 |-------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| `[BOOTSTRAPPING]` | Call `/boot.ipxe`               | Machine starts and DHCP rule 67 specifies your `ipxer` as the next server.                                                                           |
+| `[BOOTSTRAPPING]` | Call `/boot.ipxe`               | Machine starts and DHCP rule 67 specifies your `ipxer` as the next server.                                                                        |
 | `[ASSIGNMENT]`    | Chainload `/ipxe?labels=values` | Machine chain load this endpoint specifying labels for scheduling/assignment.                                                                     |
 | `[BOOT]`          | Run `#ipxe...`                  | Machine runs the retrieved iPXE manifest, optionally containing uuid references to additional configuration files such as ignition or cloud-init. |
 | `[OPTIONAL]`      | Fetch `/config/{uuid}`          | Fetch the optional config identified by a UUID.                                                                                                   |
@@ -45,7 +45,7 @@ status:
 
 ### Assignment
 
-Because the `ipxe-api` should not endorse any `scheduler` or `assigner` role, but serve the purpose of other processes,
+Because the `ipxer` should not endorse any `scheduler` or `assigner` role, but serve the purpose of other processes,
 assignments should be authored by them.
 
 This purpose is served by the `Assignment` CRD.

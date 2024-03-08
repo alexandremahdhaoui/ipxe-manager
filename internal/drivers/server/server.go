@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/controllers"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/controllers"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/labstack/echo/v4"
 )
 

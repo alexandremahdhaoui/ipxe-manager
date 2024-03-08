@@ -1,10 +1,10 @@
-package adapter
+package adapters
 
 import (
 	"context"
 	"errors"
-	"github.com/alexandremahdhaoui/ipxe-api/internal/types"
-	"github.com/alexandremahdhaoui/ipxe-api/pkg/v1alpha1"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"github.com/google/uuid"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 

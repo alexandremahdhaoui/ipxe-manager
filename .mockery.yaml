@@ -1,0 +1,19 @@
+filename: zz_generated.{{ .InterfaceName }}.go
+with-expecter: true
+
+packages:
+  # internal/
+  github.com/alexandremahdhaoui/ipxer/internal/adapters:
+    all: true
+    dir: internal/util/mocks/mockadapters
+    outpkg: mockadapters
+
+  github.com/alexandremahdhaoui/ipxer/internal/controllers:
+    all: true
+    dir: internal/util/mocks/mockcontrollers
+    outpkg: mockcontrollers
+
+  # controller-runtime/
+  sigs.k8s.io/controller-runtime/pkg/client:
+    Client:
+    SubResourceWriter:
