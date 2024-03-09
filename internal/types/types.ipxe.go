@@ -433,7 +433,7 @@ func (b *hexa) UnmarshalText(text []byte) error {
 // ------------------------------------------------ LABEL SELECTORS ------------------------------------------------- //
 
 type IpxeSelectors struct {
-	Uuid      uuid.UUID
+	UUID      uuid.UUID
 	Buildarch string
 }
 
@@ -447,7 +447,7 @@ func NewIpxeSelectors(params IpxeParams) (IpxeSelectors, error) {
 	}
 
 	return IpxeSelectors{
-		Uuid:      *params.Uuid,
+		UUID:      *params.Uuid,
 		Buildarch: *params.Buildarch,
 	}, nil
 }
