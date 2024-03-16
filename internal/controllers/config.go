@@ -35,7 +35,7 @@ func (c *config) GetByID(ctx context.Context, profileID, configID uuid.UUID) ([]
 		return nil, errors.New("TODO") //TODO: err
 	}
 
-	profile, err := c.profile.FindByID(ctx, profileID)
+	profile, err := c.profile.Get(ctx, profileID)
 	if err != nil {
 		return nil, err //TODO: wrap me
 	}

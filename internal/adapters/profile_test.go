@@ -130,7 +130,7 @@ func TestProfile(t *testing.T) {
 				selectors := types.IpxeSelectors{}
 
 				_, err := p.FindBySelectors(ctx, selectors)
-				assert.ErrorIs(t, err, adapters.ErrFindBySelectors)
+				assert.ErrorIs(t, err, adapters.ErrFindAssignmentBySelectors)
 				assert.ErrorIs(t, err, expectedErrList)
 			})
 
@@ -142,7 +142,7 @@ func TestProfile(t *testing.T) {
 				listDefault(t)
 
 				_, err := p.FindBySelectors(ctx, types.IpxeSelectors{})
-				assert.ErrorIs(t, err, adapters.ErrFindBySelectors)
+				assert.ErrorIs(t, err, adapters.ErrFindAssignmentBySelectors)
 				assert.ErrorIs(t, err, expectedErrListDefault)
 			})
 
@@ -152,7 +152,7 @@ func TestProfile(t *testing.T) {
 				listDefault(t)
 
 				_, err := p.FindBySelectors(ctx, types.IpxeSelectors{})
-				assert.ErrorIs(t, err, adapters.ErrFindBySelectors)
+				assert.ErrorIs(t, err, adapters.ErrFindAssignmentBySelectors)
 				assert.ErrorIs(t, err, adapters.ErrProfileNotFound)
 			})
 
@@ -165,7 +165,7 @@ func TestProfile(t *testing.T) {
 				get(t)
 
 				_, err := p.FindBySelectors(ctx, types.IpxeSelectors{})
-				assert.ErrorIs(t, err, adapters.ErrFindBySelectors)
+				assert.ErrorIs(t, err, adapters.ErrFindAssignmentBySelectors)
 				assert.ErrorIs(t, err, expectedErrGet)
 			})
 
@@ -181,8 +181,8 @@ func TestProfile(t *testing.T) {
 						expectedErrGet = errors.New("expected err get")
 						get(t)
 
-						_, err := p.FindByID(ctx, id)
-						assert.ErrorIs(t, err, adapters.ErrProfileFindByID)
+						_, err := p.Get(ctx, id)
+						assert.ErrorIs(t, err, adapters.errProfileGet)
 						assert.ErrorIs(t, err, expectedErrGet)
 					})
 				})
@@ -190,7 +190,7 @@ func TestProfile(t *testing.T) {
 		})
 	})
 
-	t.Run("FindByID", func(t *testing.T) {
+	t.Run("Get", func(t *testing.T) {
 
 	})
 }

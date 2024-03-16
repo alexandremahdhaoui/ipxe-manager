@@ -3,10 +3,17 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"text/template"
+)
+
+var (
+	errFallbackToDefaultAssignment         = errors.New("fallback to default assignment")
+	errSelectingAssignment                 = errors.New("selecting assignment")
+	fmtCannotSelectAssignmentWithSelectors = "cannot select assignment with selectors: uuid=%q & buildarch=%q"
 )
 
 // ---------------------------------------------------- INTERFACES -------------------------------------------------- //
@@ -28,8 +35,9 @@ func NewIPXE(profile adapters.Profile, mux ResolveTransformerMux) IPXE {
 // -------------------------------------------------------- IPXE ---------------------------------------------------- //
 
 type ipxe struct {
-	profile adapters.Profile
-	mux     ResolveTransformerMux
+	assignment adapters.Assignment
+	profile    adapters.Profile
+	mux        ResolveTransformerMux
 
 	bootstrap []byte
 }
@@ -37,7 +45,22 @@ type ipxe struct {
 // -------------------------------------------------------- FindProfileAndRender ------------------------------------ //
 
 func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error) {
-	p, err := svc.profile.FindBySelectors(ctx, selectors)
+	assignment, err := svc.assignment.FindBySelectors(ctx, selectors)
+	if errors.Is(err, adapters.ErrAssignmentNotFound) {
+		// fallback to default profile
+		defaultAssignment, defaultErr := svc.assignment.FindDefault(ctx, selectors.Buildarch)
+		if defaultErr != nil {
+			return nil, errors.Join(defaultErr,
+				fmt.Errorf(fmtCannotSelectAssignmentWithSelectors, selectors.UUID, selectors.Buildarch),
+				errFallbackToDefaultAssignment, errSelectingAssignment)
+		}
+
+		assignment = defaultAssignment
+	} else if err != nil {
+		return nil, err //TODO: wrap
+	}
+
+	p, err := svc.profile.Get(ctx, assignment)
 	if err != nil {
 		return nil, err //TODO: wrap
 	}
@@ -47,12 +70,12 @@ func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeS
 		return nil, err //TODO: wrap
 	}
 
-	output, err := templateIPXEProfile(p.IPXETemplate, data)
+	out, err := templateIPXEProfile(p.IPXETemplate, data)
 	if err != nil {
 		return nil, err //TODO: wrap
 	}
 
-	return output, nil
+	return out, nil
 }
 
 func templateIPXEProfile(ipxeTemplate string, data map[string][]byte) ([]byte, error) {

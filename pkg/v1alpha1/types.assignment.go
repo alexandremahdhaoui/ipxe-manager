@@ -38,6 +38,7 @@ func init() {
 //   labels:
 //     ipxe.cloud.alexandre.mahdhaoui.com/buildarch: arm64
 //     ipxe.cloud.alexandre.mahdhaoui.com/c4a94672-05a1-4eda-a186-b4aa4544b146: ""
+//     ipxe.cloud.alexandre.mahdhaoui.com/3f5f3c39-584e-4c7c-b6ff-137e1aaa7175: ""
 // spec:
 //   # subjectSelectors map[string]string
 //   # the specified labels selects subjects that can iPXE boot the selected profile below.
@@ -46,6 +47,7 @@ func init() {
 //       - c4a94672-05a1-4eda-a186-b4aa4544b146
 //     uuid:
 //       - 47c6da67-7477-4970-aa03-84e48ff4f6ad
+//       - 3f5f3c39-584e-4c7c-b6ff-137e1aaa7175
 //   # profileName string
 //   profileName: 819f1859-a669-410b-adfc-d0bc128e2d7a
 // status:

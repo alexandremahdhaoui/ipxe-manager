@@ -3,32 +3,19 @@ package adapters
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
+
 	"github.com/google/uuid"
 	apierrrors "k8s.io/apimachinery/pkg/api/errors"
 	k8stypes "k8s.io/apimachinery/pkg/types"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
-	// Useful errors
-
 	ErrProfileNotFound = errors.New("profile cannot be found")
 
-	// FindBySelectors
-
-	ErrFindBySelectors                     = errors.New("error finding profile by selectors")
-	errListAssignment                      = errors.New("listing assignment")
-	errFallbackToDefaultAssignment         = errors.New("fallback to default assignment")
-	errSelectingAssignment                 = errors.New("selecting assignment")
-	fmtCannotSelectAssignmentWithSelectors = "cannot select profile assignment with selectors: uuid=%q & buildarch=%q"
-
-	// FindByID
-
-	ErrProfileFindByID = errors.New("error finding profile by id")
+	errProfileGet = errors.New("error getting profile")
 
 	// Conversions
 
@@ -40,11 +27,7 @@ var (
 // --------------------------------------------------- INTERFACES --------------------------------------------------- //
 
 type Profile interface {
-	FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Profile, error)
-	FindByID(ctx context.Context, id uuid.UUID) (types.Profile, error)
-
-	// NB: CRUD operations are done via the reconciler-runtime client.Client; only FindBySelectorsAndRender is
-	// required.
+	Get(ctx context.Context, name string) (types.Profile, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -63,84 +46,23 @@ type profile struct {
 	namespace string
 }
 
-// --------------------------------------------- FindBySelectors ---------------------------------------------------- //
+// --------------------------------------------- Get ----------------------------------------------------------- //
 
-func (p *profile) FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Profile, error) {
-	// list assignment
-	list := new(v1alpha1.AssignmentList)
-	if err := p.client.List(ctx, list, toListOptions(selectors)...); err != nil {
-		return types.Profile{}, errors.Join(err, errListAssignment, ErrFindBySelectors)
-	}
-
-	// Handle
-	if list == nil || len(list.Items) == 0 {
-		selectErr := fmt.Errorf(fmtCannotSelectAssignmentWithSelectors, selectors.UUID.String(), selectors.Buildarch)
-		errChain := errors.Join(selectErr, errFallbackToDefaultAssignment, errSelectingAssignment, ErrFindBySelectors)
-		// Get the list of default matching the buildarch
-		if err := p.client.List(ctx, list, toDefaultListOptions(selectors.Buildarch)...); err != nil {
-			return types.Profile{}, errors.Join(err, errListAssignment, errChain)
-		}
-
-		if list == nil || len(list.Items) == 0 {
-			return types.Profile{}, errors.Join(ErrProfileNotFound, errChain)
-		}
-	}
-
-	profileName := list.Items[0].Spec.ProfileName
+func (p *profile) Get(ctx context.Context, name string) (types.Profile, error) {
 	obj := new(v1alpha1.Profile)
-	key := k8stypes.NamespacedName{Name: profileName, Namespace: p.namespace}
 
-	if err := p.client.Get(ctx, key, obj); err != nil {
-		return types.Profile{}, errors.Join(err, ErrFindBySelectors)
-	}
-
-	out, err := fromV1alpha1.toProfile(obj)
-	if err != nil {
-		return types.Profile{}, errors.Join(err, ErrFindBySelectors)
-	}
-
-	return out, nil
-}
-
-func toListOptions(selectors types.IpxeSelectors) []client.ListOption {
-	return []client.ListOption{
-		client.MatchingLabels{
-			v1alpha1.BuildarchAssignmentLabel: selectors.Buildarch,
-		},
-		client.HasLabels{
-			v1alpha1.UUIDLabelSelector(selectors.UUID),
-		},
-	}
-}
-
-func toDefaultListOptions(buildarch string) []client.ListOption {
-	return []client.ListOption{
-		client.MatchingLabels{
-			v1alpha1.BuildarchAssignmentLabel: buildarch,
-		},
-		client.HasLabels{
-			v1alpha1.DefaultAssignmentLabel,
-		},
-	}
-}
-
-// --------------------------------------------- FindByID ----------------------------------------------------------- //
-
-//TODO(question): change this func, we are trying to find profile by the machine id, not by the profile's ID or name.
-//TODO(question): what if there are multiple profile with a label targeting a machine ID? (use webhook validations to disallow creating 2 profile for the same machine ID?)
-
-func (p *profile) FindByID(ctx context.Context, id uuid.UUID) (types.Profile, error) {
-	obj := new(v1alpha1.Profile)
-	key := k8stypes.NamespacedName{Name: id.String(), Namespace: p.namespace}
-	if err := p.client.Get(ctx, key, obj); apierrrors.IsNotFound(err) {
-		return types.Profile{}, errors.Join(err, ErrProfileNotFound, ErrProfileFindByID)
+	if err := p.client.Get(ctx, k8stypes.NamespacedName{
+		Name:      name,
+		Namespace: p.namespace,
+	}, obj); apierrrors.IsNotFound(err) {
+		return types.Profile{}, errors.Join(err, ErrProfileNotFound, errProfileGet)
 	} else if err != nil {
-		return types.Profile{}, errors.Join(err, ErrProfileFindByID)
+		return types.Profile{}, errors.Join(err, errProfileGet)
 	}
 
 	out, err := fromV1alpha1.toProfile(obj)
 	if err != nil {
-		return types.Profile{}, errors.Join(err, ErrProfileFindByID)
+		return types.Profile{}, errors.Join(err, errProfileGet)
 	}
 
 	return out, nil

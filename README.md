@@ -109,8 +109,7 @@ Indexing will be done in-memory, therefore it's important to design a distribute
 datastructures via partitioning.
 
 Horizontally scaling indexes using partition keys can be easily achieved within the same Kubernetes cluster. If 
-partitioning kubernetes cluster is required, one partition key will never span multiple clusters, therefore ensuring a
-full separation of concern.
+partitioning kubernetes cluster is required, one partition key will never span multiple clusters.
 
 ## Deployment
 

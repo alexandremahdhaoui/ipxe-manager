@@ -25,11 +25,11 @@ func (_m *MockProfile) EXPECT() *MockProfile_Expecter {
 }
 
 // FindByID provides a mock function with given fields: ctx, id
-func (_m *MockProfile) FindByID(ctx context.Context, id uuid.UUID) (types.Profile, error) {
+func (_m *MockProfile) Get(ctx context.Context, id uuid.UUID) (types.Profile, error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindByID")
+		panic("no return value specified for Get")
 	}
 
 	var r0 types.Profile
@@ -52,7 +52,7 @@ func (_m *MockProfile) FindByID(ctx context.Context, id uuid.UUID) (types.Profil
 	return r0, r1
 }
 
-// MockProfile_FindByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindByID'
+// MockProfile_FindByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
 type MockProfile_FindByID_Call struct {
 	*mock.Call
 }
@@ -61,7 +61,7 @@ type MockProfile_FindByID_Call struct {
 //   - ctx context.Context
 //   - id uuid.UUID
 func (_e *MockProfile_Expecter) FindByID(ctx interface{}, id interface{}) *MockProfile_FindByID_Call {
-	return &MockProfile_FindByID_Call{Call: _e.mock.On("FindByID", ctx, id)}
+	return &MockProfile_FindByID_Call{Call: _e.mock.On("Get", ctx, id)}
 }
 
 func (_c *MockProfile_FindByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockProfile_FindByID_Call {
