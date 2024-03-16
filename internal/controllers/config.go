@@ -11,7 +11,7 @@ import (
 // ---------------------------------------------------- INTERFACE --------------------------------------------------- //
 
 type Config interface {
-	GetByID(ctx context.Context, profileID, configID uuid.UUID) ([]byte, error)
+	GetByID(ctx context.Context, profileName string, configID uuid.UUID) ([]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -30,17 +30,17 @@ type config struct {
 	mux     ResolveTransformerMux
 }
 
-func (c *config) GetByID(ctx context.Context, profileID, configID uuid.UUID) ([]byte, error) {
+func (c *config) GetByID(ctx context.Context, profileName string, configID uuid.UUID) ([]byte, error) {
 	if configID == uuid.Nil {
 		return nil, errors.New("TODO") //TODO: err
 	}
 
-	profile, err := c.profile.Get(ctx, profileID)
+	profile, err := c.profile.Get(ctx, profileName)
 	if err != nil {
 		return nil, err //TODO: wrap me
 	}
 
-	//TODO(super ineffective): change me
+	//TODO(ineffective): change this
 	var (
 		content types.Content
 		found   bool

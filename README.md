@@ -87,12 +87,6 @@ information.
 
 **Controllers** maintain datastructures queried by the REST API.
 
-### Scaling Storage and indexing
-
-To horizontally scale our system and ensure top performances at any scale; we will use in-memory indexing for fast
-retrieval of information, and use multiple levels of partitioning to ensure in-memory indexes never exceeds defined
-limits.
-
 #### Storage
 
 The storage backend will be done through dedicated CRDs, and or ConfigMaps. There are no reason to use databases.
@@ -100,16 +94,7 @@ Even though we need to ensure great performances, we do not need such complex sy
 with the Kubernetes API frontend is more than enough.
 
 In case too many resources are created in the same Kubernetes cluster, we might want to create partition keys for the
-kubernetes resources (CRs or CMs). That is using multiple Kubernetes and splitting CRs between them.
-It's a very unlikely scenario, but at least we're ready.
-
-#### Indexing - (partitioning)
-
-Indexing will be done in-memory, therefore it's important to design a distributed system that distributes these in-mem
-datastructures via partitioning.
-
-Horizontally scaling indexes using partition keys can be easily achieved within the same Kubernetes cluster. If 
-partitioning kubernetes cluster is required, one partition key will never span multiple clusters.
+kubernetes resources (CRs or CMs) and distribute them into multiple Kubernetes clusters.
 
 ## Deployment
 

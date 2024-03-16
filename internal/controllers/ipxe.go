@@ -94,6 +94,8 @@ func templateIPXEProfile(ipxeTemplate string, data map[string][]byte) ([]byte, e
 
 // -------------------------------------------------------- Bootstrap ----------------------------------------------- //
 
+// TODO: fix bootstrap. param types should be considered. e.g.: "${mac}" should be displayed as ${mac:hexyp}".
+
 func (svc *ipxe) Boostrap() []byte {
 	// init boostrap
 	if len(svc.bootstrap) == 0 {
