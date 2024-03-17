@@ -20,7 +20,7 @@ paths:
   /boot.ipxe:
     get:
       summary: Retrieve an iPXE config to chainload to "/ipxe?labels=values"
-      operationId: getBootIpxe
+      operationId: getIPXEBootstrap
       tags:
         - ipxe
       responses:

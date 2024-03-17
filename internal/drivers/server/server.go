@@ -2,9 +2,16 @@ package server
 
 import (
 	"context"
+	"errors"
 	"github.com/alexandremahdhaoui/ipxer/internal/controllers"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/labstack/echo/v4"
+)
+
+var (
+	ErrGetIPXEBoostrap = errors.New("getting ipxe bootstrap")
+	ErrGetConfigByID   = errors.New("getting config by id")
+	ErrGetIPXEByLabels = errors.New("getting ipxe by labels")
 )
 
 func New(ipxe controllers.IPXE, config controllers.Config) ServerInterface {
@@ -19,7 +26,7 @@ type server struct {
 	config controllers.Config
 }
 
-func (s *server) GetBootIpxe(c echo.Context) error {
+func (s *server) GetIpxeBootstrap(c echo.Context) error {
 	// call controllers
 	b := s.ipxe.Boostrap()
 

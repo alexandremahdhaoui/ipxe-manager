@@ -135,8 +135,8 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetBootIpxe request
-	GetBootIpxe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetIPXEBootstrap request
+	GetIPXEBootstrap(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetIpxeByLabels request
 	GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -145,8 +145,8 @@ type ClientInterface interface {
 	GetConfigByID(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetBootIpxe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetBootIpxeRequest(c.Server)
+func (c *Client) GetIPXEBootstrap(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetIPXEBootstrapRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -181,8 +181,8 @@ func (c *Client) GetConfigByID(ctx context.Context, profileName string, configID
 	return c.Client.Do(req)
 }
 
-// NewGetBootIpxeRequest generates requests for GetBootIpxe
-func NewGetBootIpxeRequest(server string) (*http.Request, error) {
+// NewGetIPXEBootstrapRequest generates requests for GetIPXEBootstrap
+func NewGetIPXEBootstrapRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -363,8 +363,8 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetBootIpxeWithResponse request
-	GetBootIpxeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBootIpxeResponse, error)
+	// GetIPXEBootstrapWithResponse request
+	GetIPXEBootstrapWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetIPXEBootstrapResponse, error)
 
 	// GetIpxeByLabelsWithResponse request
 	GetIpxeByLabelsWithResponse(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*GetIpxeByLabelsResponse, error)
@@ -373,7 +373,7 @@ type ClientWithResponsesInterface interface {
 	GetConfigByIDWithResponse(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error)
 }
 
-type GetBootIpxeResponse struct {
+type GetIPXEBootstrapResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *N400
@@ -385,7 +385,7 @@ type GetBootIpxeResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetBootIpxeResponse) Status() string {
+func (r GetIPXEBootstrapResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -393,7 +393,7 @@ func (r GetBootIpxeResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetBootIpxeResponse) StatusCode() int {
+func (r GetIPXEBootstrapResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -454,13 +454,13 @@ func (r GetConfigByIDResponse) StatusCode() int {
 	return 0
 }
 
-// GetBootIpxeWithResponse request returning *GetBootIpxeResponse
-func (c *ClientWithResponses) GetBootIpxeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBootIpxeResponse, error) {
-	rsp, err := c.GetBootIpxe(ctx, reqEditors...)
+// GetIPXEBootstrapWithResponse request returning *GetIPXEBootstrapResponse
+func (c *ClientWithResponses) GetIPXEBootstrapWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetIPXEBootstrapResponse, error) {
+	rsp, err := c.GetIPXEBootstrap(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetBootIpxeResponse(rsp)
+	return ParseGetIPXEBootstrapResponse(rsp)
 }
 
 // GetIpxeByLabelsWithResponse request returning *GetIpxeByLabelsResponse
@@ -481,15 +481,15 @@ func (c *ClientWithResponses) GetConfigByIDWithResponse(ctx context.Context, pro
 	return ParseGetConfigByIDResponse(rsp)
 }
 
-// ParseGetBootIpxeResponse parses an HTTP response from a GetBootIpxeWithResponse call
-func ParseGetBootIpxeResponse(rsp *http.Response) (*GetBootIpxeResponse, error) {
+// ParseGetIPXEBootstrapResponse parses an HTTP response from a GetIPXEBootstrapWithResponse call
+func ParseGetIPXEBootstrapResponse(rsp *http.Response) (*GetIPXEBootstrapResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetBootIpxeResponse{
+	response := &GetIPXEBootstrapResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
