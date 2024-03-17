@@ -2,9 +2,14 @@ package adapters
 
 import (
 	"context"
+	"errors"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	butaneconfig "github.com/coreos/butane/config"
 	butanecommon "github.com/coreos/butane/config/common"
+)
+
+var (
+	ErrTransformerTransform = errors.New("transforming content")
 )
 
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
@@ -28,7 +33,7 @@ func (t *butaneTransformer) Transform(
 ) ([]byte, error) {
 	b, _, err := butaneconfig.TranslateBytes(content, butanecommon.TranslateBytesOptions{Raw: true})
 	if err != nil {
-		return nil, err //TODO: wrap me
+		return nil, errors.Join(err, ErrTransformerTransform)
 	}
 
 	return b, nil

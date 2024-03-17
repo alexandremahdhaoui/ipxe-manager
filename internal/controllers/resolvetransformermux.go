@@ -7,6 +7,13 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
 
+var (
+	ErrResolveAndTransformBatch = errors.New("batch resolving and transforming contents")
+
+	errResolverDoesNotExist    = errors.New("resolver does not exist")
+	errTransformerDoesNotExist = errors.New("transformer does not exist")
+)
+
 // ---------------------------------------------------- INTERFACES -------------------------------------------------- //
 
 type ResolveTransformerMux interface {
@@ -41,18 +48,18 @@ func (r *resolveTransformerMux) ResolveAndTransformBatch(
 	for _, c := range batch {
 		resolver, ok := r.resolvers[c.ResolverKind]
 		if !ok {
-			return nil, errors.New("TODO") //TODO: err
+			return nil, errors.Join(errResolverDoesNotExist, ErrResolveAndTransformBatch)
 		}
 
 		result, err := resolver.Resolve(ctx, c)
 		if err != nil {
-			return nil, err //TODO: wrap
+			return nil, errors.Join(err, ErrResolveAndTransformBatch)
 		}
 
 		for _, t := range c.PostTransformers {
 			transformer, ok := r.transformers[t.Kind]
 			if !ok {
-				return nil, errors.New("TODO") //TODO: err
+				return nil, errors.Join(errTransformerDoesNotExist, ErrResolveAndTransformBatch)
 			}
 
 			result, err = transformer.Transform(ctx, result, t)

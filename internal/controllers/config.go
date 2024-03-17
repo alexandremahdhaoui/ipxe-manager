@@ -8,6 +8,13 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	ErrConfigNotFound = errors.New("config cannot be found")
+	ErrConfigGetById  = errors.New("getting config by id")
+
+	errUUIDCannotBeNil = errors.New("uuid cannot be nil")
+)
+
 // ---------------------------------------------------- INTERFACE --------------------------------------------------- //
 
 type Config interface {
@@ -32,15 +39,14 @@ type config struct {
 
 func (c *config) GetByID(ctx context.Context, profileName string, configID uuid.UUID) ([]byte, error) {
 	if configID == uuid.Nil {
-		return nil, errors.New("TODO") //TODO: err
+		return nil, errors.Join(errUUIDCannotBeNil, ErrConfigGetById)
 	}
 
 	profile, err := c.profile.Get(ctx, profileName)
 	if err != nil {
-		return nil, err //TODO: wrap me
+		return nil, errors.Join(err, ErrConfigGetById)
 	}
 
-	//TODO(ineffective): change this
 	var (
 		content types.Content
 		found   bool
@@ -54,12 +60,12 @@ func (c *config) GetByID(ctx context.Context, profileName string, configID uuid.
 	}
 
 	if !found {
-		return nil, errors.New("TODO") //TODO: err
+		return nil, errors.Join(ErrConfigNotFound, ErrConfigGetById)
 	}
 
 	res, err := c.mux.ResolveAndTransformBatch(ctx, []types.Content{content})
 	if err != nil {
-		return nil, err //TODO: wrap me
+		return nil, errors.Join(err, ErrConfigGetById)
 	}
 
 	return res[content.Name], nil
