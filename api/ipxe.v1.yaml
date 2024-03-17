@@ -70,19 +70,19 @@ paths:
           $ref: '#/components/responses/503'
 
   # ---------------------------------------------------------- /profile/{profileID}/config/{configID} ------------------
-  /profile/{profileID}/config/{configID}:
+  /profile/{profileName}/config/{configID}:
     get:
-      summary: Retrieve dynamically a configuration file by its profile and config ID
+      summary: Retrieve dynamically a configuration file by its profile name and config ID.
       operationId: getConfigByID
       tags:
         - config
       parameters:
         - in: path
-          name: profileID
+          name: profileName
           description: Unique identifier of the profile.
           required: true
           schema:
-            $ref: '#/components/schemas/UUID'
+            type: string
         - in: path
           name: configID
           description: Unique identifier of the config.

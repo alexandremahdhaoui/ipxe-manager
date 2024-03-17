@@ -32,9 +32,9 @@ func (s *server) GetBootIpxe(c echo.Context) error {
 	return nil
 }
 
-func (s *server) GetConfigByID(c echo.Context, profileID UUID, configID UUID, _ GetConfigByIDParams) error {
+func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID, _ GetConfigByIDParams) error {
 	// call controllers
-	b, err := s.config.GetByID(context.Background(), profileID, configID)
+	b, err := s.config.GetByID(context.Background(), profileName, configID)
 	if err != nil {
 		return err //TODO: wrap me
 	}

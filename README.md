@@ -1,5 +1,7 @@
 # ipxer
 
+`ipxer` is a kubernetes based iPXE server.
+
 ## iPXE booting workflow
 
 | Phase             | Action                          | Description                                                                                                                                       |
@@ -100,6 +102,11 @@ kubernetes resources (CRs or CMs) and distribute them into multiple Kubernetes c
 
 Replicas of the REST API queries the datastructures maintained by the controllers. These communications are performed
 via mTLS. Hence, cert-manager is required for a production deployment.
+
+## Next features
+
+- MTLS auth (ipxer side): https://ipxe.org/crypto
+- Trust (client side): https://ipxe.org/cmd/imgverify
 
 ## Acknowledgement
 

@@ -23,9 +23,9 @@ func (_m *MockConfig) EXPECT() *MockConfig_Expecter {
 	return &MockConfig_Expecter{mock: &_m.Mock}
 }
 
-// GetByID provides a mock function with given fields: ctx, profileID, configID
-func (_m *MockConfig) GetByID(ctx context.Context, profileID uuid.UUID, configID uuid.UUID) ([]byte, error) {
-	ret := _m.Called(ctx, profileID, configID)
+// GetByID provides a mock function with given fields: ctx, profileName, configID
+func (_m *MockConfig) GetByID(ctx context.Context, profileName string, configID uuid.UUID) ([]byte, error) {
+	ret := _m.Called(ctx, profileName, configID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByID")
@@ -33,19 +33,19 @@ func (_m *MockConfig) GetByID(ctx context.Context, profileID uuid.UUID, configID
 
 	var r0 []byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) ([]byte, error)); ok {
-		return rf(ctx, profileID, configID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uuid.UUID) ([]byte, error)); ok {
+		return rf(ctx, profileName, configID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) []byte); ok {
-		r0 = rf(ctx, profileID, configID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uuid.UUID) []byte); ok {
+		r0 = rf(ctx, profileName, configID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
-		r1 = rf(ctx, profileID, configID)
+	if rf, ok := ret.Get(1).(func(context.Context, string, uuid.UUID) error); ok {
+		r1 = rf(ctx, profileName, configID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -60,15 +60,15 @@ type MockConfig_GetByID_Call struct {
 
 // GetByID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - profileID uuid.UUID
+//   - profileName string
 //   - configID uuid.UUID
-func (_e *MockConfig_Expecter) GetByID(ctx interface{}, profileID interface{}, configID interface{}) *MockConfig_GetByID_Call {
-	return &MockConfig_GetByID_Call{Call: _e.mock.On("GetByID", ctx, profileID, configID)}
+func (_e *MockConfig_Expecter) GetByID(ctx interface{}, profileName interface{}, configID interface{}) *MockConfig_GetByID_Call {
+	return &MockConfig_GetByID_Call{Call: _e.mock.On("GetByID", ctx, profileName, configID)}
 }
 
-func (_c *MockConfig_GetByID_Call) Run(run func(ctx context.Context, profileID uuid.UUID, configID uuid.UUID)) *MockConfig_GetByID_Call {
+func (_c *MockConfig_GetByID_Call) Run(run func(ctx context.Context, profileName string, configID uuid.UUID)) *MockConfig_GetByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+		run(args[0].(context.Context), args[1].(string), args[2].(uuid.UUID))
 	})
 	return _c
 }
@@ -78,7 +78,7 @@ func (_c *MockConfig_GetByID_Call) Return(_a0 []byte, _a1 error) *MockConfig_Get
 	return _c
 }
 
-func (_c *MockConfig_GetByID_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) ([]byte, error)) *MockConfig_GetByID_Call {
+func (_c *MockConfig_GetByID_Call) RunAndReturn(run func(context.Context, string, uuid.UUID) ([]byte, error)) *MockConfig_GetByID_Call {
 	_c.Call.Return(run)
 	return _c
 }

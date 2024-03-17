@@ -142,7 +142,7 @@ type ClientInterface interface {
 	GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetConfigByID request
-	GetConfigByID(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetConfigByID(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetBootIpxe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -169,8 +169,8 @@ func (c *Client) GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsPar
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetConfigByID(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetConfigByIDRequest(c.Server, profileID, configID, params)
+func (c *Client) GetConfigByID(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetConfigByIDRequest(c.Server, profileName, configID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -258,12 +258,12 @@ func NewGetIpxeByLabelsRequest(server string, params *GetIpxeByLabelsParams) (*h
 }
 
 // NewGetConfigByIDRequest generates requests for GetConfigByID
-func NewGetConfigByIDRequest(server string, profileID UUID, configID UUID, params *GetConfigByIDParams) (*http.Request, error) {
+func NewGetConfigByIDRequest(server string, profileName string, configID UUID, params *GetConfigByIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "profileID", runtime.ParamLocationPath, profileID)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "profileName", runtime.ParamLocationPath, profileName)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +370,7 @@ type ClientWithResponsesInterface interface {
 	GetIpxeByLabelsWithResponse(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*GetIpxeByLabelsResponse, error)
 
 	// GetConfigByIDWithResponse request
-	GetConfigByIDWithResponse(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error)
+	GetConfigByIDWithResponse(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error)
 }
 
 type GetBootIpxeResponse struct {
@@ -473,8 +473,8 @@ func (c *ClientWithResponses) GetIpxeByLabelsWithResponse(ctx context.Context, p
 }
 
 // GetConfigByIDWithResponse request returning *GetConfigByIDResponse
-func (c *ClientWithResponses) GetConfigByIDWithResponse(ctx context.Context, profileID UUID, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error) {
-	rsp, err := c.GetConfigByID(ctx, profileID, configID, params, reqEditors...)
+func (c *ClientWithResponses) GetConfigByIDWithResponse(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error) {
+	rsp, err := c.GetConfigByID(ctx, profileName, configID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
