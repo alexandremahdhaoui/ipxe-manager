@@ -41,11 +41,13 @@ func (t *butaneTransformer) Transform(
 
 // ---------------------------------------------- WEBHOOK TRANSFORMER ----------------------------------------------- //
 
-func NewWebhookTransformer() Transformer {
-	return &webhookTransformer{}
+func NewWebhookTransformer(resolver WebhookResolver) Transformer {
+	return &webhookTransformer{webhook: resolver}
 }
 
-type webhookTransformer struct{}
+type webhookTransformer struct {
+	webhook WebhookResolver
+}
 
 func (t *webhookTransformer) Transform(
 	ctx context.Context,

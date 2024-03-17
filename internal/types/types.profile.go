@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/google/uuid"
-	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/jsonpath"
 )
 
 // ---------------------------------------------------- PROFILE ----------------------------------------------------- //
@@ -27,10 +27,14 @@ type Content struct {
 }
 
 type ObjectRef struct {
-	Ref corev1.TypedObjectReference
+	Group     string
+	Version   string
+	Resource  string
+	Namespace string
+	Name      string
 
-	// Path to the desired content in the resource. E.g. `.data."private.key"`
-	Path string
+	// JSONPath is optional for types that extends this struct.
+	JSONPath *jsonpath.JSONPath
 }
 
 type WebhookConfig struct {
@@ -41,18 +45,18 @@ type WebhookConfig struct {
 }
 
 type BasicAuthObjectRef struct {
-	Ref corev1.TypedObjectReference
+	ObjectRef
 
-	UsernamePath string
-	PasswordPath string
+	UsernameJSONPath *jsonpath.JSONPath
+	PasswordJSONPath *jsonpath.JSONPath
 }
 
 type MTLSObjectRef struct {
-	Ref corev1.TypedObjectReference
+	ObjectRef
 
-	ClientKeyPath  string
-	ClientCertPath string
-	CaBundlePath   *string
+	ClientKeyJSONPath  *jsonpath.JSONPath
+	ClientCertJSONPath *jsonpath.JSONPath
+	CaBundleJSONPath   *jsonpath.JSONPath
 }
 
 // --------------------------------------------------- RESOLVER ----------------------------------------------------- //

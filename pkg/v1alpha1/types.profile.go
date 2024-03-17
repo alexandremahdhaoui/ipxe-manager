@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 ) //nolint:depguard
 
@@ -115,10 +114,14 @@ type (
 	}
 
 	ObjectRef struct {
-		corev1.TypedObjectReference `json:",inline"`
+		GroupVersionResource `json:",inline"`
 
-		// Path to the desired content in the resource. E.g. `.data."private.key"`
-		Path string `json:"path"`
+		// The name of the object
+		Name string
+
+		// JSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'private.key'`
+		// TODO: Validate this jsonpath in the webhook.
+		JSONPath string `json:"jsonpath"`
 	}
 
 	WebhookConfig struct {
@@ -129,17 +132,41 @@ type (
 	}
 
 	BasicAuthObjectRef struct {
-		corev1.TypedObjectReference `json:",inline"`
+		GroupVersionResource `json:",inline"`
 
-		UsernamePath string `json:"usernamePath"`
-		PasswordPath string `json:"passwordPath"`
+		// UsernameJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.username`
+		// TODO: Validate this jsonpath in the webhook.
+		UsernameJSONPath string `json:"usernameJSONPath"`
+
+		// PasswordJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.password`
+		// TODO: Validate this jsonpath in the webhook.
+		PasswordJSONPath string `json:"passwordJSONPath"`
 	}
 
 	MTLSObjectRef struct {
-		corev1.TypedObjectReference `json:",inline"`
+		GroupVersionResource `json:",inline"`
 
-		ClientKeyPath  string  `json:"clientKeyPath"`
-		ClientCertPath string  `json:"clientCertPath"`
-		CaBundlePath   *string `json:"caBundlePath,omitempty"`
+		// ClientKeyJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.key'`
+		// TODO: Validate this jsonpath in the webhook.
+		ClientKeyJSONPath string `json:"clientKeyJSONPath"`
+
+		// ClientCertJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.crt'`
+		// TODO: Validate this jsonpath in the webhook.
+		ClientCertJSONPath string `json:"clientCertJSONPath"`
+
+		// CaBundleJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'ca-bundle.pem'`
+		// TODO: Validate this jsonpath in the webhook.
+		CaBundleJSONPath string `json:"caBundleJSONPath,omitempty"`
 	}
 )
+
+// GroupVersionResource unambiguously identifies a resource. It doesn't anonymously include GroupVersion to avoid
+// automatic coercion. It doesn't use a GroupVersion to avoid custom marshalling.
+type GroupVersionResource struct {
+	// Group is the group of the apiVersion.
+	Group string `json:"group"`
+	// Version is the version of the apiVersion.
+	Version string `json:"version"`
+	// Resource is the kind of the resource.
+	Resource string `json:"resource"`
+}
