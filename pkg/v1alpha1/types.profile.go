@@ -114,10 +114,7 @@ type (
 	}
 
 	ObjectRef struct {
-		GroupVersionResource `json:",inline"`
-
-		// The name of the object
-		Name string
+		ResourceRef `json:",inline"`
 
 		// JSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'private.key'`
 		// TODO: Validate this jsonpath in the webhook.
@@ -132,7 +129,7 @@ type (
 	}
 
 	BasicAuthObjectRef struct {
-		GroupVersionResource `json:",inline"`
+		ResourceRef `json:",inline"`
 
 		// UsernameJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.username`
 		// TODO: Validate this jsonpath in the webhook.
@@ -144,7 +141,7 @@ type (
 	}
 
 	MTLSObjectRef struct {
-		GroupVersionResource `json:",inline"`
+		ResourceRef `json:",inline"`
 
 		// ClientKeyJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.key'`
 		// TODO: Validate this jsonpath in the webhook.
@@ -160,13 +157,17 @@ type (
 	}
 )
 
-// GroupVersionResource unambiguously identifies a resource. It doesn't anonymously include GroupVersion to avoid
+// ResourceRef unambiguously identifies a resource. It doesn't anonymously include GroupVersion to avoid
 // automatic coercion. It doesn't use a GroupVersion to avoid custom marshalling.
-type GroupVersionResource struct {
+type ResourceRef struct {
 	// Group is the group of the apiVersion.
 	Group string `json:"group"`
 	// Version is the version of the apiVersion.
 	Version string `json:"version"`
 	// Resource is the kind of the resource.
 	Resource string `json:"resource"`
+	// Namespace is the namespace of the resource
+	Namespace string `json:"namespace"`
+	// Name is the name of the resource.
+	Name string `json:"name"`
 }
