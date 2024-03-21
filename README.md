@@ -1,7 +1,11 @@
 # ipxer
 
-
 `ipxer` is a kubernetes based iPXE server.
+
+## TODO
+
+- implement OAPI spec for webhook resolver and transformers.
+- generate client & server packages.
 
 ## iPXE booting workflow
 

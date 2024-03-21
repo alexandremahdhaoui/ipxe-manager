@@ -62,32 +62,33 @@ spec:
                         ObjectRef allow users to specify any reference to a resource holding the desired configuration.
                         Such resources can be ContentMap, Secrets or any other kind of (custom) resources.
                       properties:
-                        apiGroup:
-                          description: |-
-                            APIGroup is the group for the resource being referenced.
-                            If APIGroup is not specified, the specified Kind must be in the core API group.
-                            For any other third-party types, APIGroup is required.
+                        group:
+                          description: Group is the group of the apiVersion.
                           type: string
-                        kind:
-                          description: Kind is the type of resource being referenced
+                        jsonpath:
+                          description: |-
+                            JSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'private.key'`
+                            TODO: Validate this jsonpath in the webhook.
                           type: string
                         name:
-                          description: Name is the name of resource being referenced
+                          description: Name is the name of the resource.
                           type: string
                         namespace:
-                          description: |-
-                            Namespace is the namespace of resource being referenced
-                            Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details.
-                            (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                          description: Namespace is the namespace of the resource
                           type: string
-                        path:
-                          description: Path to the desired content in the resource.
-                            E.g. `.data."private.key"`
+                        resource:
+                          description: Resource is the kind of the resource.
+                          type: string
+                        version:
+                          description: Version is the version of the apiVersion.
                           type: string
                       required:
-                      - kind
+                      - group
+                      - jsonpath
                       - name
-                      - path
+                      - namespace
+                      - resource
+                      - version
                       type: object
                     postTransformations:
                       description: PostTransformations is a list of Transformers
@@ -103,69 +104,82 @@ spec:
                             properties:
                               basicAuthRef:
                                 properties:
-                                  apiGroup:
-                                    description: |-
-                                      APIGroup is the group for the resource being referenced.
-                                      If APIGroup is not specified, the specified Kind must be in the core API group.
-                                      For any other third-party types, APIGroup is required.
-                                    type: string
-                                  kind:
-                                    description: Kind is the type of resource being
-                                      referenced
+                                  group:
+                                    description: Group is the group of the apiVersion.
                                     type: string
                                   name:
-                                    description: Name is the name of resource being
-                                      referenced
+                                    description: Name is the name of the resource.
                                     type: string
                                   namespace:
+                                    description: Namespace is the namespace of the
+                                      resource
+                                    type: string
+                                  passwordJSONPath:
                                     description: |-
-                                      Namespace is the namespace of resource being referenced
-                                      Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details.
-                                      (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                                      PasswordJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.password`
+                                      TODO: Validate this jsonpath in the webhook.
                                     type: string
-                                  passwordPath:
+                                  resource:
+                                    description: Resource is the kind of the resource.
                                     type: string
-                                  usernamePath:
+                                  usernameJSONPath:
+                                    description: |-
+                                      UsernameJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.username`
+                                      TODO: Validate this jsonpath in the webhook.
+                                    type: string
+                                  version:
+                                    description: Version is the version of the apiVersion.
                                     type: string
                                 required:
-                                - kind
+                                - group
                                 - name
-                                - passwordPath
-                                - usernamePath
+                                - namespace
+                                - passwordJSONPath
+                                - resource
+                                - usernameJSONPath
+                                - version
                                 type: object
                               mTLSRef:
                                 properties:
-                                  apiGroup:
+                                  caBundleJSONPath:
                                     description: |-
-                                      APIGroup is the group for the resource being referenced.
-                                      If APIGroup is not specified, the specified Kind must be in the core API group.
-                                      For any other third-party types, APIGroup is required.
+                                      CaBundleJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'ca-bundle.pem'`
+                                      TODO: Validate this jsonpath in the webhook.
                                     type: string
-                                  caBundlePath:
+                                  clientCertJSONPath:
+                                    description: |-
+                                      ClientCertJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.crt'`
+                                      TODO: Validate this jsonpath in the webhook.
                                     type: string
-                                  clientCertPath:
+                                  clientKeyJSONPath:
+                                    description: |-
+                                      ClientKeyJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.key'`
+                                      TODO: Validate this jsonpath in the webhook.
                                     type: string
-                                  clientKeyPath:
-                                    type: string
-                                  kind:
-                                    description: Kind is the type of resource being
-                                      referenced
+                                  group:
+                                    description: Group is the group of the apiVersion.
                                     type: string
                                   name:
-                                    description: Name is the name of resource being
-                                      referenced
+                                    description: Name is the name of the resource.
                                     type: string
                                   namespace:
-                                    description: |-
-                                      Namespace is the namespace of resource being referenced
-                                      Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details.
-                                      (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                                    description: Namespace is the namespace of the
+                                      resource
+                                    type: string
+                                  resource:
+                                    description: Resource is the kind of the resource.
+                                    type: string
+                                  version:
+                                    description: Version is the version of the apiVersion.
                                     type: string
                                 required:
-                                - clientCertPath
-                                - clientKeyPath
-                                - kind
+                                - clientCertJSONPath
+                                - clientKeyJSONPath
+                                - group
                                 - name
+                                - namespace
+                                - resource
+                                - version
                                 type: object
                               url:
                                 type: string
@@ -183,65 +197,80 @@ spec:
                       properties:
                         basicAuthRef:
                           properties:
-                            apiGroup:
-                              description: |-
-                                APIGroup is the group for the resource being referenced.
-                                If APIGroup is not specified, the specified Kind must be in the core API group.
-                                For any other third-party types, APIGroup is required.
-                              type: string
-                            kind:
-                              description: Kind is the type of resource being referenced
+                            group:
+                              description: Group is the group of the apiVersion.
                               type: string
                             name:
-                              description: Name is the name of resource being referenced
+                              description: Name is the name of the resource.
                               type: string
                             namespace:
+                              description: Namespace is the namespace of the resource
+                              type: string
+                            passwordJSONPath:
                               description: |-
-                                Namespace is the namespace of resource being referenced
-                                Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details.
-                                (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                                PasswordJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.password`
+                                TODO: Validate this jsonpath in the webhook.
                               type: string
-                            passwordPath:
+                            resource:
+                              description: Resource is the kind of the resource.
                               type: string
-                            usernamePath:
+                            usernameJSONPath:
+                              description: |-
+                                UsernameJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.username`
+                                TODO: Validate this jsonpath in the webhook.
+                              type: string
+                            version:
+                              description: Version is the version of the apiVersion.
                               type: string
                           required:
-                          - kind
+                          - group
                           - name
-                          - passwordPath
-                          - usernamePath
+                          - namespace
+                          - passwordJSONPath
+                          - resource
+                          - usernameJSONPath
+                          - version
                           type: object
                         mTLSRef:
                           properties:
-                            apiGroup:
+                            caBundleJSONPath:
                               description: |-
-                                APIGroup is the group for the resource being referenced.
-                                If APIGroup is not specified, the specified Kind must be in the core API group.
-                                For any other third-party types, APIGroup is required.
+                                CaBundleJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'ca-bundle.pem'`
+                                TODO: Validate this jsonpath in the webhook.
                               type: string
-                            caBundlePath:
+                            clientCertJSONPath:
+                              description: |-
+                                ClientCertJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.crt'`
+                                TODO: Validate this jsonpath in the webhook.
                               type: string
-                            clientCertPath:
+                            clientKeyJSONPath:
+                              description: |-
+                                ClientKeyJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.key'`
+                                TODO: Validate this jsonpath in the webhook.
                               type: string
-                            clientKeyPath:
-                              type: string
-                            kind:
-                              description: Kind is the type of resource being referenced
+                            group:
+                              description: Group is the group of the apiVersion.
                               type: string
                             name:
-                              description: Name is the name of resource being referenced
+                              description: Name is the name of the resource.
                               type: string
                             namespace:
-                              description: |-
-                                Namespace is the namespace of resource being referenced
-                                Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details.
-                                (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                              description: Namespace is the namespace of the resource
+                              type: string
+                            resource:
+                              description: Resource is the kind of the resource.
+                              type: string
+                            version:
+                              description: Version is the version of the apiVersion.
                               type: string
                           required:
-                          - clientCertPath
-                          - clientKeyPath
-                          - kind
+                          - clientCertJSONPath
+                          - clientKeyJSONPath
+                          - group
                           - name
+                          - namespace
+                          - resource
+                          - version
                           type: object
                         url:
                           type: string

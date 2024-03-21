@@ -1,0 +1,170 @@
+openapi: 3.0.3
+
+info:
+  title: IPXER Webhook Transformer
+  description: This is the API specification for implementing a Webhook Transformer.
+  contact:
+    name: Alexandre Mahdhaoui
+    url: https://github.com/alexandremahdhaoui/ipxer
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+
+servers: []
+
+# ------------------------------------------------------------ PATHS ---------------------------------------------------
+paths:
+
+  # ---------------------------------------------------------- /resolve ----------------------------------------------
+  /transform/{anyPath}:
+    post:
+      summary: Perform a transformation
+      operationId: resolve
+      parameters:
+        - $ref: '#/components/parameters/anyPath'
+      tags:
+        - transform
+      requestBody:
+        description: The transform request body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/TransformResponse'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        503:
+          $ref: '#/components/responses/503'
+
+# ------------------------------------------------------------ API -----------------------------------------------------
+components:
+
+  # ---------------------------------------------------------- PARAMETERS ----------------------------------------------
+  parameters:
+
+    # -------------------------------------------------------- anyPath -------------------------------------------------
+    anyPath:
+      in: path
+      name: anyPath
+      description: Unique identifier of the profile.
+      required: true
+      schema:
+        type: string
+        pattern: '^[A-Za-z][A-Za-z0-9]*$' # TODO: regex
+
+  # ---------------------------------------------------------- SCHEMAS -------------------------------------------------
+  schemas:
+
+    #--------------------------------------------------------- TRANSFORM INPUT -----------------------------------------
+    TransformRequest:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+
+    #--------------------------------------------------------- ERROR ---------------------------------------------------
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      required:
+        - code
+        - message
+
+  # ---------------------------------------------------------- RESPONSES -----------------------------------------------
+  responses:
+
+    # -------------------------------------------------------- resolveResponse -----------------------------------------
+    TransformResponse:
+      description: the expected transform response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: string
+
+
+    # -------------------------------------------------------- 400 -----------------------------------------------------
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 400
+            message: Bad request, please check your input
+
+    # -------------------------------------------------------- 401 -----------------------------------------------------
+    401:
+      description: Authorization information is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 401
+            message: Unauthorized, please provide valid authentication inputs
+
+    # -------------------------------------------------------- 403 -----------------------------------------------------
+    403:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 403
+            message: Forbidden, you do not have permission to access this resource
+
+    # -------------------------------------------------------- 404 -----------------------------------------------------
+    404:
+      description: A specified resource is not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 404
+            message: The requested resource was not found
+
+    # -------------------------------------------------------- 500 -----------------------------------------------------
+    500:
+      description: Unexpected internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 500
+            message: Internal server error, please try again later
+
+    # -------------------------------------------------------- 503 -----------------------------------------------------
+    503:
+      description: Service unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 503
+            message: Service unavailable, please try again later
