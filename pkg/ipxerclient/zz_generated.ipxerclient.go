@@ -16,6 +16,30 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for BuildarchSelector.
+const (
+	BuildarchSelectorArm32 BuildarchSelector = "arm32"
+	BuildarchSelectorArm64 BuildarchSelector = "arm64"
+	BuildarchSelectorI386  BuildarchSelector = "i386"
+	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
+)
+
+// Defines values for GetIpxeBySelectorsParamsBuildarch.
+const (
+	GetIpxeBySelectorsParamsBuildarchArm32 GetIpxeBySelectorsParamsBuildarch = "arm32"
+	GetIpxeBySelectorsParamsBuildarchArm64 GetIpxeBySelectorsParamsBuildarch = "arm64"
+	GetIpxeBySelectorsParamsBuildarchI386  GetIpxeBySelectorsParamsBuildarch = "i386"
+	GetIpxeBySelectorsParamsBuildarchX8664 GetIpxeBySelectorsParamsBuildarch = "x86_64"
+)
+
+// Defines values for GetConfigByIDParamsBuildarch.
+const (
+	Arm32 GetConfigByIDParamsBuildarch = "arm32"
+	Arm64 GetConfigByIDParamsBuildarch = "arm64"
+	I386  GetConfigByIDParamsBuildarch = "i386"
+	X8664 GetConfigByIDParamsBuildarch = "x86_64"
+)
+
 // Error defines model for Error.
 type Error struct {
 	Code    int32  `json:"code"`
@@ -31,8 +55,11 @@ type Config = string
 // IPXE An iPXE manifest.
 type IPXE = string
 
-// Labels defines model for labels.
-type Labels = string
+// BuildarchSelector defines model for buildarchSelector.
+type BuildarchSelector string
+
+// UuidSelector defines model for uuidSelector.
+type UuidSelector = UUID
 
 // N400 defines model for 400.
 type N400 = Error
@@ -52,15 +79,23 @@ type N500 = Error
 // N503 defines model for 503.
 type N503 = Error
 
-// GetIpxeByLabelsParams defines parameters for GetIpxeByLabels.
-type GetIpxeByLabelsParams struct {
-	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
+// GetIpxeBySelectorsParams defines parameters for GetIpxeBySelectors.
+type GetIpxeBySelectorsParams struct {
+	Uuid      UuidSelector                      `form:"uuid" json:"uuid"`
+	Buildarch GetIpxeBySelectorsParamsBuildarch `form:"buildarch" json:"buildarch"`
 }
+
+// GetIpxeBySelectorsParamsBuildarch defines parameters for GetIpxeBySelectors.
+type GetIpxeBySelectorsParamsBuildarch string
 
 // GetConfigByIDParams defines parameters for GetConfigByID.
 type GetConfigByIDParams struct {
-	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
+	Uuid      UuidSelector                 `form:"uuid" json:"uuid"`
+	Buildarch GetConfigByIDParamsBuildarch `form:"buildarch" json:"buildarch"`
 }
+
+// GetConfigByIDParamsBuildarch defines parameters for GetConfigByID.
+type GetConfigByIDParamsBuildarch string
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -138,8 +173,8 @@ type ClientInterface interface {
 	// GetIPXEBootstrap request
 	GetIPXEBootstrap(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetIpxeByLabels request
-	GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetIpxeBySelectors request
+	GetIpxeBySelectors(ctx context.Context, params *GetIpxeBySelectorsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetConfigByID request
 	GetConfigByID(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -157,8 +192,8 @@ func (c *Client) GetIPXEBootstrap(ctx context.Context, reqEditors ...RequestEdit
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetIpxeByLabels(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetIpxeByLabelsRequest(c.Server, params)
+func (c *Client) GetIpxeBySelectors(ctx context.Context, params *GetIpxeBySelectorsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetIpxeBySelectorsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -208,8 +243,8 @@ func NewGetIPXEBootstrapRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetIpxeByLabelsRequest generates requests for GetIpxeByLabels
-func NewGetIpxeByLabelsRequest(server string, params *GetIpxeByLabelsParams) (*http.Request, error) {
+// NewGetIpxeBySelectorsRequest generates requests for GetIpxeBySelectors
+func NewGetIpxeBySelectorsRequest(server string, params *GetIpxeBySelectorsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -230,20 +265,28 @@ func NewGetIpxeByLabelsRequest(server string, params *GetIpxeByLabelsParams) (*h
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.Labels != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "labels", runtime.ParamLocationQuery, *params.Labels); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "uuid", runtime.ParamLocationQuery, params.Uuid); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
 				}
 			}
+		}
 
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "buildarch", runtime.ParamLocationQuery, params.Buildarch); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
 		}
 
 		queryURL.RawQuery = queryValues.Encode()
@@ -293,20 +336,28 @@ func NewGetConfigByIDRequest(server string, profileName string, configID UUID, p
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.Labels != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "labels", runtime.ParamLocationQuery, *params.Labels); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "uuid", runtime.ParamLocationQuery, params.Uuid); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
 				}
 			}
+		}
 
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "buildarch", runtime.ParamLocationQuery, params.Buildarch); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
 		}
 
 		queryURL.RawQuery = queryValues.Encode()
@@ -366,8 +417,8 @@ type ClientWithResponsesInterface interface {
 	// GetIPXEBootstrapWithResponse request
 	GetIPXEBootstrapWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetIPXEBootstrapResponse, error)
 
-	// GetIpxeByLabelsWithResponse request
-	GetIpxeByLabelsWithResponse(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*GetIpxeByLabelsResponse, error)
+	// GetIpxeBySelectorsWithResponse request
+	GetIpxeBySelectorsWithResponse(ctx context.Context, params *GetIpxeBySelectorsParams, reqEditors ...RequestEditorFn) (*GetIpxeBySelectorsResponse, error)
 
 	// GetConfigByIDWithResponse request
 	GetConfigByIDWithResponse(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error)
@@ -400,7 +451,7 @@ func (r GetIPXEBootstrapResponse) StatusCode() int {
 	return 0
 }
 
-type GetIpxeByLabelsResponse struct {
+type GetIpxeBySelectorsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *N400
@@ -412,7 +463,7 @@ type GetIpxeByLabelsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetIpxeByLabelsResponse) Status() string {
+func (r GetIpxeBySelectorsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -420,7 +471,7 @@ func (r GetIpxeByLabelsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetIpxeByLabelsResponse) StatusCode() int {
+func (r GetIpxeBySelectorsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -463,13 +514,13 @@ func (c *ClientWithResponses) GetIPXEBootstrapWithResponse(ctx context.Context, 
 	return ParseGetIPXEBootstrapResponse(rsp)
 }
 
-// GetIpxeByLabelsWithResponse request returning *GetIpxeByLabelsResponse
-func (c *ClientWithResponses) GetIpxeByLabelsWithResponse(ctx context.Context, params *GetIpxeByLabelsParams, reqEditors ...RequestEditorFn) (*GetIpxeByLabelsResponse, error) {
-	rsp, err := c.GetIpxeByLabels(ctx, params, reqEditors...)
+// GetIpxeBySelectorsWithResponse request returning *GetIpxeBySelectorsResponse
+func (c *ClientWithResponses) GetIpxeBySelectorsWithResponse(ctx context.Context, params *GetIpxeBySelectorsParams, reqEditors ...RequestEditorFn) (*GetIpxeBySelectorsResponse, error) {
+	rsp, err := c.GetIpxeBySelectors(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetIpxeByLabelsResponse(rsp)
+	return ParseGetIpxeBySelectorsResponse(rsp)
 }
 
 // GetConfigByIDWithResponse request returning *GetConfigByIDResponse
@@ -542,15 +593,15 @@ func ParseGetIPXEBootstrapResponse(rsp *http.Response) (*GetIPXEBootstrapRespons
 	return response, nil
 }
 
-// ParseGetIpxeByLabelsResponse parses an HTTP response from a GetIpxeByLabelsWithResponse call
-func ParseGetIpxeByLabelsResponse(rsp *http.Response) (*GetIpxeByLabelsResponse, error) {
+// ParseGetIpxeBySelectorsResponse parses an HTTP response from a GetIpxeBySelectorsWithResponse call
+func ParseGetIpxeBySelectorsResponse(rsp *http.Response) (*GetIpxeBySelectorsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetIpxeByLabelsResponse{
+	response := &GetIpxeBySelectorsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

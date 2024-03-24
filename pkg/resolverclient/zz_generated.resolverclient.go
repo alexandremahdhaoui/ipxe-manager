@@ -13,6 +13,23 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
+)
+
+// Defines values for BuildarchSelector.
+const (
+	BuildarchSelectorArm32 BuildarchSelector = "arm32"
+	BuildarchSelectorArm64 BuildarchSelector = "arm64"
+	BuildarchSelectorI386  BuildarchSelector = "i386"
+	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
+)
+
+// Defines values for ResolveParamsBuildarch.
+const (
+	ResolveParamsBuildarchArm32 ResolveParamsBuildarch = "arm32"
+	ResolveParamsBuildarchArm64 ResolveParamsBuildarch = "arm64"
+	ResolveParamsBuildarchI386  ResolveParamsBuildarch = "i386"
+	ResolveParamsBuildarchX8664 ResolveParamsBuildarch = "x86_64"
 )
 
 // Error defines model for Error.
@@ -21,11 +38,17 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-// AnyPath defines model for anyPath.
-type AnyPath = string
+// UUID defines model for UUID.
+type UUID = openapi_types.UUID
 
-// AnyQuery defines model for anyQuery.
-type AnyQuery = string
+// AnyRoutes defines model for anyRoutes.
+type AnyRoutes = string
+
+// BuildarchSelector defines model for buildarchSelector.
+type BuildarchSelector string
+
+// UuidSelector defines model for uuidSelector.
+type UuidSelector = UUID
 
 // N400 defines model for 400.
 type N400 = Error
@@ -52,8 +75,12 @@ type ResolveResponse struct {
 
 // ResolveParams defines parameters for Resolve.
 type ResolveParams struct {
-	AnyQuery *AnyQuery `form:"anyQuery,omitempty" json:"anyQuery,omitempty"`
+	Uuid      UuidSelector           `form:"uuid" json:"uuid"`
+	Buildarch ResolveParamsBuildarch `form:"buildarch" json:"buildarch"`
 }
+
+// ResolveParamsBuildarch defines parameters for Resolve.
+type ResolveParamsBuildarch string
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -129,11 +156,11 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// Resolve request
-	Resolve(ctx context.Context, anyPath AnyPath, params *ResolveParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Resolve(ctx context.Context, anyRoutes AnyRoutes, params *ResolveParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) Resolve(ctx context.Context, anyPath AnyPath, params *ResolveParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewResolveRequest(c.Server, anyPath, params)
+func (c *Client) Resolve(ctx context.Context, anyRoutes AnyRoutes, params *ResolveParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewResolveRequest(c.Server, anyRoutes, params)
 	if err != nil {
 		return nil, err
 	}
@@ -145,12 +172,12 @@ func (c *Client) Resolve(ctx context.Context, anyPath AnyPath, params *ResolvePa
 }
 
 // NewResolveRequest generates requests for Resolve
-func NewResolveRequest(server string, anyPath AnyPath, params *ResolveParams) (*http.Request, error) {
+func NewResolveRequest(server string, anyRoutes AnyRoutes, params *ResolveParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "anyPath", runtime.ParamLocationPath, anyPath)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "anyRoutes", runtime.ParamLocationPath, anyRoutes)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +187,7 @@ func NewResolveRequest(server string, anyPath AnyPath, params *ResolveParams) (*
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/resolve/%s", pathParam0)
+	operationPath := fmt.Sprintf("/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -173,20 +200,28 @@ func NewResolveRequest(server string, anyPath AnyPath, params *ResolveParams) (*
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.AnyQuery != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "anyQuery", runtime.ParamLocationQuery, *params.AnyQuery); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "uuid", runtime.ParamLocationQuery, params.Uuid); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
 				}
 			}
+		}
 
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "buildarch", runtime.ParamLocationQuery, params.Buildarch); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
 		}
 
 		queryURL.RawQuery = queryValues.Encode()
@@ -244,7 +279,7 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// ResolveWithResponse request
-	ResolveWithResponse(ctx context.Context, anyPath AnyPath, params *ResolveParams, reqEditors ...RequestEditorFn) (*ResolveResponse, error)
+	ResolveWithResponse(ctx context.Context, anyRoutes AnyRoutes, params *ResolveParams, reqEditors ...RequestEditorFn) (*ResolveResponse, error)
 }
 
 type ResolveResponse struct {
@@ -276,8 +311,8 @@ func (r ResolveResponse) StatusCode() int {
 }
 
 // ResolveWithResponse request returning *ResolveResponse
-func (c *ClientWithResponses) ResolveWithResponse(ctx context.Context, anyPath AnyPath, params *ResolveParams, reqEditors ...RequestEditorFn) (*ResolveResponse, error) {
-	rsp, err := c.Resolve(ctx, anyPath, params, reqEditors...)
+func (c *ClientWithResponses) ResolveWithResponse(ctx context.Context, anyRoutes AnyRoutes, params *ResolveParams, reqEditors ...RequestEditorFn) (*ResolveResponse, error) {
+	rsp, err := c.Resolve(ctx, anyRoutes, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

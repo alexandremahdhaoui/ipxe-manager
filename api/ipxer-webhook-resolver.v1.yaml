@@ -16,14 +16,15 @@ servers: []
 # ------------------------------------------------------------ PATHS ---------------------------------------------------
 paths:
 
-  # ---------------------------------------------------------- /resolve ----------------------------------------------
-  /resolve/{anyPath}:
+  # ---------------------------------------------------------- /{anyRoutes} --------------------------------------------
+  /{anyRoutes}:
     get:
       summary: Resolve a config
       operationId: resolve
       parameters:
-        - $ref: '#/components/parameters/anyPath'
-        - $ref: '#/components/parameters/anyQuery'
+        - $ref: '#/components/parameters/anyRoutes'
+        - $ref: '#/components/parameters/uuidSelector'
+        - $ref: '#/components/parameters/buildarchSelector'
       tags:
         - resolve
       responses:
@@ -47,30 +48,45 @@ components:
 
   # ---------------------------------------------------------- PARAMETERS ----------------------------------------------
   parameters:
-
-    # -------------------------------------------------------- anyPath -------------------------------------------------
-    anyPath:
+    # -------------------------------------------------------- anyRoutes -------------------------------------------------
+    anyRoutes:
       in: path
-      name: anyPath
+      name: anyRoutes
       description: Unique identifier of the profile.
       required: true
       schema:
         type: string
         pattern: '^[A-Za-z][A-Za-z0-9]*$' # TODO: regex
 
-    # -------------------------------------------------------- anyQuery ------------------------------------------------
-    anyQuery:
+    # -------------------------------------------------------- uuidSelector --------------------------------------------
+    uuidSelector:
       in: query
-      name: anyQuery
+      name: uuid
+      schema:
+        $ref: '#/components/schemas/UUID'
+      required: true
+
+    # -------------------------------------------------------- buildarchSelector ---------------------------------------
+    buildarchSelector:
+      in: query
+      name: buildarch
       schema:
         type: string
-        additionalProperties:
-          type: string
-          pattern: '.*' # TODO: regex or explicitly define all possible ipxe parameters.
-        example: ?uuid=af62ee2f-9657-498a-86e7-5f2629958bd3
+        enum:
+          - i386
+          - x86_64
+          - arm32
+          - arm64
+      required: true
 
   # ---------------------------------------------------------- SCHEMAS -------------------------------------------------
   schemas:
+
+    #--------------------------------------------------------- UUID ----------------------------------------------------
+    UUID:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
 
     #--------------------------------------------------------- ERROR ---------------------------------------------------
     Error:

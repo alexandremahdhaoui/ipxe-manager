@@ -19,6 +19,30 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for BuildarchSelector.
+const (
+	BuildarchSelectorArm32 BuildarchSelector = "arm32"
+	BuildarchSelectorArm64 BuildarchSelector = "arm64"
+	BuildarchSelectorI386  BuildarchSelector = "i386"
+	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
+)
+
+// Defines values for GetIpxeBySelectorsParamsBuildarch.
+const (
+	GetIpxeBySelectorsParamsBuildarchArm32 GetIpxeBySelectorsParamsBuildarch = "arm32"
+	GetIpxeBySelectorsParamsBuildarchArm64 GetIpxeBySelectorsParamsBuildarch = "arm64"
+	GetIpxeBySelectorsParamsBuildarchI386  GetIpxeBySelectorsParamsBuildarch = "i386"
+	GetIpxeBySelectorsParamsBuildarchX8664 GetIpxeBySelectorsParamsBuildarch = "x86_64"
+)
+
+// Defines values for GetConfigByIDParamsBuildarch.
+const (
+	Arm32 GetConfigByIDParamsBuildarch = "arm32"
+	Arm64 GetConfigByIDParamsBuildarch = "arm64"
+	I386  GetConfigByIDParamsBuildarch = "i386"
+	X8664 GetConfigByIDParamsBuildarch = "x86_64"
+)
+
 // Error defines model for Error.
 type Error struct {
 	Code    int32  `json:"code"`
@@ -34,8 +58,11 @@ type Config = string
 // IPXE An iPXE manifest.
 type IPXE = string
 
-// Labels defines model for labels.
-type Labels = string
+// BuildarchSelector defines model for buildarchSelector.
+type BuildarchSelector string
+
+// UuidSelector defines model for uuidSelector.
+type UuidSelector = UUID
 
 // N400 defines model for 400.
 type N400 = Error
@@ -55,24 +82,32 @@ type N500 = Error
 // N503 defines model for 503.
 type N503 = Error
 
-// GetIpxeByLabelsParams defines parameters for GetIpxeByLabels.
-type GetIpxeByLabelsParams struct {
-	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
+// GetIpxeBySelectorsParams defines parameters for GetIpxeBySelectors.
+type GetIpxeBySelectorsParams struct {
+	Uuid      UuidSelector                      `form:"uuid" json:"uuid"`
+	Buildarch GetIpxeBySelectorsParamsBuildarch `form:"buildarch" json:"buildarch"`
 }
+
+// GetIpxeBySelectorsParamsBuildarch defines parameters for GetIpxeBySelectors.
+type GetIpxeBySelectorsParamsBuildarch string
 
 // GetConfigByIDParams defines parameters for GetConfigByID.
 type GetConfigByIDParams struct {
-	Labels *Labels `form:"labels,omitempty" json:"labels,omitempty"`
+	Uuid      UuidSelector                 `form:"uuid" json:"uuid"`
+	Buildarch GetConfigByIDParamsBuildarch `form:"buildarch" json:"buildarch"`
 }
+
+// GetConfigByIDParamsBuildarch defines parameters for GetConfigByID.
+type GetConfigByIDParamsBuildarch string
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Retrieve an iPXE config to chainload to "/ipxe?labels=values"
 	// (GET /boot.ipxe)
 	GetIPXEBootstrap(ctx echo.Context) error
-	// Retrieve an iPXE manifest by labels
+	// Retrieve an iPXE manifest by selectors
 	// (GET /ipxe)
-	GetIpxeByLabels(ctx echo.Context, params GetIpxeByLabelsParams) error
+	GetIpxeBySelectors(ctx echo.Context, params GetIpxeBySelectorsParams) error
 	// Retrieve dynamically a configuration file by its profile name and config ID.
 	// (GET /profile/{profileName}/config/{configID})
 	GetConfigByID(ctx echo.Context, profileName string, configID UUID, params GetConfigByIDParams) error
@@ -92,21 +127,28 @@ func (w *ServerInterfaceWrapper) GetIPXEBootstrap(ctx echo.Context) error {
 	return err
 }
 
-// GetIpxeByLabels converts echo context to params.
-func (w *ServerInterfaceWrapper) GetIpxeByLabels(ctx echo.Context) error {
+// GetIpxeBySelectors converts echo context to params.
+func (w *ServerInterfaceWrapper) GetIpxeBySelectors(ctx echo.Context) error {
 	var err error
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetIpxeByLabelsParams
-	// ------------- Optional query parameter "labels" -------------
+	var params GetIpxeBySelectorsParams
+	// ------------- Required query parameter "uuid" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "labels", ctx.QueryParams(), &params.Labels)
+	err = runtime.BindQueryParameter("form", true, true, "uuid", ctx.QueryParams(), &params.Uuid)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter labels: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter uuid: %s", err))
+	}
+
+	// ------------- Required query parameter "buildarch" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "buildarch", ctx.QueryParams(), &params.Buildarch)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter buildarch: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetIpxeByLabels(ctx, params)
+	err = w.Handler.GetIpxeBySelectors(ctx, params)
 	return err
 }
 
@@ -131,11 +173,18 @@ func (w *ServerInterfaceWrapper) GetConfigByID(ctx echo.Context) error {
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetConfigByIDParams
-	// ------------- Optional query parameter "labels" -------------
+	// ------------- Required query parameter "uuid" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "labels", ctx.QueryParams(), &params.Labels)
+	err = runtime.BindQueryParameter("form", true, true, "uuid", ctx.QueryParams(), &params.Uuid)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter labels: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter uuid: %s", err))
+	}
+
+	// ------------- Required query parameter "buildarch" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "buildarch", ctx.QueryParams(), &params.Buildarch)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter buildarch: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
@@ -172,7 +221,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/boot.ipxe", wrapper.GetIPXEBootstrap)
-	router.GET(baseURL+"/ipxe", wrapper.GetIpxeByLabels)
+	router.GET(baseURL+"/ipxe", wrapper.GetIpxeBySelectors)
 	router.GET(baseURL+"/profile/:profileName/config/:configID", wrapper.GetConfigByID)
 
 }
@@ -180,32 +229,32 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"1TG/XK1Wq/8CAAD//292Rm2OEwAA",
+	"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",
+	"XwAAAP//AQmoIysUAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

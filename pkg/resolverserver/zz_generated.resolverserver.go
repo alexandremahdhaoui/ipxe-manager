@@ -16,6 +16,23 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
+)
+
+// Defines values for BuildarchSelector.
+const (
+	BuildarchSelectorArm32 BuildarchSelector = "arm32"
+	BuildarchSelectorArm64 BuildarchSelector = "arm64"
+	BuildarchSelectorI386  BuildarchSelector = "i386"
+	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
+)
+
+// Defines values for ResolveParamsBuildarch.
+const (
+	ResolveParamsBuildarchArm32 ResolveParamsBuildarch = "arm32"
+	ResolveParamsBuildarchArm64 ResolveParamsBuildarch = "arm64"
+	ResolveParamsBuildarchI386  ResolveParamsBuildarch = "i386"
+	ResolveParamsBuildarchX8664 ResolveParamsBuildarch = "x86_64"
 )
 
 // Error defines model for Error.
@@ -24,11 +41,17 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-// AnyPath defines model for anyPath.
-type AnyPath = string
+// UUID defines model for UUID.
+type UUID = openapi_types.UUID
 
-// AnyQuery defines model for anyQuery.
-type AnyQuery = string
+// AnyRoutes defines model for anyRoutes.
+type AnyRoutes = string
+
+// BuildarchSelector defines model for buildarchSelector.
+type BuildarchSelector string
+
+// UuidSelector defines model for uuidSelector.
+type UuidSelector = UUID
 
 // N400 defines model for 400.
 type N400 = Error
@@ -55,14 +78,18 @@ type ResolveResponse struct {
 
 // ResolveParams defines parameters for Resolve.
 type ResolveParams struct {
-	AnyQuery *AnyQuery `form:"anyQuery,omitempty" json:"anyQuery,omitempty"`
+	Uuid      UuidSelector           `form:"uuid" json:"uuid"`
+	Buildarch ResolveParamsBuildarch `form:"buildarch" json:"buildarch"`
 }
+
+// ResolveParamsBuildarch defines parameters for Resolve.
+type ResolveParamsBuildarch string
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Resolve a config
-	// (GET /resolve/{anyPath})
-	Resolve(ctx echo.Context, anyPath AnyPath, params ResolveParams) error
+	// (GET /{anyRoutes})
+	Resolve(ctx echo.Context, anyRoutes AnyRoutes, params ResolveParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -73,25 +100,32 @@ type ServerInterfaceWrapper struct {
 // Resolve converts echo context to params.
 func (w *ServerInterfaceWrapper) Resolve(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "anyPath" -------------
-	var anyPath AnyPath
+	// ------------- Path parameter "anyRoutes" -------------
+	var anyRoutes AnyRoutes
 
-	err = runtime.BindStyledParameterWithOptions("simple", "anyPath", ctx.Param("anyPath"), &anyPath, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "anyRoutes", ctx.Param("anyRoutes"), &anyRoutes, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter anyPath: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter anyRoutes: %s", err))
 	}
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ResolveParams
-	// ------------- Optional query parameter "anyQuery" -------------
+	// ------------- Required query parameter "uuid" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "anyQuery", ctx.QueryParams(), &params.AnyQuery)
+	err = runtime.BindQueryParameter("form", true, true, "uuid", ctx.QueryParams(), &params.Uuid)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter anyQuery: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter uuid: %s", err))
+	}
+
+	// ------------- Required query parameter "buildarch" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "buildarch", ctx.QueryParams(), &params.Buildarch)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter buildarch: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Resolve(ctx, anyPath, params)
+	err = w.Handler.Resolve(ctx, anyRoutes, params)
 	return err
 }
 
@@ -123,30 +157,31 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/resolve/:anyPath", wrapper.Resolve)
+	router.GET(baseURL+"/:anyRoutes", wrapper.Resolve)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"dV33XwAAAP//40PDBiYMAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

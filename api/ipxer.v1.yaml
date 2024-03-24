@@ -47,12 +47,13 @@ paths:
           # NB: a lot of information cannot be obtained on pxe boot and require the physical server to pass information,
           #     during the registration phase, to the state of the PSM.
     get:
-      summary: Retrieve an iPXE manifest by labels
-      operationId: getIpxeByLabels
+      summary: Retrieve an iPXE manifest by selectors
+      operationId: getIpxeBySelectors
       tags:
         - ipxe
       parameters:
-        - $ref: '#/components/parameters/labels'
+        - $ref: '#/components/parameters/uuidSelector'
+        - $ref: '#/components/parameters/buildarchSelector'
       responses:
         200:
           $ref: '#/components/responses/iPXE'
@@ -89,7 +90,8 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/UUID'
-        - $ref: '#/components/parameters/labels'
+        - $ref: '#/components/parameters/uuidSelector'
+        - $ref: '#/components/parameters/buildarchSelector'
       responses:
         200:
           $ref: '#/components/responses/config'
@@ -111,17 +113,27 @@ components:
 
   # ---------------------------------------------------------- PARAMETERS ----------------------------------------------
   parameters:
-    labels:
+
+    # -------------------------------------------------------- uuidSelector --------------------------------------------
+    uuidSelector:
       in: query
-      name: labels
+      name: uuid
+      schema:
+        $ref: '#/components/schemas/UUID'
+      required: true
+
+    # -------------------------------------------------------- buildarchSelector ---------------------------------------
+    buildarchSelector:
+      in: query
+      name: buildarch
       schema:
         type: string
-        additionalProperties:
-          type: string
-          pattern: '^[A-Za-z][A-Za-z0-9]*$'
-        example:
-          labelKey_0: labelValue_0
-          labelKey_1: labelValue_1
+        enum:
+          - i386
+          - x86_64
+          - arm32
+          - arm64
+      required: true
 
   # ---------------------------------------------------------- SCHEMAS -------------------------------------------------
   schemas:

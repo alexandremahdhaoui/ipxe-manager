@@ -5,11 +5,10 @@ import (
 	"errors"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
-	"k8s.io/client-go/util/jsonpath"
-
 	"github.com/google/uuid"
-	apierrrors "k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/jsonpath"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,7 +33,7 @@ type Profile interface {
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
 func NewProfile(c client.Client, namespace string) Profile {
-	return &profile{
+	return &v1a1Profile{
 		client:    c,
 		namespace: namespace,
 	}
@@ -42,20 +41,20 @@ func NewProfile(c client.Client, namespace string) Profile {
 
 // --------------------------------------------- CONCRETE IMPLEMENTATION -------------------------------------------- //
 
-type profile struct {
+type v1a1Profile struct {
 	client    client.Client
 	namespace string
 }
 
 // --------------------------------------------- Get ----------------------------------------------------------- //
 
-func (p *profile) Get(ctx context.Context, name string) (types.Profile, error) {
+func (p *v1a1Profile) Get(ctx context.Context, name string) (types.Profile, error) {
 	obj := new(v1alpha1.Profile)
 
 	if err := p.client.Get(ctx, k8stypes.NamespacedName{
 		Name:      name,
 		Namespace: p.namespace,
-	}, obj); apierrrors.IsNotFound(err) {
+	}, obj); apierrors.IsNotFound(err) {
 		return types.Profile{}, errors.Join(err, ErrProfileNotFound, errProfileGet)
 	} else if err != nil {
 		return types.Profile{}, errors.Join(err, errProfileGet)

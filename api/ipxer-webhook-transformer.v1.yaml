@@ -16,13 +16,13 @@ servers: []
 # ------------------------------------------------------------ PATHS ---------------------------------------------------
 paths:
 
-  # ---------------------------------------------------------- /resolve ----------------------------------------------
-  /transform/{anyPath}:
+  # ---------------------------------------------------------- /{anyRoutes} --------------------------------------------
+  /{anyRoutes}:
     post:
       summary: Perform a transformation
-      operationId: resolve
+      operationId: transform
       parameters:
-        - $ref: '#/components/parameters/anyPath'
+        - $ref: '#/components/parameters/anyRoutes'
       tags:
         - transform
       requestBody:
@@ -53,10 +53,10 @@ components:
   # ---------------------------------------------------------- PARAMETERS ----------------------------------------------
   parameters:
 
-    # -------------------------------------------------------- anyPath -------------------------------------------------
-    anyPath:
+    # -------------------------------------------------------- anyRoutes -------------------------------------------------
+    anyRoutes:
       in: path
-      name: anyPath
+      name: anyRoutes
       description: Unique identifier of the profile.
       required: true
       schema:
@@ -72,8 +72,31 @@ components:
       properties:
         content:
           type: string
-      required:
-        - content
+        attributes:
+          type: object
+          properties:
+            uuid:
+              $ref: '#/components/schemas/UUID'
+            buildarch:
+              $ref: '#/components/schemas/Buildarch'
+      required: true
+
+    #--------------------------------------------------------- Buildarch -----------------------------------------------
+    Buildarch:
+      type: string
+      enum:
+        - i386
+        - x86_64
+        - arm32
+        - arm64
+      required: true
+
+    #--------------------------------------------------------- UUID ----------------------------------------------------
+    UUID:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+      required: true
 
     #--------------------------------------------------------- ERROR ---------------------------------------------------
     Error:
@@ -91,7 +114,7 @@ components:
   # ---------------------------------------------------------- RESPONSES -----------------------------------------------
   responses:
 
-    # -------------------------------------------------------- resolveResponse -----------------------------------------
+    # -------------------------------------------------------- TransformResponse ---------------------------------------
     TransformResponse:
       description: the expected transform response
       content:
