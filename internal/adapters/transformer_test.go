@@ -16,7 +16,7 @@ func TestButaneTransformer(t *testing.T) {
 	}
 
 	t.Run("Transform", func(t *testing.T) {
-
+		defer setup(t)()
 	})
 }
 func WebhookTransformer(t *testing.T) {
@@ -31,6 +31,6 @@ func WebhookTransformer(t *testing.T) {
 	}
 
 	t.Run("Transform", func(t *testing.T) {
-
+		defer setup(t)()
 	})
 }

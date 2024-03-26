@@ -15,7 +15,7 @@ func TestInlineResolver(t *testing.T) {
 	}
 
 	t.Run("Resolve", func(t *testing.T) {
-
+		defer setup(t)()
 	})
 }
 
@@ -30,7 +30,7 @@ func TestObjectRefResolver(t *testing.T) {
 	}
 
 	t.Run("Resolve", func(t *testing.T) {
-
+		defer setup(t)()
 	})
 }
 
@@ -45,6 +45,6 @@ func TestWebhookResolver(t *testing.T) {
 	}
 
 	t.Run("Resolve", func(t *testing.T) {
-
+		defer setup(t)()
 	})
 }
