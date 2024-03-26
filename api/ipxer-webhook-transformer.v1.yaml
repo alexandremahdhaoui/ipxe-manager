@@ -79,7 +79,9 @@ components:
               $ref: '#/components/schemas/UUID'
             buildarch:
               $ref: '#/components/schemas/Buildarch'
-      required: true
+          required:
+            - uuid
+            - buildarch
 
     #--------------------------------------------------------- Buildarch -----------------------------------------------
     Buildarch:
@@ -89,14 +91,12 @@ components:
         - x86_64
         - arm32
         - arm64
-      required: true
 
     #--------------------------------------------------------- UUID ----------------------------------------------------
     UUID:
       type: string
       format: uuid
       example: "123e4567-e89b-12d3-a456-426614174000"
-      required: true
 
     #--------------------------------------------------------- ERROR ---------------------------------------------------
     Error:

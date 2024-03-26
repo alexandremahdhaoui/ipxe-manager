@@ -14,7 +14,19 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for Buildarch.
+const (
+	Arm32 Buildarch = "arm32"
+	Arm64 Buildarch = "arm64"
+	I386  Buildarch = "i386"
+	X8664 Buildarch = "x86_64"
+)
+
+// Buildarch defines model for Buildarch.
+type Buildarch string
 
 // Error defines model for Error.
 type Error struct {
@@ -24,11 +36,18 @@ type Error struct {
 
 // TransformRequest defines model for TransformRequest.
 type TransformRequest struct {
-	Content string `json:"content"`
+	Attributes *struct {
+		Buildarch Buildarch `json:"buildarch"`
+		Uuid      UUID      `json:"uuid"`
+	} `json:"attributes,omitempty"`
+	Content *string `json:"content,omitempty"`
 }
 
-// AnyPath defines model for anyPath.
-type AnyPath = string
+// UUID defines model for UUID.
+type UUID = openapi_types.UUID
+
+// AnyRoutes defines model for anyRoutes.
+type AnyRoutes = string
 
 // N400 defines model for 400.
 type N400 = Error
@@ -53,8 +72,8 @@ type TransformResponse struct {
 	Data *string `json:"data,omitempty"`
 }
 
-// ResolveJSONRequestBody defines body for Resolve for application/json ContentType.
-type ResolveJSONRequestBody = TransformRequest
+// TransformJSONRequestBody defines body for Transform for application/json ContentType.
+type TransformJSONRequestBody = TransformRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -129,14 +148,14 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// ResolveWithBody request with any body
-	ResolveWithBody(ctx context.Context, anyPath AnyPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// TransformWithBody request with any body
+	TransformWithBody(ctx context.Context, anyRoutes AnyRoutes, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	Resolve(ctx context.Context, anyPath AnyPath, body ResolveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Transform(ctx context.Context, anyRoutes AnyRoutes, body TransformJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) ResolveWithBody(ctx context.Context, anyPath AnyPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewResolveRequestWithBody(c.Server, anyPath, contentType, body)
+func (c *Client) TransformWithBody(ctx context.Context, anyRoutes AnyRoutes, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransformRequestWithBody(c.Server, anyRoutes, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +166,8 @@ func (c *Client) ResolveWithBody(ctx context.Context, anyPath AnyPath, contentTy
 	return c.Client.Do(req)
 }
 
-func (c *Client) Resolve(ctx context.Context, anyPath AnyPath, body ResolveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewResolveRequest(c.Server, anyPath, body)
+func (c *Client) Transform(ctx context.Context, anyRoutes AnyRoutes, body TransformJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransformRequest(c.Server, anyRoutes, body)
 	if err != nil {
 		return nil, err
 	}
@@ -159,24 +178,24 @@ func (c *Client) Resolve(ctx context.Context, anyPath AnyPath, body ResolveJSONR
 	return c.Client.Do(req)
 }
 
-// NewResolveRequest calls the generic Resolve builder with application/json body
-func NewResolveRequest(server string, anyPath AnyPath, body ResolveJSONRequestBody) (*http.Request, error) {
+// NewTransformRequest calls the generic Transform builder with application/json body
+func NewTransformRequest(server string, anyRoutes AnyRoutes, body TransformJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewResolveRequestWithBody(server, anyPath, "application/json", bodyReader)
+	return NewTransformRequestWithBody(server, anyRoutes, "application/json", bodyReader)
 }
 
-// NewResolveRequestWithBody generates requests for Resolve with any type of body
-func NewResolveRequestWithBody(server string, anyPath AnyPath, contentType string, body io.Reader) (*http.Request, error) {
+// NewTransformRequestWithBody generates requests for Transform with any type of body
+func NewTransformRequestWithBody(server string, anyRoutes AnyRoutes, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "anyPath", runtime.ParamLocationPath, anyPath)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "anyRoutes", runtime.ParamLocationPath, anyRoutes)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +205,7 @@ func NewResolveRequestWithBody(server string, anyPath AnyPath, contentType strin
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/transform/%s", pathParam0)
+	operationPath := fmt.Sprintf("/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -249,13 +268,13 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// ResolveWithBodyWithResponse request with any body
-	ResolveWithBodyWithResponse(ctx context.Context, anyPath AnyPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ResolveResponse, error)
+	// TransformWithBodyWithResponse request with any body
+	TransformWithBodyWithResponse(ctx context.Context, anyRoutes AnyRoutes, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransformResponse, error)
 
-	ResolveWithResponse(ctx context.Context, anyPath AnyPath, body ResolveJSONRequestBody, reqEditors ...RequestEditorFn) (*ResolveResponse, error)
+	TransformWithResponse(ctx context.Context, anyRoutes AnyRoutes, body TransformJSONRequestBody, reqEditors ...RequestEditorFn) (*TransformResponse, error)
 }
 
-type ResolveResponse struct {
+type TransformResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *TransformResponse
@@ -268,7 +287,7 @@ type ResolveResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r ResolveResponse) Status() string {
+func (r TransformResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -276,39 +295,39 @@ func (r ResolveResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r ResolveResponse) StatusCode() int {
+func (r TransformResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// ResolveWithBodyWithResponse request with arbitrary body returning *ResolveResponse
-func (c *ClientWithResponses) ResolveWithBodyWithResponse(ctx context.Context, anyPath AnyPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ResolveResponse, error) {
-	rsp, err := c.ResolveWithBody(ctx, anyPath, contentType, body, reqEditors...)
+// TransformWithBodyWithResponse request with arbitrary body returning *TransformResponse
+func (c *ClientWithResponses) TransformWithBodyWithResponse(ctx context.Context, anyRoutes AnyRoutes, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransformResponse, error) {
+	rsp, err := c.TransformWithBody(ctx, anyRoutes, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseResolveResponse(rsp)
+	return ParseTransformResponse(rsp)
 }
 
-func (c *ClientWithResponses) ResolveWithResponse(ctx context.Context, anyPath AnyPath, body ResolveJSONRequestBody, reqEditors ...RequestEditorFn) (*ResolveResponse, error) {
-	rsp, err := c.Resolve(ctx, anyPath, body, reqEditors...)
+func (c *ClientWithResponses) TransformWithResponse(ctx context.Context, anyRoutes AnyRoutes, body TransformJSONRequestBody, reqEditors ...RequestEditorFn) (*TransformResponse, error) {
+	rsp, err := c.Transform(ctx, anyRoutes, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseResolveResponse(rsp)
+	return ParseTransformResponse(rsp)
 }
 
-// ParseResolveResponse parses an HTTP response from a ResolveWithResponse call
-func ParseResolveResponse(rsp *http.Response) (*ResolveResponse, error) {
+// ParseTransformResponse parses an HTTP response from a TransformWithResponse call
+func ParseTransformResponse(rsp *http.Response) (*TransformResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &ResolveResponse{
+	response := &TransformResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

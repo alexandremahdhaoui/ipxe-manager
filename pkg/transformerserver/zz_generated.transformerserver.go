@@ -16,7 +16,19 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for Buildarch.
+const (
+	Arm32 Buildarch = "arm32"
+	Arm64 Buildarch = "arm64"
+	I386  Buildarch = "i386"
+	X8664 Buildarch = "x86_64"
+)
+
+// Buildarch defines model for Buildarch.
+type Buildarch string
 
 // Error defines model for Error.
 type Error struct {
@@ -26,11 +38,18 @@ type Error struct {
 
 // TransformRequest defines model for TransformRequest.
 type TransformRequest struct {
-	Content string `json:"content"`
+	Attributes *struct {
+		Buildarch Buildarch `json:"buildarch"`
+		Uuid      UUID      `json:"uuid"`
+	} `json:"attributes,omitempty"`
+	Content *string `json:"content,omitempty"`
 }
 
-// AnyPath defines model for anyPath.
-type AnyPath = string
+// UUID defines model for UUID.
+type UUID = openapi_types.UUID
+
+// AnyRoutes defines model for anyRoutes.
+type AnyRoutes = string
 
 // N400 defines model for 400.
 type N400 = Error
@@ -55,14 +74,14 @@ type TransformResponse struct {
 	Data *string `json:"data,omitempty"`
 }
 
-// ResolveJSONRequestBody defines body for Resolve for application/json ContentType.
-type ResolveJSONRequestBody = TransformRequest
+// TransformJSONRequestBody defines body for Transform for application/json ContentType.
+type TransformJSONRequestBody = TransformRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Perform a transformation
-	// (POST /transform/{anyPath})
-	Resolve(ctx echo.Context, anyPath AnyPath) error
+	// (POST /{anyRoutes})
+	Transform(ctx echo.Context, anyRoutes AnyRoutes) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -70,19 +89,19 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// Resolve converts echo context to params.
-func (w *ServerInterfaceWrapper) Resolve(ctx echo.Context) error {
+// Transform converts echo context to params.
+func (w *ServerInterfaceWrapper) Transform(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "anyPath" -------------
-	var anyPath AnyPath
+	// ------------- Path parameter "anyRoutes" -------------
+	var anyRoutes AnyRoutes
 
-	err = runtime.BindStyledParameterWithOptions("simple", "anyPath", ctx.Param("anyPath"), &anyPath, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "anyRoutes", ctx.Param("anyRoutes"), &anyRoutes, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter anyPath: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter anyRoutes: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Resolve(ctx, anyPath)
+	err = w.Handler.Transform(ctx, anyRoutes)
 	return err
 }
 
@@ -114,29 +133,31 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.POST(baseURL+"/transform/:anyPath", wrapper.Resolve)
+	router.POST(baseURL+"/:anyRoutes", wrapper.Transform)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

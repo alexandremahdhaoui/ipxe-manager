@@ -16,21 +16,16 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Defines values for BuildarchSelector.
+// Defines values for Buildarch.
 const (
-	BuildarchSelectorArm32 BuildarchSelector = "arm32"
-	BuildarchSelectorArm64 BuildarchSelector = "arm64"
-	BuildarchSelectorI386  BuildarchSelector = "i386"
-	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
+	Arm32 Buildarch = "arm32"
+	Arm64 Buildarch = "arm64"
+	I386  Buildarch = "i386"
+	X8664 Buildarch = "x86_64"
 )
 
-// Defines values for ResolveParamsBuildarch.
-const (
-	ResolveParamsBuildarchArm32 ResolveParamsBuildarch = "arm32"
-	ResolveParamsBuildarchArm64 ResolveParamsBuildarch = "arm64"
-	ResolveParamsBuildarchI386  ResolveParamsBuildarch = "i386"
-	ResolveParamsBuildarchX8664 ResolveParamsBuildarch = "x86_64"
-)
+// Buildarch defines model for Buildarch.
+type Buildarch string
 
 // Error defines model for Error.
 type Error struct {
@@ -45,7 +40,7 @@ type UUID = openapi_types.UUID
 type AnyRoutes = string
 
 // BuildarchSelector defines model for buildarchSelector.
-type BuildarchSelector string
+type BuildarchSelector = Buildarch
 
 // UuidSelector defines model for uuidSelector.
 type UuidSelector = UUID
@@ -75,12 +70,9 @@ type ResolveResponse struct {
 
 // ResolveParams defines parameters for Resolve.
 type ResolveParams struct {
-	Uuid      UuidSelector           `form:"uuid" json:"uuid"`
-	Buildarch ResolveParamsBuildarch `form:"buildarch" json:"buildarch"`
+	Uuid      UuidSelector      `form:"uuid" json:"uuid"`
+	Buildarch BuildarchSelector `form:"buildarch" json:"buildarch"`
 }
-
-// ResolveParamsBuildarch defines parameters for Resolve.
-type ResolveParamsBuildarch string
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error

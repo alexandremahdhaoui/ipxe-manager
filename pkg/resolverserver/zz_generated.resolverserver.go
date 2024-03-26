@@ -19,21 +19,16 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Defines values for BuildarchSelector.
+// Defines values for Buildarch.
 const (
-	BuildarchSelectorArm32 BuildarchSelector = "arm32"
-	BuildarchSelectorArm64 BuildarchSelector = "arm64"
-	BuildarchSelectorI386  BuildarchSelector = "i386"
-	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
+	Arm32 Buildarch = "arm32"
+	Arm64 Buildarch = "arm64"
+	I386  Buildarch = "i386"
+	X8664 Buildarch = "x86_64"
 )
 
-// Defines values for ResolveParamsBuildarch.
-const (
-	ResolveParamsBuildarchArm32 ResolveParamsBuildarch = "arm32"
-	ResolveParamsBuildarchArm64 ResolveParamsBuildarch = "arm64"
-	ResolveParamsBuildarchI386  ResolveParamsBuildarch = "i386"
-	ResolveParamsBuildarchX8664 ResolveParamsBuildarch = "x86_64"
-)
+// Buildarch defines model for Buildarch.
+type Buildarch string
 
 // Error defines model for Error.
 type Error struct {
@@ -48,7 +43,7 @@ type UUID = openapi_types.UUID
 type AnyRoutes = string
 
 // BuildarchSelector defines model for buildarchSelector.
-type BuildarchSelector string
+type BuildarchSelector = Buildarch
 
 // UuidSelector defines model for uuidSelector.
 type UuidSelector = UUID
@@ -78,12 +73,9 @@ type ResolveResponse struct {
 
 // ResolveParams defines parameters for Resolve.
 type ResolveParams struct {
-	Uuid      UuidSelector           `form:"uuid" json:"uuid"`
-	Buildarch ResolveParamsBuildarch `form:"buildarch" json:"buildarch"`
+	Uuid      UuidSelector      `form:"uuid" json:"uuid"`
+	Buildarch BuildarchSelector `form:"buildarch" json:"buildarch"`
 }
-
-// ResolveParamsBuildarch defines parameters for Resolve.
-type ResolveParamsBuildarch string
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -164,24 +156,24 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7RW32/jNgz+VwTungbHdhIn1/Nbt3VAgG04tFdsWJENis3EurMllZLT5gr/74Mk50eb",
-	"oC2K7slx/In8PpIi+QCFarSSKK2B/AE0J96gRfJvXG4uVWvRv5RoChLaCiUhh2spbltkokRpxVIgMbVk",
-	"tkKmSS1FjTFEIBxQc1tBBJI3CPmBxQgIb1tBWEJuqcUITFFhwwMLa5Hc6X9uzgd/88H3ef9MB5/mP36A",
-	"COxGO3vGkpAr6LoIFq2oS05FdYU1FlaRs+Qp3LZImz2HHfBZDijbBvIbEOOzKURwfzb9d5pBBJya8Sg8",
-	"pxnMTzFpW1G+RMJhnvX/gXAJOfyQ7BOUhK8mub6e/QKdc0VotJImZChLU/colLQorU+g1rUouMtZ8tW4",
-	"xD0A3vNG1xiQJUKepWkEDRrDV47ZT7xkjhYaGzFdIzfIigqLb2yjWmJC6tZC91qqF0SKAtfHBeTcXAY3",
-	"zlqWDt/GfXjI/Vry1laKxHcsd+Q1qbUoka15LUrmAK5mg+Ugx7yDnvPe8dbsUlHT/zasEcYIuWLKxc/z",
-	"CJrHb9M8PtT8q6KFKEuUkUsQKxWTyrKKr5FpJO9ZSWYV40WBxjBbCcMIjWqpwHcQvvMfJGVvk5QdSvpS",
-	"4bYEsdxxZXfceG1L1cryPVLGjMbCda8DJ+KJj8nbLtXk8aWaSdfQeM0M0hqJoeO0q1BLG8ZXXEhWc4v0",
-	"DtKuJd5rLFz4xCnXQdn4bcoeld8V0loUyFrJ11zUfFHj/6jrhLfYmb1Eo+o1Xvbt8BW6DqYNKY1kRT/m",
-	"uPX/Hrf1/h+1+IqFPUXOjb9d2LedmS1JNX4yUuDIUJZaCWm90V6x8xhEHxEKUX+A0FAgByGtn0A9H5ff",
-	"VQjuLiun6O9HzU2wucfPj8RF4GfMYf5hOBpjNpl+HODZp8VgOCrHA55NpoNsNJ0Os+HHLE1TiPY8+xH3",
-	"lEnnFoOl2qaIFz5F/Vg8r/Gey5KQ/c6rsuKqFRBBSzXkUFmrTZ4kK2GrdhEXqkn4Ft5s0YnQ9yEYj3Pz",
-	"xXU9YXwizj/Ptje/nwJL15idzMaNBrlinP2Ji0qpb6yvLHILTS0K7Ktry1fzokI2itMjmnd3dzH3n2NF",
-	"q6Q/a5LfZj9f/HF1MRjFaVzZpnZcrbA+xLPPf11cHrmGCNZIJggZxmmcujNKo+RaQA7jOI3HEPlVy5dM",
-	"8rDbszr3vkIfY1dVXu+shHx7Zfy5/dJ3c/pi7iHJfoXrohfBj1ahV+CPl7hu/mTLGYWGfMrQDpc87Qd+",
-	"NL3inAPtt5GXsMODKf4SdnwwHl/CZgeD53nsJPCdvIaDA/mW0zYNp82+BBhnhZJLsXK3la9cFUDfrGDe",
-	"dV33XwAAAP//40PDBiYMAAA=",
+	"H4sIAAAAAAAC/7RWYW/bNhP+K8S9/fRClmRbdlt9S7cMMLANRdJgwwJvoKmzxFYiGZJy4gb67wNJ2XJi",
+	"owmM7JMs6+Hd89wd7+4RmGyUFCisgfwRFNW0QYvav1GxvZKtRf9SoGGaK8ulgBxuBL9rkfACheVrjprI",
+	"NbEVEqXlmtcYQwTcARW1FUQgaIOQH1iMQONdyzUWkFvdYgSGVdjQwMJa1O7037cXo7/o6Puyf6ajj8v/",
+	"v4MI7FY5e8ZqLkroughWLa8Lqll1jTUyK7Wz5Cnctai3A4c98Icc3mlcQw7/S4YAJeGrST7tLTjHbcuL",
+	"l3w6zNnubm4WP0PnXGk0SgoTEpKlqXswKSwK6/OlVM0ZdSlKvhqXp0fAB9qoGgOyQMizNI2gQWNo6Zh9",
+	"ogVxtNDYiKgaqUHCKmTfyFa2mnChWgvda6leai114Pq0Xpybq+DGWcvS8Xncx4fcbwRtbSU1/47FnrzS",
+	"csMLJBta84I4gCvRYDnIMW+g56J3vDO7lrrpfxvScGO4KIl08fM8gubpeZqnh5p/kXrFiwJF5BJECkmE",
+	"tKSiGyQKtfcsBbGSUMbQGGIrbohGI1vN8A2E7/0HSdl5krJDSV8q3JUgFnuu5J4ar20tW1G8RcqIUchc",
+	"szpwwp/5mJ13qWZPL9VCuP5Fa2JQb1ATdJz2FWr1ltCSckFqalG/gbQbgQ8KmQsfP+U6KJuep+xJ+V2j",
+	"3nCGpBV0Q3lNVzX+h7pOeIud2Ss0st7gVd8OX6HrYLhoqVBb3k81av2/x/Ok/0euviKzp8i5abcP+64z",
+	"k7WWjR+EOnAkKAolubDeaK/YeRyGiAu7aBvIb4FPP8whgocP83/mGURAdTOdhOc8g+XR3IsgxO5IV0je",
+	"I4S+BDlwYb2l3oArkzLkaJ/cU1EYJtZtsDngl0cxisCPqsMygvFkitls/n6EHz6uRuNJMR3RbDYfZZP5",
+	"fJyN32dpmkI08Own5XMmnVsn1nKXacp8pvvpelHjAxWFRvIbrYqKypZDBK2uIYfKWmXyJCm5rdpVzGST",
+	"0B282aETrh5CMJ6m+Itrntz4fF58XuwaSD9M1q6/O5mNmzCiJJT8gatKym+kL1Dt1qCaM+yLdMdXUVYh",
+	"mcTpEc37+/uY+s+x1GXSnzXJr4ufLn+/vhxN4jSubFM7rpZbH+LF5z8vr45cQwQb1CYIGcdpnLozUqGg",
+	"ikMO0ziNpxD5Bc2XTPK43846916ij7GrKq93UUC+u3n+3LAq3p6+3wMkGRa/LnoR/GSjegX+ePXrls+W",
+	"pUno66cM7XHJ87biJ9wrzjnQsNS8hB0fLAMvYacHU/YlbHYwv36MnQW+s9dwcCDfudqmoXo7lAChhEmx",
+	"5qW7rbR0VQB9z4Nl13XdvwEAAP//7K1NslwMAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
