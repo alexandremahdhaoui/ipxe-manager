@@ -39,7 +39,7 @@ type assignment struct {
 	namespace string
 }
 
-// --------------------------------------------- FindDefaultProfile -------------------------------------------------------- //
+// --------------------------------------------- FindDefaultProfile ------------------------------------------------- //
 
 func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (string, error) {
 	// list assignment
@@ -57,7 +57,7 @@ func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (
 	return list.Items[0].Spec.ProfileName, nil
 }
 
-// --------------------------------------------- FindProfileBySelectors ---------------------------------------------------- //
+// --------------------------------------------- FindProfileBySelectors --------------------------------------------- //
 
 func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (string, error) {
 	// list assignment
