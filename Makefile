@@ -76,7 +76,23 @@ GOLANGCI_LINT := go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.5
 lint:
 	$(GOLANGCI_LINT) run --fix
 
+# ------------------------------------------------------- TEST ------------------------------------------------------- #
+
+test-unit:
+	go test -v ./... -tags=unit
+
+test-integration:
+	go test -v ./... -tags=integration
+
+test-e2e:
+	go run -v ./test/e2e
+
+
 # ------------------------------------------------------- PRE-PUSH --------------------------------------------------- #
+
+.PHONY: githooks
+githooks: ## Initializes Git hooks to run before a push.
+	git config core.hooksPath .githooks
 
 .PHONY: pre-push
 pre-push: generate fmt lint
