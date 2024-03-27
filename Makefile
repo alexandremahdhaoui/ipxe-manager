@@ -60,6 +60,13 @@ generate: ## Generate REST API server/client code, CRDs and other go generators.
 	$(MOCKS_INSTALL)
 	$(MOCKS_GEN)
 
+# ------------------------------------------------------- BUILD ------------------------------------------------------ #
+
+.PHONY: build
+build: generate ## Build the binaries.
+	CGO_ENABLED=0 go build -ldflags "-X 'main.Version=$(VERSION)' -X 'main.CommitSHA=$(GIT_COMMIT)'" -o build/bin/ipxer-api ./cmd/ipxer-api
+	CGO_ENABLED=0 go build -ldflags "-X 'main.Version=$(VERSION)' -X 'main.CommitSHA=$(GIT_COMMIT)'" -o build/bin/ipxer-webhook ./cmd/ipxer-webhook
+
 # ------------------------------------------------------- FMT -------------------------------------------------------- #
 
 GOFUMPT := go run mvdan.cc/gofumpt@v0.6.0

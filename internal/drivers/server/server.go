@@ -27,7 +27,7 @@ type server struct {
 	config controllers.Config
 }
 
-func (s *server) GetIpxeBootstrap(c echo.Context) error {
+func (s *server) GetIPXEBootstrap(c echo.Context) error {
 	// call controllers
 	b := s.ipxe.Boostrap()
 
@@ -56,7 +56,7 @@ func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID
 	return nil
 }
 
-func (s *server) GetIpxeByLabels(c echo.Context, _ GetIpxeByLabelsParams) error {
+func (s *server) GetIpxeBySelectors(c echo.Context, params GetIpxeBySelectorsParams) error {
 	// convert into type
 	selectors, err := types.NewIpxeSelectorsFromContext(c)
 	if err != nil {

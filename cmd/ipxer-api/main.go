@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
@@ -11,22 +12,37 @@ import (
 )
 
 const (
-	Name = "ipxer"
+	Name = "ipxer-api"
 
-	APIServerPort     = 8080
-	MetricsServerPort = 8081
-	ProbesServerPort  = 8082
+	AppServerPort     = 8080 //TODO: specify through config file
+	MetricsServerPort = 8081 //TODO: specify through config file
+	ProbesServerPort  = 8082 //TODO: specify through config file
 )
 
-func main() {
-	var handler server.ServerInterface
+var (
+	Version   = "dev" //nolint:gochecknoglobals // set by ldflags
+	CommitSHA = "dev" //nolint:gochecknoglobals // set by ldflags
+)
 
-	api := echo.New()
-	api.Use(echoprometheus.NewMiddleware(Name))
-	server.RegisterHandlers(api, handler)
+// ------------------------------------------------- Main ----------------------------------------------------------- //
+
+func main() {
+	fmt.Printf("Starting %s version %s (%s)\n", Name, Version, CommitSHA)
+
+	// --------------------------------------------- App ------------------------------------------------------------ //
+
+	var handler server.ServerInterface //TODO
+
+	app := echo.New()
+	app.Use(echoprometheus.NewMiddleware(Name))
+	server.RegisterHandlers(app, handler)
+
+	// --------------------------------------------- Metrics -------------------------------------------------------- //
 
 	metrics := echo.New()
 	metrics.GET("/metrics", echoprometheus.NewHandler())
+
+	// --------------------------------------------- Probes --------------------------------------------------------- //
 
 	// TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
 
@@ -38,16 +54,20 @@ func main() {
 		return wrapErr(c.NoContent(http.StatusOK), "readiness probe error")
 	})
 
+	// --------------------------------------------- Run Server ----------------------------------------------------- //
+
 	if err := cmd.Serve(map[int]*echo.Echo{
-		APIServerPort:     api,
+		AppServerPort:     app,
 		MetricsServerPort: metrics,
 		ProbesServerPort:  probes,
 	}); err != nil {
-		api.Logger.Fatal(err)
+		app.Logger.Fatal(err)
 	}
 
-	api.Logger.Infof("Successfully stopped %s server", Name)
+	app.Logger.Infof("Successfully stopped %s server", Name)
 }
+
+// --------------------------------------------- UTILS -------------------------------------------------------------- //
 
 func wrapErr(err error, s string) error {
 	if err != nil {

@@ -21,7 +21,7 @@ func Serve(portServerMap map[int]*echo.Echo) error {
 	defer stop()
 
 	runBulk(portServerMap, nil, func(port int, e *echo.Echo) {
-		if err := e.Start(fmtPort(port)); err != nil {
+		if err := e.Start(fmt.Sprintf(":%d", port)); err != nil {
 			e.Logger.Error(err)
 			errChan <- err
 		}
@@ -76,10 +76,6 @@ func runBulk(servers map[int]*echo.Echo, wg *sync.WaitGroup, f func(int, *echo.E
 
 		go f(port, e)
 	}
-}
-
-func fmtPort(port int) string {
-	return fmt.Sprintf(":%d", port)
 }
 
 func inSlice[T comparable](v T, sl []T) bool {
