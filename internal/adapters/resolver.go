@@ -6,13 +6,15 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"io"
+	"net/http"
+
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/util/jsonpath"
-	"net/http"
 )
 
 var (
@@ -74,11 +76,11 @@ func (r *objectRefResolver) Resolve(ctx context.Context, c types.Content) ([]byt
 
 	out, err := r.ResolvePaths(ctx, []*jsonpath.JSONPath{ref.JSONPath}, ref)
 	if err != nil {
-		return nil, err //TODO: wrap
+		return nil, err // TODO: wrap
 	}
 
 	if len(out) < 1 {
-		return nil, errors.New("TODO") //TODO
+		return nil, errors.New("TODO") // TODO
 	}
 
 	return out[0], nil
@@ -124,7 +126,7 @@ type webhookResolver struct {
 
 func (r *webhookResolver) Resolve(ctx context.Context, content types.Content) ([]byte, error) {
 	if content.WebhookConfig == nil {
-		return nil, errors.New("TODO") //TODO: wrap
+		return nil, errors.New("TODO") // TODO: wrap
 	}
 
 	cfg := content.WebhookConfig
@@ -133,7 +135,7 @@ func (r *webhookResolver) Resolve(ctx context.Context, content types.Content) ([
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, cfg.URL, nil)
 	if err != nil {
-		return nil, errors.New("TODO") //TODO: wrap
+		return nil, errors.New("TODO") // TODO: wrap
 	}
 
 	if err := r.mTLSConfig(ctx, httpClient, cfg.MTLSObjectRef); err != nil {
@@ -172,7 +174,7 @@ func (r *webhookResolver) mTLSConfig(ctx context.Context, httpClient *http.Clien
 	}
 
 	if len(res) < 3 {
-		return errors.New("TODO") //TODO
+		return errors.New("TODO") // TODO
 	}
 
 	clientKey := res[0]
@@ -206,11 +208,11 @@ func (r *webhookResolver) setBasicAuth(ctx context.Context, req *http.Request, r
 
 	res, err := r.objectRefResolver.ResolvePaths(ctx, paths, ref.ObjectRef)
 	if err != nil {
-		return err //TODO: wrap
+		return err // TODO: wrap
 	}
 
 	if len(res) < 2 {
-		return errors.New("TODO") //TODO
+		return errors.New("TODO") // TODO
 	}
 
 	username := res[0]

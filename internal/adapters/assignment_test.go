@@ -4,6 +4,8 @@ package adapters_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockclient"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
@@ -11,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
 )
 
 func TestAssignment(t *testing.T) {
@@ -102,6 +103,5 @@ func TestAssignment(t *testing.T) {
 	})
 
 	t.Run("FindProfileBySelectors", func(t *testing.T) {
-
 	})
 }

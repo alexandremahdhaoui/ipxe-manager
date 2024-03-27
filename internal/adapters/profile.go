@@ -3,6 +3,7 @@ package adapters
 import (
 	"context"
 	"errors"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"github.com/google/uuid"
@@ -83,7 +84,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 
 		transformers, err := fromV1alpha1.toTransformerConfig(ac.PostTransformations)
 		if err != nil {
-			return types.Profile{}, err //TODO: wrap err
+			return types.Profile{}, err // TODO: wrap err
 		}
 
 		var content types.Content
@@ -100,14 +101,14 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 		case ac.ObjectRef != nil:
 			ref, err := fromV1alpha1.toObjectRef(ac.ObjectRef)
 			if err != nil {
-				return types.Profile{}, err //TODO: wrap err
+				return types.Profile{}, err // TODO: wrap err
 			}
 
 			content = types.NewObjectRefContent(ac.Name, ref, transformers...)
 		case ac.Webhook != nil:
 			config, err := fromV1alpha1.toWebhookConfig(ac.Webhook)
 			if err != nil {
-				return types.Profile{}, err //TODO: wrap err
+				return types.Profile{}, err // TODO: wrap err
 			}
 
 			content = types.NewWebhookContent(ac.Name, config, transformers...)
@@ -136,7 +137,7 @@ func (ipxev1a1) toProfileID(name string, status v1alpha1.ProfileStatus) (uuid.UU
 func (ipxev1a1) toObjectRef(objectRef *v1alpha1.ObjectRef) (types.ObjectRef, error) {
 	jp, err := toJSONPath(objectRef.JSONPath)
 	if err != nil {
-		return types.ObjectRef{}, err //TODO: wrap err
+		return types.ObjectRef{}, err // TODO: wrap err
 	}
 
 	return types.ObjectRef{
@@ -161,7 +162,7 @@ func (ipxev1a1) toTransformerConfig(input []v1alpha1.Transformer) ([]types.Trans
 		case t.Webhook != nil:
 			typesCfg, err := fromV1alpha1.toWebhookConfig(t.Webhook)
 			if err != nil {
-				return nil, err //TODO: wrap err
+				return nil, err // TODO: wrap err
 			}
 
 			cfg.Kind = types.WebhookTransformerKind
@@ -181,7 +182,7 @@ func (ipxev1a1) toWebhookConfig(input *v1alpha1.WebhookConfig) (types.WebhookCon
 	if input.MTLSObjectRef != nil {
 		ref, err := fromV1alpha1.toMTLSObjectRef(input.MTLSObjectRef)
 		if err != nil {
-			return types.WebhookConfig{}, err //TODO: wrap err
+			return types.WebhookConfig{}, err // TODO: wrap err
 		}
 
 		out.MTLSObjectRef = ref
@@ -190,7 +191,7 @@ func (ipxev1a1) toWebhookConfig(input *v1alpha1.WebhookConfig) (types.WebhookCon
 	if input.BasicAuthObjectRef != nil {
 		ref, err := fromV1alpha1.toBasicAuthObjectRef(input.BasicAuthObjectRef)
 		if err != nil {
-			return types.WebhookConfig{}, err //TODO: wrap err
+			return types.WebhookConfig{}, err // TODO: wrap err
 		}
 
 		out.BasicAuthObjectRef = ref
@@ -232,12 +233,12 @@ func (ipxev1a1) toMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) (*types.MTLSObjectR
 func (ipxev1a1) toBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) (*types.BasicAuthObjectRef, error) {
 	ujp, err := toJSONPath(ref.UsernameJSONPath)
 	if err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	pjp, err := toJSONPath(ref.PasswordJSONPath)
 	if err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	return &types.BasicAuthObjectRef{
@@ -256,7 +257,7 @@ func (ipxev1a1) toBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) (*types.B
 func toJSONPath(s string) (*jsonpath.JSONPath, error) {
 	jp := jsonpath.New("")
 	if err := jp.Parse(s); err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	return jp, nil

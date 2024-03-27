@@ -4,11 +4,12 @@ import (
 	"encoding"
 	"encoding/hex"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
 // -------------------------------------------------- PARAMETERS ---------------------------------------------------- //
@@ -31,7 +32,7 @@ const (
 	Dns     = "dns"     // DNS server
 	Domain  = "domain"  // DNS domain
 
-	//Boot settings
+	// Boot settings
 
 	Filename     = "filename"      // Boot filename
 	NextServer   = "next-server"   // TFTP server
@@ -51,21 +52,21 @@ const (
 	Serial       = "serial"       // Serial number
 	Asset        = "asset"        // Asset tag
 
-	//Authentication settings
+	// Authentication settings
 
 	Username        = "username"         // User name
 	Password        = "password"         // Password
 	ReverseUsername = "reverse-username" // Reverse user name
 	ReversePassword = "reverse-password" // Reverse password
 
-	//Cryptography settings
+	// Cryptography settings
 
 	Crosscert = "crosscert" // Cross-signed certificate source
 	Trust     = "trust"     // Trusted root certificate fingerprints
 	Cert      = "cert"      // Client certificate
 	Privkey   = "privkey"   // Client private key
 
-	//Miscellaneous settings
+	// Miscellaneous settings
 
 	Buildarch  = "buildarch"   // Build architecture
 	Cpumodel   = "cpumodel"    // CPU model
@@ -105,7 +106,7 @@ type IpxeParams struct {
 	Dns     *net.IP // DNS server
 	Domain  *string // DNS domain
 
-	//Boot settings
+	// Boot settings
 
 	Filename     *string // Boot filename
 	NextServer   *net.IP // TFTP server
@@ -125,21 +126,21 @@ type IpxeParams struct {
 	Serial       *string    // Serial number
 	Asset        *string    // Asset tag
 
-	//Authentication settings
+	// Authentication settings
 
 	Username        *string // User name
 	Password        *string // Password
 	ReverseUsername *string // Reverse user name
 	ReversePassword *string // Reverse password
 
-	//Cryptography settings
+	// Cryptography settings
 
 	Crosscert *string // Cross-signed certificate source
 	Trust     *hexa   // Trusted root certificate fingerprints
 	Cert      *hexa   // Client certificate
 	Privkey   *hexa   // Client private key
 
-	//Miscellaneous settings
+	// Miscellaneous settings
 
 	Buildarch  *string // Build architecture
 	Cpumodel   *string // CPU model
@@ -206,7 +207,7 @@ func NewIpxeParamsFromContext(c echo.Context) (IpxeParams, error) {
 		return IpxeParams{}, err
 	}
 
-	//Boot settings
+	// Boot settings
 
 	if ipxeParams.Filename, err = getParam[string](c, Filename); err != nil {
 		return IpxeParams{}, err
@@ -254,7 +255,7 @@ func NewIpxeParamsFromContext(c echo.Context) (IpxeParams, error) {
 		return IpxeParams{}, err
 	}
 
-	//Authentication settings
+	// Authentication settings
 
 	if ipxeParams.Username, err = getParam[string](c, Username); err != nil {
 		return IpxeParams{}, err
@@ -269,7 +270,7 @@ func NewIpxeParamsFromContext(c echo.Context) (IpxeParams, error) {
 		return IpxeParams{}, err
 	}
 
-	//Miscellaneous settings
+	// Miscellaneous settings
 
 	if ipxeParams.Crosscert, err = getParam[string](c, Crosscert); err != nil {
 		return IpxeParams{}, err
@@ -364,7 +365,7 @@ func getParam[T any](c echo.Context, key string) (*T, error) {
 
 	if v, ok := any(out).(encoding.TextUnmarshaler); ok {
 		if err := v.UnmarshalText([]byte(s)); err != nil {
-			return nil, err //wrap error
+			return nil, err // wrap error
 		}
 
 		return out, nil
@@ -439,11 +440,11 @@ type IpxeSelectors struct {
 
 func NewIpxeSelectors(params IpxeParams) (IpxeSelectors, error) {
 	if params.Uuid == nil {
-		return IpxeSelectors{}, errors.New("TODO") //TODO: define this err.
+		return IpxeSelectors{}, errors.New("TODO") // TODO: define this err.
 	}
 
 	if params.Buildarch == nil {
-		return IpxeSelectors{}, errors.New("TODO") //TODO: define this err.
+		return IpxeSelectors{}, errors.New("TODO") // TODO: define this err.
 	}
 
 	return IpxeSelectors{
@@ -455,12 +456,12 @@ func NewIpxeSelectors(params IpxeParams) (IpxeSelectors, error) {
 func NewIpxeSelectorsFromContext(c echo.Context) (IpxeSelectors, error) {
 	params, err := NewIpxeParamsFromContext(c)
 	if err != nil {
-		return IpxeSelectors{}, err //TODO: wrap
+		return IpxeSelectors{}, err // TODO: wrap
 	}
 
 	selectors, err := NewIpxeSelectors(params)
 	if err != nil {
-		return IpxeSelectors{}, err //TODO: wrap
+		return IpxeSelectors{}, err // TODO: wrap
 	}
 
 	return selectors, nil

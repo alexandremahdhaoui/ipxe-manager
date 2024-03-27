@@ -10,10 +10,8 @@ func TestProfile(t *testing.T) {
 	var ()
 
 	setup := func(t *testing.T) func() {
-
 		return func() {
 			t.Helper()
-
 		}
 	}
 

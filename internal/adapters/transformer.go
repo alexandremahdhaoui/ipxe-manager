@@ -5,17 +5,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"io"
+	"net/http"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	butaneconfig "github.com/coreos/butane/config"
 	butanecommon "github.com/coreos/butane/config/common"
-	"io"
+
 	"k8s.io/client-go/util/jsonpath"
-	"net/http"
 )
 
-var (
-	ErrTransformerTransform = errors.New("transforming content")
-)
+var ErrTransformerTransform = errors.New("transforming content")
 
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
@@ -60,14 +60,14 @@ func (t *webhookTransformer) Transform(
 	cfg types.TransformerConfig,
 ) ([]byte, error) {
 	if cfg.Webhook == nil {
-		return nil, errors.New("TODO") //TODO: wrap
+		return nil, errors.New("TODO") // TODO: wrap
 	}
 
 	httpClient := &http.Client{}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cfg.Webhook.URL, nil)
 	if err != nil {
-		return nil, errors.New("TODO") //TODO: wrap
+		return nil, errors.New("TODO") // TODO: wrap
 	}
 
 	if err := t.mTLSConfig(ctx, httpClient, cfg.Webhook.MTLSObjectRef); err != nil {
@@ -105,7 +105,7 @@ func (t *webhookTransformer) mTLSConfig(ctx context.Context, httpClient *http.Cl
 	}
 
 	if len(res) < 3 {
-		return errors.New("TODO") //TODO
+		return errors.New("TODO") // TODO
 	}
 
 	clientKey := res[0]
@@ -139,11 +139,11 @@ func (t *webhookTransformer) setBasicAuth(ctx context.Context, req *http.Request
 
 	res, err := t.objectRefResolver.ResolvePaths(ctx, paths, ref.ObjectRef)
 	if err != nil {
-		return err //TODO: wrap
+		return err // TODO: wrap
 	}
 
 	if len(res) < 2 {
-		return errors.New("TODO") //TODO
+		return errors.New("TODO") // TODO
 	}
 
 	username := res[0]

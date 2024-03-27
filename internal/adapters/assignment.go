@@ -3,6 +3,7 @@ package adapters
 import (
 	"context"
 	"errors"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

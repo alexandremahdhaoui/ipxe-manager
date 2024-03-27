@@ -1,5 +1,7 @@
 PROJECT := ipxer
 
+# ------------------------------------------------------- GENERATE --------------------------------------------------- #
+
 OAPI_IPXER_SPEC        := ./api/ipxer.v1.yaml
 OAPI_IPXER_SERVER_PKG  := server
 OAPI_IPXER_SERVER_FILE := ./internal/drivers/server/zz_generated.server.go
@@ -19,8 +21,8 @@ OAPI_WEBHOOK_TRANSFORMER_SERVER_PKG  := transformerserver
 OAPI_WEBHOOK_TRANSFORMER_SERVER_FILE := ./pkg/transformerserver/zz_generated.transformerserver.go
 
 GO_GEN         := go generate
-CONTROLLER_GEN := go run sigs.k8s.io/controller-tools/cmd/controller-gen@latest
-OAPI_CODEGEN   := go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@latest
+CONTROLLER_GEN := go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0
+OAPI_CODEGEN   := go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.1.0
 
 MOCKS_CLEAN   := rm -rf ./internal/util/mocks
 MOCKS_INSTALL := go install github.com/vektra/mockery/v2@v2.42.0
@@ -57,3 +59,25 @@ generate: ## Generate REST API server/client code, CRDs and other go generators.
 	$(MOCKS_CLEAN)
 	$(MOCKS_INSTALL)
 	$(MOCKS_GEN)
+
+# ------------------------------------------------------- FMT -------------------------------------------------------- #
+
+GOFUMPT := go run mvdan.cc/gofumpt@v0.6.0
+
+.PHONY: fmt
+fmt:
+	$(GOFUMPT) -w .
+
+# ------------------------------------------------------- LINT ------------------------------------------------------- #
+
+GOLANGCI_LINT := go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.1
+
+.PHONY: lint
+lint:
+	$(GOLANGCI_LINT) run --fix
+
+# ------------------------------------------------------- PRE-PUSH --------------------------------------------------- #
+
+.PHONY: pre-push
+pre-push: generate fmt lint
+	git status

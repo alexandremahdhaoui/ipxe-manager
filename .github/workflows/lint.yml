@@ -1,4 +1,4 @@
-name: golangci-lint
+name: lint
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   golangci:
-    name: lint
+    name: golangci
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,3 +34,24 @@ jobs:
           version: v1.56.2
           args: --out-format=colored-line-number
           working-directory: ${{matrix.working-directory}}
+
+  modified-files:
+    name: modified-files
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        working-directory:
+          - ""
+    steps:
+      - uses: actions/checkout@v4
+      - name: check-modified-files
+        run: |
+          make generate fmt
+          if [[ -z $(git status --porcelain) ]]; then
+            echo "ok"
+          else
+            echo "Found modified files:"
+            git status --porcelain
+            exit 1
+          fi
+        working-directory: ${{matrix.working-directory}}

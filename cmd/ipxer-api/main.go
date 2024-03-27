@@ -2,11 +2,12 @@ package main
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
 	"github.com/alexandremahdhaoui/ipxer/internal/drivers/server"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 const (
@@ -27,7 +28,7 @@ func main() {
 	metrics := echo.New()
 	metrics.GET("/metrics", echoprometheus.NewHandler())
 
-	//TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
+	// TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
 
 	probes := echo.New()
 	probes.GET("/healthz", func(c echo.Context) error {

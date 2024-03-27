@@ -22,7 +22,7 @@ func (_m *MockAssignment) EXPECT() *MockAssignment_Expecter {
 	return &MockAssignment_Expecter{mock: &_m.Mock}
 }
 
-// FindDefaultProfileName provides a mock function with given fields: ctx, buildarch
+// FindDefaultProfile provides a mock function with given fields: ctx, buildarch
 func (_m *MockAssignment) FindDefaultProfile(ctx context.Context, buildarch string) (string, error) {
 	ret := _m.Called(ctx, buildarch)
 
@@ -50,36 +50,36 @@ func (_m *MockAssignment) FindDefaultProfile(ctx context.Context, buildarch stri
 	return r0, r1
 }
 
-// MockAssignment_FindDefaultProfileName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindDefaultProfile'
-type MockAssignment_FindDefaultProfileName_Call struct {
+// MockAssignment_FindDefaultProfile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindDefaultProfile'
+type MockAssignment_FindDefaultProfile_Call struct {
 	*mock.Call
 }
 
-// FindDefaultProfileName is a helper method to define mock.On call
+// FindDefaultProfile is a helper method to define mock.On call
 //   - ctx context.Context
 //   - buildarch string
-func (_e *MockAssignment_Expecter) FindDefaultProfileName(ctx interface{}, buildarch interface{}) *MockAssignment_FindDefaultProfileName_Call {
-	return &MockAssignment_FindDefaultProfileName_Call{Call: _e.mock.On("FindDefaultProfile", ctx, buildarch)}
+func (_e *MockAssignment_Expecter) FindDefaultProfile(ctx interface{}, buildarch interface{}) *MockAssignment_FindDefaultProfile_Call {
+	return &MockAssignment_FindDefaultProfile_Call{Call: _e.mock.On("FindDefaultProfile", ctx, buildarch)}
 }
 
-func (_c *MockAssignment_FindDefaultProfileName_Call) Run(run func(ctx context.Context, buildarch string)) *MockAssignment_FindDefaultProfileName_Call {
+func (_c *MockAssignment_FindDefaultProfile_Call) Run(run func(ctx context.Context, buildarch string)) *MockAssignment_FindDefaultProfile_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockAssignment_FindDefaultProfileName_Call) Return(_a0 string, _a1 error) *MockAssignment_FindDefaultProfileName_Call {
+func (_c *MockAssignment_FindDefaultProfile_Call) Return(_a0 string, _a1 error) *MockAssignment_FindDefaultProfile_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockAssignment_FindDefaultProfileName_Call) RunAndReturn(run func(context.Context, string) (string, error)) *MockAssignment_FindDefaultProfileName_Call {
+func (_c *MockAssignment_FindDefaultProfile_Call) RunAndReturn(run func(context.Context, string) (string, error)) *MockAssignment_FindDefaultProfile_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindProfileNameBySelectors provides a mock function with given fields: ctx, selectors
+// FindProfileBySelectors provides a mock function with given fields: ctx, selectors
 func (_m *MockAssignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (string, error) {
 	ret := _m.Called(ctx, selectors)
 
@@ -107,31 +107,31 @@ func (_m *MockAssignment) FindProfileBySelectors(ctx context.Context, selectors 
 	return r0, r1
 }
 
-// MockAssignment_FindProfileNameBySelectors_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindProfileBySelectors'
-type MockAssignment_FindProfileNameBySelectors_Call struct {
+// MockAssignment_FindProfileBySelectors_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindProfileBySelectors'
+type MockAssignment_FindProfileBySelectors_Call struct {
 	*mock.Call
 }
 
-// FindProfileNameBySelectors is a helper method to define mock.On call
+// FindProfileBySelectors is a helper method to define mock.On call
 //   - ctx context.Context
 //   - selectors types.IpxeSelectors
-func (_e *MockAssignment_Expecter) FindProfileNameBySelectors(ctx interface{}, selectors interface{}) *MockAssignment_FindProfileNameBySelectors_Call {
-	return &MockAssignment_FindProfileNameBySelectors_Call{Call: _e.mock.On("FindProfileBySelectors", ctx, selectors)}
+func (_e *MockAssignment_Expecter) FindProfileBySelectors(ctx interface{}, selectors interface{}) *MockAssignment_FindProfileBySelectors_Call {
+	return &MockAssignment_FindProfileBySelectors_Call{Call: _e.mock.On("FindProfileBySelectors", ctx, selectors)}
 }
 
-func (_c *MockAssignment_FindProfileNameBySelectors_Call) Run(run func(ctx context.Context, selectors types.IpxeSelectors)) *MockAssignment_FindProfileNameBySelectors_Call {
+func (_c *MockAssignment_FindProfileBySelectors_Call) Run(run func(ctx context.Context, selectors types.IpxeSelectors)) *MockAssignment_FindProfileBySelectors_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(types.IpxeSelectors))
 	})
 	return _c
 }
 
-func (_c *MockAssignment_FindProfileNameBySelectors_Call) Return(_a0 string, _a1 error) *MockAssignment_FindProfileNameBySelectors_Call {
+func (_c *MockAssignment_FindProfileBySelectors_Call) Return(_a0 string, _a1 error) *MockAssignment_FindProfileBySelectors_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockAssignment_FindProfileNameBySelectors_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) (string, error)) *MockAssignment_FindProfileNameBySelectors_Call {
+func (_c *MockAssignment_FindProfileBySelectors_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) (string, error)) *MockAssignment_FindProfileBySelectors_Call {
 	_c.Call.Return(run)
 	return _c
 }

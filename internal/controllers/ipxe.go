@@ -5,9 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"text/template"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
-	"text/template"
 )
 
 var (
@@ -136,76 +137,74 @@ const (
 
 type ipxeParamType string
 
-var (
-	allowedParamsWithType = map[string]ipxeParamType{
-		//types.Mac,
-		//types.BusType,
-		//types.BusLoc,
-		//types.BusID,
-		//types.Chip,
-		//types.Ssid,
-		//types.ActiveScan,
-		//types.Key,
+var allowedParamsWithType = map[string]ipxeParamType{
+	// types.Mac,
+	// types.BusType,
+	// types.BusLoc,
+	// types.BusID,
+	// types.Chip,
+	// types.Ssid,
+	// types.ActiveScan,
+	// types.Key,
 
-		// IPv4 settings
+	// IPv4 settings
 
-		//types.Ip,
-		//types.Netmask,
-		//types.Gateway,
-		//types.Dns,
-		//types.Domain,
+	// types.Ip,
+	// types.Netmask,
+	// types.Gateway,
+	// types.Dns,
+	// types.Domain,
 
-		//Boot settings
+	// Boot settings
 
-		//types.Filename,
-		//types.NextServer,
-		//types.RootPath,
-		//types.SanFilename,
-		//types.InitiatorIqn,
-		//types.KeepSan,
-		//types.SkipSanBoot,
+	// types.Filename,
+	// types.NextServer,
+	// types.RootPath,
+	// types.SanFilename,
+	// types.InitiatorIqn,
+	// types.KeepSan,
+	// types.SkipSanBoot,
 
-		// Host settings
+	// Host settings
 
-		//types.Hostname,
-		types.Uuid: none,
-		//types.UserClass,
-		//types.Manufacturer,
-		//types.Product,
-		//types.Serial,
-		//types.Asset,
+	// types.Hostname,
+	types.Uuid: none,
+	// types.UserClass,
+	// types.Manufacturer,
+	// types.Product,
+	// types.Serial,
+	// types.Asset,
 
-		//Authentication settings
+	// Authentication settings
 
-		//types.Username,
-		//types.Password,
-		//types.ReverseUsername,
-		//types.ReversePassword,
+	// types.Username,
+	// types.Password,
+	// types.ReverseUsername,
+	// types.ReversePassword,
 
-		//Cryptography settings
+	// Cryptography settings
 
-		//types.Crosscert,
-		//types.Trust,
-		//types.Cert,
-		//types.Privkey,
+	// types.Crosscert,
+	// types.Trust,
+	// types.Cert,
+	// types.Privkey,
 
-		//Miscellaneous settings
+	// Miscellaneous settings
 
-		types.Buildarch: uriString,
-		//types.Cpumodel,
-		//types.Cpuvendor,
-		//types.DhcpServer,
-		//types.Keymap,
-		//types.Memsize,
-		//types.Platform,
-		//types.Priority,
-		//types.Scriptlet,
-		//types.Syslog,
-		//types.Syslogs,
-		//types.Sysmac,
-		//types.Unixtime,
-		//types.UseCached,
-		//types.Version,
-		//types.Vram,
-	}
-)
+	types.Buildarch: uriString,
+	// types.Cpumodel,
+	// types.Cpuvendor,
+	// types.DhcpServer,
+	// types.Keymap,
+	// types.Memsize,
+	// types.Platform,
+	// types.Priority,
+	// types.Scriptlet,
+	// types.Syslog,
+	// types.Syslogs,
+	// types.Sysmac,
+	// types.Unixtime,
+	// types.UseCached,
+	// types.Version,
+	// types.Vram,
+}

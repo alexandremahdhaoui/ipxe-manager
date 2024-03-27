@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"errors"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
