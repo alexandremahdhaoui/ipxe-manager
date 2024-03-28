@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/alexandremahdhaoui/ipxer/internal/controllers"
+	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/labstack/echo/v4"
 )
@@ -15,7 +15,7 @@ var (
 	ErrGetIPXEByLabels = errors.New("getting ipxe by labels")
 )
 
-func New(ipxe controllers.IPXE, config controllers.Config) ServerInterface {
+func New(ipxe controller.IPXE, config controller.Config) ServerInterface {
 	return &server{
 		ipxe:   ipxe,
 		config: config,
@@ -23,12 +23,12 @@ func New(ipxe controllers.IPXE, config controllers.Config) ServerInterface {
 }
 
 type server struct {
-	ipxe   controllers.IPXE
-	config controllers.Config
+	ipxe   controller.IPXE
+	config controller.Config
 }
 
 func (s *server) GetIPXEBootstrap(c echo.Context) error {
-	// call controllers
+	// call controller
 	b := s.ipxe.Boostrap()
 
 	// write response
@@ -41,7 +41,7 @@ func (s *server) GetIPXEBootstrap(c echo.Context) error {
 }
 
 func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID, _ GetConfigByIDParams) error {
-	// call controllers
+	// call controller
 	b, err := s.config.GetByID(context.Background(), profileName, configID)
 	if err != nil {
 		return err // TODO: wrap me
@@ -63,7 +63,7 @@ func (s *server) GetIpxeBySelectors(c echo.Context, params GetIpxeBySelectorsPar
 		return err // TODO: wrap
 	}
 
-	// call controllers
+	// call controller
 	b, err := s.ipxe.FindProfileAndRender(context.Background(), selectors)
 	if err != nil {
 		return err // TODO: wrap

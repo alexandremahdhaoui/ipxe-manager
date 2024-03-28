@@ -1,6 +1,6 @@
 //go:build unit
 
-package adapters_test
+package adapter_test
 
 import "testing"
 

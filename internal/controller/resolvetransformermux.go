@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	"context"
 	"errors"
 
-	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
+	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
 
@@ -24,8 +24,8 @@ type ResolveTransformerMux interface {
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
 func NewResolveTransformerMux(
-	resolvers map[types.ResolverKind]adapters.Resolver,
-	transformers map[types.TransformerKind]adapters.Transformer,
+	resolvers map[types.ResolverKind]adapter.Resolver,
+	transformers map[types.TransformerKind]adapter.Transformer,
 ) ResolveTransformerMux {
 	return &resolveTransformerMux{
 		resolvers:    resolvers,
@@ -36,8 +36,8 @@ func NewResolveTransformerMux(
 // ---------------------------------------------------- MULTIPLEXER ------------------------------------------------- //
 
 type resolveTransformerMux struct {
-	resolvers    map[types.ResolverKind]adapters.Resolver
-	transformers map[types.TransformerKind]adapters.Transformer
+	resolvers    map[types.ResolverKind]adapter.Resolver
+	transformers map[types.TransformerKind]adapter.Transformer
 }
 
 func (r *resolveTransformerMux) ResolveAndTransformBatch(

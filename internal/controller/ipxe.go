@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
+	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
 
@@ -30,7 +30,7 @@ type IPXE interface {
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
-func NewIPXE(profile adapters.Profile, mux ResolveTransformerMux) IPXE {
+func NewIPXE(profile adapter.Profile, mux ResolveTransformerMux) IPXE {
 	return &ipxe{
 		profile: profile,
 		mux:     mux,
@@ -40,8 +40,8 @@ func NewIPXE(profile adapters.Profile, mux ResolveTransformerMux) IPXE {
 // -------------------------------------------------------- IPXE ---------------------------------------------------- //
 
 type ipxe struct {
-	assignment adapters.Assignment
-	profile    adapters.Profile
+	assignment adapter.Assignment
+	profile    adapter.Profile
 	mux        ResolveTransformerMux
 
 	bootstrap []byte
@@ -51,7 +51,7 @@ type ipxe struct {
 
 func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error) {
 	assignment, err := svc.assignment.FindProfileBySelectors(ctx, selectors)
-	if errors.Is(err, adapters.ErrAssignmentNotFound) {
+	if errors.Is(err, adapter.ErrAssignmentNotFound) {
 		// fallback to default profile
 		defaultAssignment, defaultErr := svc.assignment.FindDefaultProfile(ctx, selectors.Buildarch)
 		if defaultErr != nil {

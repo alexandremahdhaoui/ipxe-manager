@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	"context"
 	"errors"
 
-	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
+	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/google/uuid"
 )
@@ -24,7 +24,7 @@ type Config interface {
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
-func NewConfig(profile adapters.Profile, mux ResolveTransformerMux) Config {
+func NewConfig(profile adapter.Profile, mux ResolveTransformerMux) Config {
 	return &config{
 		profile: profile,
 		mux:     mux,
@@ -34,7 +34,7 @@ func NewConfig(profile adapters.Profile, mux ResolveTransformerMux) Config {
 // ---------------------------------------------------- CONFIG ------------------------------------------------- //
 
 type config struct {
-	profile adapters.Profile
+	profile adapter.Profile
 	mux     ResolveTransformerMux
 }
 

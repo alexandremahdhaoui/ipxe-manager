@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
-	"github.com/alexandremahdhaoui/ipxer/internal/drivers/server"
+	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 )

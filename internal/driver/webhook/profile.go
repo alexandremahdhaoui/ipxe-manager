@@ -1,4 +1,4 @@
-package webhooks
+package webhook
 
 // ProfileReconciler takes care of maintaining datastructures queried by the REST API.
 type ProfileReconciler struct{}

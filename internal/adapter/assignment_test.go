@@ -1,12 +1,12 @@
 //go:build unit
 
-package adapters_test
+package adapter_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/alexandremahdhaoui/ipxer/internal/adapters"
+	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockclient"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"github.com/google/uuid"
@@ -26,7 +26,7 @@ func TestAssignment(t *testing.T) {
 		expectedListOptions []interface{}
 
 		cl         *mockclient.MockClient
-		assignment adapters.Assignment
+		assignment adapter.Assignment
 	)
 
 	setup := func(t *testing.T) func() {
@@ -38,7 +38,7 @@ func TestAssignment(t *testing.T) {
 		inputBuildarch = "arm64"
 
 		cl = mockclient.NewMockClient(t)
-		assignment = adapters.NewAssignment(cl, namespace)
+		assignment = adapter.NewAssignment(cl, namespace)
 
 		return func() {
 			t.Helper()
@@ -96,7 +96,7 @@ func TestAssignment(t *testing.T) {
 				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 				actual, err := assignment.FindDefaultProfile(ctx, inputBuildarch)
-				assert.ErrorIs(t, err, adapters.ErrAssignmentNotFound)
+				assert.ErrorIs(t, err, adapter.ErrAssignmentNotFound)
 				assert.Empty(t, actual)
 			})
 		})
