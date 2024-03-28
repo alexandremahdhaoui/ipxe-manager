@@ -94,6 +94,11 @@ test-integration:
 test-e2e:
 	go run -v ./test/e2e
 
+.PHONY: test
+test: test-unit test-integration
+
+.PHONY: test-all
+test-all: test-unit test-integration test-e2e
 
 # ------------------------------------------------------- PRE-PUSH --------------------------------------------------- #
 
