@@ -1,0 +1,57 @@
+impl:
+  cmd:
+    - config
+  webhook:
+    - assignment
+    - profile
+test:
+  unit:
+    adapter:
+      assignment:
+        - FindProfileBySelectors
+      profile:
+        - Get
+      resolver:
+        Resolver:
+          - Resolve
+        ObjectRefResolver:
+          - Resolver
+          - ResolvePaths
+        WebhookResolver:
+          - Resolver
+          - ResolveRequest
+      transformer:
+        butaneTransformer:
+          - Transform
+        webhookTransformer:
+          - Transform
+    cmd:
+      - cmd
+      - config
+    controller:
+      Config:
+        - GetByID
+      IPXE:
+        - FindProfileAndRender
+        - Boostrap
+      ResolveTransformerMux:
+        - ResolveAndTransformBatch
+    driver:
+      server:
+      webhook:
+    types:
+      ipxe:
+      profile:
+  integration:
+    TODO:
+      - define integration
+      - scope: kind or "k8s w/o kubelet" (kwok)
+  e2e:
+    TODO:
+      - define e2e
+      - scope: create VMs + DHCP server + a kubeadm cluster.
+      - considerations:
+        - make it quite extensible.
+        - use different k8s distros (e.g. k3s)
+        - use different DHCP server.
+        - NB: don't bother using a different hypervisor than KVM.
