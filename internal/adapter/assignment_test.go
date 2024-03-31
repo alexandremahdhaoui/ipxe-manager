@@ -4,6 +4,7 @@ package adapter_test
 
 import (
 	"context"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"testing"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
@@ -103,5 +104,50 @@ func TestAssignment(t *testing.T) {
 	})
 
 	t.Run("FindProfileBySelectors", func(t *testing.T) {
+		t.Run("Success", func(t *testing.T) {
+			defer setup(t)()
+
+			expectedProfile = uuid.New().String()
+			id := uuid.New()
+
+			selectors := types.IpxeSelectors{
+				UUID:      id,
+				Buildarch: inputBuildarch,
+			}
+
+			expectedListOptions = []interface{}{
+				client.MatchingLabels{v1alpha1.BuildarchAssignmentLabel: inputBuildarch},
+				client.HasLabels{v1alpha1.UUIDLabelSelector(id)},
+			}
+
+			list(t)
+
+			actual, err := assignment.FindProfileBySelectors(ctx, selectors)
+			assert.NoError(t, err)
+			assert.Equal(t, expectedProfile, actual)
+		})
+
+		t.Run("Failure", func(t *testing.T) {
+			t.Run("ListError", func(t *testing.T) {
+				defer setup(t)()
+
+				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
+
+				actual, err := assignment.FindProfileBySelectors(ctx, types.IpxeSelectors{})
+				assert.ErrorIs(t, err, assert.AnError)
+				assert.Empty(t, actual)
+			})
+
+			t.Run("NotFound", func(t *testing.T) {
+				defer setup(t)()
+
+				// No assignment found.
+				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+				actual, err := assignment.FindProfileBySelectors(ctx, types.IpxeSelectors{})
+				assert.ErrorIs(t, err, adapter.ErrAssignmentNotFound)
+				assert.Empty(t, actual)
+			})
+		})
 	})
 }

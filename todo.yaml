@@ -1,16 +1,13 @@
 impl:
   cmd:
     - config
-  webhook:
+  driver/webhook:
     - assignment
     - profile
 test:
+
   unit:
     adapter:
-      assignment:
-        - FindProfileBySelectors
-      profile:
-        - Get
       resolver:
         Resolver:
           - Resolve
@@ -42,10 +39,12 @@ test:
     types:
       ipxe:
       profile:
+
   integration:
     TODO:
       - define integration
       - scope: kind or "k8s w/o kubelet" (kwok)
+
   e2e:
     TODO:
       - define e2e
