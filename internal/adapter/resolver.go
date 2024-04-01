@@ -103,7 +103,7 @@ func (r *objectRefResolver) ResolvePaths(ctx context.Context, paths []*jsonpath.
 
 	for _, path := range paths {
 		buf := bytes.NewBuffer(make([]byte, 0))
-		if err := path.Execute(buf, obj); err != nil {
+		if err := path.Execute(buf, obj.Object); err != nil {
 			return nil, errors.Join(err, ErrObjectRefResolver)
 		}
 
