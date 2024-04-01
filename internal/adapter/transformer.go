@@ -1,9 +1,11 @@
 package adapter
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -20,7 +22,7 @@ var ErrTransformerTransform = errors.New("transforming content")
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
 type Transformer interface {
-	Transform(ctx context.Context, content []byte, cfg types.TransformerConfig) ([]byte, error)
+	Transform(ctx context.Context, cfg types.TransformerConfig, content []byte, selectors types.IpxeSelectors) ([]byte, error)
 }
 
 // ----------------------------------------------- BUTANE TRANSFORMER ----------------------------------------------- //
@@ -33,8 +35,9 @@ type butaneTransformer struct{}
 
 func (t *butaneTransformer) Transform(
 	_ context.Context,
-	content []byte,
 	_ types.TransformerConfig,
+	content []byte,
+	_ types.IpxeSelectors,
 ) ([]byte, error) {
 	b, _, err := butaneconfig.TranslateBytes(content, butanecommon.TranslateBytesOptions{Raw: true})
 	if err != nil {
@@ -54,10 +57,16 @@ type webhookTransformer struct {
 	objectRefResolver ObjectRefResolver
 }
 
+type webhookTransformerRequest struct {
+	Content    []byte            `json:"content"`
+	Attributes map[string]string `json:"attributes"`
+}
+
 func (t *webhookTransformer) Transform(
 	ctx context.Context,
-	content []byte,
 	cfg types.TransformerConfig,
+	content []byte,
+	attributes types.IpxeSelectors,
 ) ([]byte, error) {
 	if cfg.Webhook == nil {
 		return nil, errors.New("TODO") // TODO: wrap
@@ -65,7 +74,18 @@ func (t *webhookTransformer) Transform(
 
 	httpClient := &http.Client{}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cfg.Webhook.URL, nil)
+	body, err := json.Marshal(webhookTransformerRequest{
+		Content: content,
+		Attributes: map[string]string{ //TODO: use const for keys && a type-conversion func to build that map
+			"uuid":      attributes.UUID.String(),
+			"buildarch": attributes.Buildarch,
+		},
+	})
+	if err != nil {
+		return nil, err //TODO: wrap err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cfg.Webhook.URL, bytes.NewReader(body))
 	if err != nil {
 		return nil, errors.New("TODO") // TODO: wrap
 	}
