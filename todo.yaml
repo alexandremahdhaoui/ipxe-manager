@@ -12,10 +12,10 @@ test:
         Resolver:
           - Resolve
         ObjectRefResolver:
-          - Resolver
+          - Resolve
           - ResolvePaths
         WebhookResolver:
-          - Resolver
+          - Resolve
           - ResolveRequest
       transformer:
         butaneTransformer:

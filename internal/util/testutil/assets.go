@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"fmt"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"k8s.io/client-go/util/jsonpath"
@@ -14,6 +15,10 @@ const (
 	webhookName   = "test-webhook"
 
 	ipxeTemplate = "abc123"
+
+	WebhookServerFQDN    = "test.example.com"
+	WebhookServerURLPath = "s3-test"
+	WebhookServerPort    = 30443
 )
 
 func NewV1alpha1Profile() v1alpha1.Profile {
@@ -62,7 +67,7 @@ func NewV1alpha1AdditionalContentWebhook() v1alpha1.AdditionalContent {
 		Exposed:             false,
 		PostTransformations: nil,
 		Webhook: &v1alpha1.WebhookConfig{
-			URL: "alexandre.mahdhaoui.com/s3-test",
+			URL: webhookURL(),
 			MTLSObjectRef: &v1alpha1.MTLSObjectRef{
 				ResourceRef: v1alpha1.ResourceRef{
 					Group:     "core",
@@ -71,9 +76,9 @@ func NewV1alpha1AdditionalContentWebhook() v1alpha1.AdditionalContent {
 					Namespace: "test-namespace",
 					Name:      "test-mtls",
 				},
-				ClientKeyJSONPath:  ".data.\"client.key\"",
-				ClientCertJSONPath: ".data.\"client.crt\"",
-				CaBundleJSONPath:   ".data.\"ca.crt\"",
+				ClientKeyJSONPath:  ".data.client\\.key",
+				ClientCertJSONPath: ".data.client\\.crt",
+				CaBundleJSONPath:   ".data.ca\\.crt",
 			},
 			BasicAuthObjectRef: &v1alpha1.BasicAuthObjectRef{
 				ResourceRef: v1alpha1.ResourceRef{
@@ -141,7 +146,7 @@ func NewTypesContentWebhookConfig() types.Content {
 
 func NewTypesWebhookConfig() types.WebhookConfig {
 	return types.WebhookConfig{
-		URL: "alexandre.mahdhaoui.com/s3-test",
+		URL: webhookURL(),
 		MTLSObjectRef: &types.MTLSObjectRef{
 			ObjectRef: types.ObjectRef{
 				Group:     "core",
@@ -197,4 +202,8 @@ func MakeProfileComparable(profile types.Profile) types.Profile {
 	}
 
 	return profile
+}
+
+func webhookURL() string {
+	return fmt.Sprintf("%s:%d/%s", WebhookServerFQDN, WebhookServerPort, WebhookServerURLPath)
 }

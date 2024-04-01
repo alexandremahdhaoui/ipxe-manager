@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -25,6 +26,8 @@ var (
 	errObjectRefMustBeSpecified = errors.New("object ref must be specified")
 	errResolvingMTLSConfig      = errors.New("resolving mTLS config")
 	errResolvingBasicAuthRef    = errors.New("resolving basic auth ref")
+
+	errWebhookConfigShouldNotBeNil = errors.New("webhook config should not be nil")
 )
 
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
@@ -37,12 +40,6 @@ type ObjectRefResolver interface {
 	Resolver
 
 	ResolvePaths(ctx context.Context, paths []*jsonpath.JSONPath, ref types.ObjectRef) ([][]byte, error)
-}
-
-type WebhookResolver interface {
-	Resolver
-
-	ResolveRequest(ctx context.Context, req *http.Request, config types.WebhookConfig) ([][]byte, error)
 }
 
 // ------------------------------------------------- INLINE RESOLVER ------------------------------------------------ //
@@ -122,27 +119,27 @@ func NewWebhookResolver(resolver ObjectRefResolver) Resolver {
 
 type webhookResolver struct {
 	objectRefResolver ObjectRefResolver
+	//TODO: add field to enable/disable insecure TLS communication.
+	//      - should it be specified for the whole deployment or explicitly enabled for each mTLSObjectRef config?
 }
 
 func (r *webhookResolver) Resolve(ctx context.Context, content types.Content) ([]byte, error) {
 	if content.WebhookConfig == nil {
-		return nil, errors.New("TODO") // TODO: wrap
+		return nil, errors.Join(errWebhookConfigShouldNotBeNil, ErrWebhookResolver, ErrResolverResolve)
 	}
 
-	cfg := content.WebhookConfig
+	httpClient := new(http.Client)
 
-	httpClient := &http.Client{}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, cfg.URL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, content.WebhookConfig.URL, nil)
 	if err != nil {
-		return nil, errors.New("TODO") // TODO: wrap
-	}
-
-	if err := r.mTLSConfig(ctx, httpClient, cfg.MTLSObjectRef); err != nil {
 		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}
 
-	if err := r.setBasicAuth(ctx, req, cfg.BasicAuthObjectRef); err != nil {
+	if err := r.mTLSConfig(ctx, httpClient, content.WebhookConfig.MTLSObjectRef); err != nil {
+		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
+	}
+
+	if err := r.setBasicAuth(ctx, req, content.WebhookConfig.BasicAuthObjectRef); err != nil {
 		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}
 
@@ -173,13 +170,16 @@ func (r *webhookResolver) mTLSConfig(ctx context.Context, httpClient *http.Clien
 		return errors.Join(err, errResolvingMTLSConfig)
 	}
 
-	if len(res) < 3 {
-		return errors.New("TODO") // TODO
+	if nRes := len(res); nRes < 3 {
+		return errors.Join(
+			fmt.Errorf("got: %d results; want: 3 results", nRes),
+			errors.New("mTLS configuration expected 1 client key, 1 client crt, and 1 ca bundle/crt"),
+			errResolvingMTLSConfig)
 	}
 
 	clientKey := res[0]
 	clientCert := res[1]
-	caBundle := res[3]
+	caBundle := res[2]
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caBundle)
@@ -208,11 +208,14 @@ func (r *webhookResolver) setBasicAuth(ctx context.Context, req *http.Request, r
 
 	res, err := r.objectRefResolver.ResolvePaths(ctx, paths, ref.ObjectRef)
 	if err != nil {
-		return err // TODO: wrap
+		return errors.Join(err, errResolvingBasicAuthRef)
 	}
 
-	if len(res) < 2 {
-		return errors.New("TODO") // TODO
+	if nRes := len(res); nRes < 2 {
+		return errors.Join(
+			fmt.Errorf("got: %d results; want: 2 results", nRes),
+			errors.New("basic auth credentials expected 1 username, and 1 password"),
+			errResolvingBasicAuthRef)
 	}
 
 	username := res[0]
