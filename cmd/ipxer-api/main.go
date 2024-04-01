@@ -3,7 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
+	"github.com/alexandremahdhaoui/ipxer/internal/controller"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
+	"k8s.io/client-go/dynamic"
 	"net/http"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
 	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
@@ -13,10 +18,6 @@ import (
 
 const (
 	Name = "ipxer-api"
-
-	AppServerPort     = 8080 //TODO: specify through config file
-	MetricsServerPort = 8081 //TODO: specify through config file
-	ProbesServerPort  = 8082 //TODO: specify through config file
 )
 
 var (
@@ -29,9 +30,59 @@ var (
 func main() {
 	fmt.Printf("Starting %s version %s (%s)\n", Name, Version, CommitSHA)
 
+	// --------------------------------------------- Config --------------------------------------------------------- //
+
+	//TODO: specify all those values through config file
+	//      which should derive from a k8s manifests/helmchart values.
+	var (
+		assignmentNamespace string
+		profileNamespace    string
+
+		appServerPort     = 8080
+		metricsServerPort = 8081
+		probesServerPort  = 8082
+		metricsPath       = "/metrics"
+		probesHealthPath  = "/healthz"
+		probesReadyPath   = "/readyz"
+	)
+
+	// --------------------------------------------- Client --------------------------------------------------------- //
+
+	var cl client.Client        //TODO
+	var dynCl dynamic.Interface //TODO
+
+	// --------------------------------------------- Adapter -------------------------------------------------------- //
+
+	assignment := adapter.NewAssignment(cl, assignmentNamespace)
+	profile := adapter.NewProfile(cl, profileNamespace)
+
+	inlineResolver := adapter.NewInlineResolver()
+	objectRefResolver := adapter.NewObjectRefResolver(dynCl)
+	webhookResolver := adapter.NewWebhookResolver(objectRefResolver)
+
+	butaneTransformer := adapter.NewButaneTransformer()
+	webhookTransformer := adapter.NewWebhookTransformer(objectRefResolver)
+
+	// --------------------------------------------- Controller ----------------------------------------------------- //
+
+	mux := controller.NewResolveTransformerMux(
+		map[types.ResolverKind]adapter.Resolver{
+			types.InlineResolverKind:    inlineResolver,
+			types.ObjectRefResolverKind: objectRefResolver,
+			types.WebhookResolverKind:   webhookResolver,
+		},
+		map[types.TransformerKind]adapter.Transformer{
+			types.ButaneTransformerKind:  butaneTransformer,
+			types.WebhookTransformerKind: webhookTransformer,
+		},
+	)
+
+	ipxe := controller.NewIPXE(assignment, profile, mux)
+	config := controller.NewConfig(profile, mux)
+
 	// --------------------------------------------- App ------------------------------------------------------------ //
 
-	var handler server.ServerInterface //TODO
+	handler := server.New(ipxe, config)
 
 	app := echo.New()
 	app.Use(echoprometheus.NewMiddleware(Name))
@@ -40,26 +91,26 @@ func main() {
 	// --------------------------------------------- Metrics -------------------------------------------------------- //
 
 	metrics := echo.New()
-	metrics.GET("/metrics", echoprometheus.NewHandler())
+	metrics.GET(metricsPath, echoprometheus.NewHandler())
 
 	// --------------------------------------------- Probes --------------------------------------------------------- //
 
 	// TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
 
 	probes := echo.New()
-	probes.GET("/healthz", func(c echo.Context) error {
+	probes.GET(probesHealthPath, func(c echo.Context) error {
 		return wrapErr(c.NoContent(http.StatusOK), "health probe error")
 	})
-	probes.GET("/readyz", func(c echo.Context) error {
+	probes.GET(probesReadyPath, func(c echo.Context) error {
 		return wrapErr(c.NoContent(http.StatusOK), "readiness probe error")
 	})
 
 	// --------------------------------------------- Run Server ----------------------------------------------------- //
 
 	if err := cmd.Serve(map[int]*echo.Echo{
-		AppServerPort:     app,
-		MetricsServerPort: metrics,
-		ProbesServerPort:  probes,
+		appServerPort:     app,
+		metricsServerPort: metrics,
+		probesServerPort:  probes,
 	}); err != nil {
 		app.Logger.Fatal(err)
 	}

@@ -30,10 +30,11 @@ type IPXE interface {
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
-func NewIPXE(profile adapter.Profile, mux ResolveTransformerMux) IPXE {
+func NewIPXE(assignment adapter.Assignment, profile adapter.Profile, mux ResolveTransformerMux) IPXE {
 	return &ipxe{
-		profile: profile,
-		mux:     mux,
+		assignment: assignment,
+		profile:    profile,
+		mux:        mux,
 	}
 }
 
