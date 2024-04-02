@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/dynamic/fake"
 	k8stesting "k8s.io/client-go/testing"
 	"testing"
+	"time"
 )
 
 func TestInlineResolver(t *testing.T) {
@@ -104,7 +105,7 @@ func TestWebhookResolver(t *testing.T) {
 		mtlsObject      *unstructured.Unstructured
 		content         types.Content
 
-		webhookResolverServer resolverserver.ServerInterface
+		mock *resolverserver.Mock
 
 		cl       *fake.FakeDynamicClient
 		resolver adapter.Resolver
@@ -160,16 +161,14 @@ func TestWebhookResolver(t *testing.T) {
 
 		// -------------------------------------------------- Webhook Server  --------------------------------------- //
 
+		//TODO: generate mTLS certs
+		// https://github.com/madflojo/testcerts
+		// https://echo.labstack.com/docs/middleware/basic-auth
+
 		//TODO: create a server to test:
 		// - validate mTLS certs
 		// - validate basic auth
-
-		server := echo.New()
-		webhookResolverServer = nil //TODO: create the dummy server interface.
-		resolverserver.RegisterHandlersWithBaseURL(server, webhookResolverServer, content.WebhookConfig.URL)
-
-		err := server.Start(fmt.Sprintf(":%d", testutil.WebhookServerPort))
-		require.NoError(t, err)
+		mock = resolverserver.NewMock(t, fmt.Sprintf(":%d", testutil.WebhookServerPort))
 
 		// -------------------------------------------------- Client and Adapter ------------------------------------ //
 
@@ -181,14 +180,20 @@ func TestWebhookResolver(t *testing.T) {
 		return func() {
 			t.Helper()
 
-			err := server.Shutdown(context.Background())
-			require.NoError(t, err)
+			mock.AssertExpectationsAndShutdown()
 		}
 	}
 
 	t.Run("Resolve", func(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			setup(t)
+
+			mock.AppendExpectation(func(e echo.Context, params resolverserver.ResolveParams) error {
+				e.Response().Write(
+					[]byte(fmt.Sprintf("hello world: %s + %s", params.Buildarch, params.Uuid.String())))
+
+				return nil
+			})
 
 			cl.PrependReactor("get", "YourSecret", func(_ k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, basicAuthObject, nil
@@ -197,6 +202,8 @@ func TestWebhookResolver(t *testing.T) {
 			cl.PrependReactor("get", "Secret", func(_ k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, mtlsObject, nil
 			})
+
+			time.Sleep(10 * time.Minute)
 
 			actual, err := resolver.Resolve(ctx, content)
 			assert.NoError(t, err)
