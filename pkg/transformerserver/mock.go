@@ -2,9 +2,14 @@ package transformerserver
 
 import (
 	"context"
+	"crypto/tls"
+	"errors"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/certutil"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -13,50 +18,96 @@ type Expectation = func(echo.Context) error
 type Mock struct {
 	t            *testing.T
 	expectations []Expectation
-	counter      uint
-	Echo         *echo.Echo
+	counter      int
+	server       http.Server
+
+	CA   *certutil.CA
+	Echo *echo.Echo
 }
 
-func (w *Mock) Transform(ctx echo.Context, _ AnyRoutes) error {
-	w.t.Helper()
+func (m *Mock) Transform(ctx echo.Context, _ AnyRoutes) error {
+	m.t.Helper()
 
-	counter := w.counter
-	w.counter += 1
+	counter := m.counter
+	m.counter += 1
 
-	return w.expectations[counter](ctx)
+	return m.expectations[counter](ctx)
 }
 
-func (w *Mock) PrependExpectation(f Expectation) {
-	w.expectations = append([]Expectation{f}, w.expectations...)
+func (m *Mock) Start() *Mock {
+	go func() {
+		if err := m.server.ListenAndServeTLS("", ""); !errors.Is(err, http.ErrServerClosed) {
+			require.NoError(m.t, err)
+		}
+	}()
+
+	return m
 }
 
-func (w *Mock) AppendExpectation(f Expectation) {
-	w.expectations = append(w.expectations, f)
+func (m *Mock) PrependExpectation(f Expectation) *Mock {
+	m.expectations = append([]Expectation{f}, m.expectations...)
+
+	return m
 }
 
-func (w *Mock) AssertExpectationsAndShutdown() {
-	w.t.Helper()
+func (m *Mock) AppendExpectation(f Expectation) *Mock {
+	m.expectations = append(m.expectations, f)
 
-	assert.Equal(w.t, w.counter, len(w.expectations))
-	require.NoError(w.t, w.Echo.Shutdown(context.Background()))
+	return m
 }
 
-func NewMock(t *testing.T, address string) *Mock {
+func (m *Mock) AssertExpectationsAndShutdown() *Mock {
+	m.t.Helper()
+
+	ctx := context.Background()
+
+	assert.Equal(m.t, m.counter, len(m.expectations))
+	require.NoError(m.t, m.server.Shutdown(ctx))
+
+	return m
+}
+
+func NewMock(t *testing.T, addr string) *Mock {
 	t.Helper()
+
+	serverName := strings.SplitN(addr, ":", 2)[0] // a bit hacky
+
+	// generate mTLS certs
+	ca, err := certutil.NewCA()
+	require.NoError(t, err)
+
+	serverKey, serverCrt, err := ca.NewCertifiedKeyPEM(serverName)
+	require.NoError(t, err)
 
 	echoServer := echo.New()
 	mock := &Mock{
 		t:            t,
 		expectations: make([]Expectation, 0),
 		counter:      0,
-		Echo:         echoServer,
+
+		CA:   ca,
+		Echo: echoServer,
 	}
 
 	RegisterHandlers(echoServer, mock)
 
-	go func() {
-		require.NoError(t, echoServer.Start(address))
-	}()
+	tlsKeyPair, err := tls.X509KeyPair(serverCrt, serverKey)
+	require.NoError(t, err)
+
+	mock.server = http.Server{
+		Addr:    addr,
+		Handler: echoServer, // set Echo as handler
+		TLSConfig: &tls.Config{
+			Certificates:       []tls.Certificate{tlsKeyPair},
+			RootCAs:            ca.Pool(),
+			ServerName:         serverName,
+			ClientAuth:         tls.RequireAndVerifyClientCert,
+			ClientCAs:          ca.Pool(),
+			InsecureSkipVerify: false, //TODO?
+		},
+	}
+
+	mock.Start()
 
 	return mock
 }
