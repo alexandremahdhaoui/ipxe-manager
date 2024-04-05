@@ -16,7 +16,7 @@ const (
 
 	ipxeTemplate = "abc123"
 
-	WebhookServerFQDN    = "test.alexandre.mahdhaoui.com"
+	WebhookServerFQDN    = "localhost"
 	WebhookServerURLPath = "s3-test"
 	WebhookServerPort    = 30443
 )

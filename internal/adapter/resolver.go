@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
 
@@ -129,8 +130,8 @@ func (r *webhookResolver) Resolve(ctx context.Context, content types.Content) ([
 	}
 
 	httpClient := new(http.Client)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, content.WebhookConfig.URL, nil)
+	url := fmt.Sprintf("https://%s?uuid=%s&buildarch=%s", content.WebhookConfig.URL, uuid.Nil, "arm64")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}
@@ -145,7 +146,7 @@ func (r *webhookResolver) Resolve(ctx context.Context, content types.Content) ([
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, errors.Join(ErrWebhookResolver, ErrResolverResolve)
+		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}
 
 	defer resp.Body.Close()
@@ -218,8 +219,7 @@ func (r *webhookResolver) setBasicAuth(ctx context.Context, req *http.Request, r
 			errResolvingBasicAuthRef)
 	}
 
-	username := res[0]
-	password := res[1]
+	username, password := res[0], res[1]
 
 	req.SetBasicAuth(string(username), string(password))
 

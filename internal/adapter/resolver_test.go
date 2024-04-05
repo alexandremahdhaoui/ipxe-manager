@@ -10,6 +10,7 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
 	"github.com/alexandremahdhaoui/ipxer/pkg/resolverserver"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -17,8 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic/fake"
 	k8stesting "k8s.io/client-go/testing"
+	"strings"
 	"testing"
-	"time"
 )
 
 func TestInlineResolver(t *testing.T) {
@@ -115,9 +116,9 @@ func TestWebhookResolver(t *testing.T) {
 		t.Helper()
 
 		ctx = context.Background()
-		expected = []byte("expected additional content")
 
 		// -------------------------------------------------- Content ----------------------------------------------- //
+
 		content = testutil.NewTypesContentWebhookConfig()
 		require.NoError(t, content.WebhookConfig.BasicAuthObjectRef.UsernameJSONPath.Parse(`{.data.username}`))
 		require.NoError(t, content.WebhookConfig.BasicAuthObjectRef.PasswordJSONPath.Parse(`{.data.password}`))
@@ -125,13 +126,35 @@ func TestWebhookResolver(t *testing.T) {
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.ClientCertJSONPath.Parse(`{.data.client\.crt}`))
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.CaBundleJSONPath.Parse(`{.data.ca\.crt}`))
 
+		// -------------------------------------------------- Webhook Server  --------------------------------------- //
+
+		//TODO: use basic auth middleware
+		// https://echo.labstack.com/docs/middleware/basic-auth
+
+		//TODO: create a server to test:
+		// - validate basic auth
+		addr := strings.SplitN(content.WebhookConfig.URL, "/", 2)[0]
+		mock = resolverserver.NewMock(t, addr)
+
+		clientKey, clientCert, err := mock.CA.NewCertifiedKeyPEM(addr)
+		require.NoError(t, err)
+		caCert := mock.CA.Cert()
+
 		// -------------------------------------------------- Basic Auth -------------------------------------------- //
+
+		username, password := "qwe123", "321ewq"
+		mock.Echo.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
+			Validator: func(u string, p string, _ echo.Context) (bool, error) {
+				return u == username && p == password, nil
+			},
+		}))
 
 		basicAuthObject = &unstructured.Unstructured{}
 		basicAuthObject.SetUnstructuredContent(map[string]any{"data": map[string]any{
-			"username": "qwe123",
-			"password": "321ewq",
+			"username": username,
+			"password": password,
 		}})
+
 		basicAuthObject.SetName(content.WebhookConfig.BasicAuthObjectRef.Name)
 		basicAuthObject.SetNamespace(content.WebhookConfig.BasicAuthObjectRef.Namespace)
 		basicAuthObject.SetGroupVersionKind(schema.GroupVersionKind{
@@ -142,14 +165,14 @@ func TestWebhookResolver(t *testing.T) {
 
 		// -------------------------------------------------- mTLS  ------------------------------------------------- //
 
-		//TODO: create func or use existing library for creating self signed client/server cert.
-
 		mtlsObject = &unstructured.Unstructured{}
-		mtlsObject.SetUnstructuredContent(map[string]any{"data": map[string]any{
-			"client.key": "TODO", //TODO
-			"client.crt": "TODO", //TODO
-			"ca.crt":     "TODO", //TODO
-		}})
+		mtlsObject.SetUnstructuredContent(map[string]any{
+			"data": map[string]any{
+				"client.key": string(clientKey),
+				"client.crt": string(clientCert),
+				"ca.crt":     string(caCert),
+			},
+		})
 
 		mtlsObject.SetName(content.WebhookConfig.MTLSObjectRef.Name)
 		mtlsObject.SetNamespace(content.WebhookConfig.MTLSObjectRef.Namespace)
@@ -158,17 +181,6 @@ func TestWebhookResolver(t *testing.T) {
 			Version: "v1",
 			Kind:    "Secret",
 		})
-
-		// -------------------------------------------------- Webhook Server  --------------------------------------- //
-
-		//TODO: generate mTLS certs
-		// https://github.com/madflojo/testcerts
-		// https://echo.labstack.com/docs/middleware/basic-auth
-
-		//TODO: create a server to test:
-		// - validate mTLS certs
-		// - validate basic auth
-		mock = resolverserver.NewMock(t, fmt.Sprintf(":%d", testutil.WebhookServerPort))
 
 		// -------------------------------------------------- Client and Adapter ------------------------------------ //
 
@@ -186,12 +198,11 @@ func TestWebhookResolver(t *testing.T) {
 
 	t.Run("Resolve", func(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
-			setup(t)
+			defer setup(t)()
 
 			mock.AppendExpectation(func(e echo.Context, params resolverserver.ResolveParams) error {
-				e.Response().Write(
-					[]byte(fmt.Sprintf("hello world: %s + %s", params.Buildarch, params.Uuid.String())))
-
+				expected = []byte(fmt.Sprintf("hello world: %s + %s", params.Buildarch, params.Uuid.String()))
+				e.Response().Write(expected)
 				return nil
 			})
 
@@ -203,7 +214,28 @@ func TestWebhookResolver(t *testing.T) {
 				return true, mtlsObject, nil
 			})
 
-			time.Sleep(10 * time.Minute)
+			actual, err := resolver.Resolve(ctx, content)
+			assert.NoError(t, err)
+			assert.Equal(t, expected, actual)
+		})
+
+		t.Run("Fail", func(t *testing.T) {
+			defer setup(t)()
+
+			cl.PrependReactor("get", "YourSecret", func(_ k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				basicAuthObject.SetUnstructuredContent(map[string]any{"data": map[string]any{
+					"username": "not a username",
+					"password": "not a password",
+				}})
+				return true, basicAuthObject, nil
+			})
+
+			cl.PrependReactor("get", "Secret", func(_ k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, mtlsObject, nil
+			})
+
+			expected = []byte(`{"message":"Unauthorized"}`)
+			expected = append(expected, byte(0x0a))
 
 			actual, err := resolver.Resolve(ctx, content)
 			assert.NoError(t, err)
