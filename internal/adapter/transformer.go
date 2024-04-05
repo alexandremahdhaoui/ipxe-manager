@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -69,27 +70,33 @@ func (t *webhookTransformer) Transform(
 	attributes types.IpxeSelectors,
 ) ([]byte, error) {
 	if cfg.Webhook == nil {
-		return nil, errors.New("TODO") // TODO: wrap
+		return nil, errors.New("TODO") // TODO: err & wrap err
 	}
 
-	httpClient := &http.Client{}
-
-	body, err := json.Marshal(webhookTransformerRequest{
+	requestBody := webhookTransformerRequest{
 		Content: content,
 		Attributes: map[string]string{ //TODO: use const for keys && a type-conversion func to build that map
 			"uuid":      attributes.UUID.String(),
 			"buildarch": attributes.Buildarch,
 		},
-	})
-	if err != nil {
-		return nil, err //TODO: wrap err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cfg.Webhook.URL, bytes.NewReader(body))
+	body, err := json.Marshal(requestBody)
 	if err != nil {
-		return nil, errors.New("TODO") // TODO: wrap
+		return nil, errors.Join(err) //TODO: wrap err
 	}
 
+	url := fmt.Sprintf("https://%s?uuid=%s&buildarch=%s",
+		cfg.Webhook.URL,
+		attributes.UUID.String(),
+		attributes.Buildarch)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, errors.Join(err) //TODO: wrap err
+	}
+
+	httpClient := new(http.Client)
 	if err := t.mTLSConfig(ctx, httpClient, cfg.Webhook.MTLSObjectRef); err != nil {
 		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}
@@ -100,7 +107,7 @@ func (t *webhookTransformer) Transform(
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, errors.Join(ErrWebhookResolver, ErrResolverResolve)
+		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}
 
 	defer resp.Body.Close()
@@ -125,12 +132,12 @@ func (t *webhookTransformer) mTLSConfig(ctx context.Context, httpClient *http.Cl
 	}
 
 	if len(res) < 3 {
-		return errors.New("TODO") // TODO
+		return errors.New("TODO") //TODO
 	}
 
 	clientKey := res[0]
 	clientCert := res[1]
-	caBundle := res[3]
+	caBundle := res[2]
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caBundle)

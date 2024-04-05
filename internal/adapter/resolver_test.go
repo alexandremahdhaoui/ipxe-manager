@@ -119,7 +119,7 @@ func TestWebhookResolver(t *testing.T) {
 
 		// -------------------------------------------------- Content ----------------------------------------------- //
 
-		content = testutil.NewTypesContentWebhookConfig()
+		content = testutil.NewTypesContentWebhook()
 		require.NoError(t, content.WebhookConfig.BasicAuthObjectRef.UsernameJSONPath.Parse(`{.data.username}`))
 		require.NoError(t, content.WebhookConfig.BasicAuthObjectRef.PasswordJSONPath.Parse(`{.data.password}`))
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.ClientKeyJSONPath.Parse(`{.data.client\.key}`))
@@ -128,11 +128,6 @@ func TestWebhookResolver(t *testing.T) {
 
 		// -------------------------------------------------- Webhook Server  --------------------------------------- //
 
-		//TODO: use basic auth middleware
-		// https://echo.labstack.com/docs/middleware/basic-auth
-
-		//TODO: create a server to test:
-		// - validate basic auth
 		addr := strings.SplitN(content.WebhookConfig.URL, "/", 2)[0]
 		mock = resolverserver.NewMock(t, addr)
 
@@ -227,6 +222,7 @@ func TestWebhookResolver(t *testing.T) {
 					"username": "not a username",
 					"password": "not a password",
 				}})
+
 				return true, basicAuthObject, nil
 			})
 

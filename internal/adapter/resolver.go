@@ -129,13 +129,16 @@ func (r *webhookResolver) Resolve(ctx context.Context, content types.Content) ([
 		return nil, errors.Join(errWebhookConfigShouldNotBeNil, ErrWebhookResolver, ErrResolverResolve)
 	}
 
-	httpClient := new(http.Client)
+	//TODO: pass UUID and BUILDARCH as parameters
+	// Requires to change the interface Resolve() func signature
 	url := fmt.Sprintf("https://%s?uuid=%s&buildarch=%s", content.WebhookConfig.URL, uuid.Nil, "arm64")
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}
 
+	httpClient := new(http.Client)
 	if err := r.mTLSConfig(ctx, httpClient, content.WebhookConfig.MTLSObjectRef); err != nil {
 		return nil, errors.Join(err, ErrWebhookResolver, ErrResolverResolve)
 	}

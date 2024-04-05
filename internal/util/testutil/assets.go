@@ -101,7 +101,7 @@ func NewTypesProfile() types.Profile {
 		AdditionalContent: []types.Content{
 			NewTypesContentInline(),
 			NewTypesContentObjectRef(),
-			NewTypesContentWebhookConfig(),
+			NewTypesContentWebhook(),
 		},
 	}
 }
@@ -135,12 +135,19 @@ func NewTypesObjectRef() types.ObjectRef {
 	}
 }
 
-func NewTypesContentWebhookConfig() types.Content {
+func NewTypesContentWebhook() types.Content {
 	return types.Content{
 		Name:             webhookName,
 		PostTransformers: []types.TransformerConfig{},
 		ResolverKind:     types.WebhookResolverKind,
 		WebhookConfig:    types.Ptr(NewTypesWebhookConfig()),
+	}
+}
+
+func NewTypesTransformerConfigWebhook() types.TransformerConfig {
+	return types.TransformerConfig{
+		Kind:    types.WebhookTransformerKind,
+		Webhook: types.Ptr(NewTypesWebhookConfig()),
 	}
 }
 
