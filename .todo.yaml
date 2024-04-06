@@ -1,27 +1,25 @@
+misc:
+  "*.go":
+    - wrap errors
+  Cache:
+    - create an LRU cache for inline configs
+  CachePolicies:
+    - allow caching for objectRef and webhook content.
+    - create multiple caching strategies such as lru, timeout and allow users to choose between multiple strategies.
+    - the NoCache policy should be enabled by default. Users who wants to optimize can optimize.
+    - NB: Always implement the cache as lru or as a ring buffer of pointers to avoid uncontrolled mem consumptions.
+          Also allow other strategies such as timeouts e.g. by creating a small DS to store pointers to cache entries 
+          that should be deleted after a timestamp.
+
 impl:
   cmd:
     - config
   driver/webhook:
     - assignment
     - profile
-test:
 
+test:
   unit:
-    adapter:
-      resolver:
-        Resolver:
-          - Resolve
-        ObjectRefResolver:
-          - Resolve
-          - ResolvePaths
-        WebhookResolver:
-          - Resolve
-          - ResolveRequest
-      transformer:
-        butaneTransformer:
-          - Transform
-        webhookTransformer:
-          - Transform
     cmd:
       - cmd
       - config

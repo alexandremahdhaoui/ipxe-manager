@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/google/uuid"
@@ -52,8 +51,12 @@ func (c *config) GetByID(ctx context.Context, profileName string, configID uuid.
 		content types.Content
 		found   bool
 	)
+
+	// This can be constant time by building a map if we let users name the additional content.
+	// Constant time can also be achieved by building that map during the v1alpha1-to-types conversion.
+	// NB: these comments are pointless because we don't expect len(profile.AdditionalContent) to be big.
 	for _, ctt := range profile.AdditionalContent {
-		if ctt.ExposedConfigID == content.ExposedConfigID {
+		if ctt.ExposedConfigID == configID {
 			content = ctt
 			found = true
 			break
@@ -64,7 +67,11 @@ func (c *config) GetByID(ctx context.Context, profileName string, configID uuid.
 		return nil, errors.Join(ErrConfigNotFound, ErrConfigGetById)
 	}
 
-	res, err := c.mux.ResolveAndTransformBatch(ctx, []types.Content{content})
+	res, err := c.mux.ResolveAndTransformBatch(ctx, []types.Content{content}, types.IpxeSelectors{
+		UUID: configID,
+		//TODO: allow config.GetByID to accept types.IPXESelectors as argument.
+		// Buildarch: "",
+	})
 	if err != nil {
 		return nil, errors.Join(err, ErrConfigGetById)
 	}

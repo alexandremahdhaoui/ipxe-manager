@@ -45,16 +45,16 @@ type ipxe struct {
 	profile    adapter.Profile
 	mux        ResolveTransformerMux
 
-	bootstrap []byte
+	cachedBootstrap []byte
 }
 
 // -------------------------------------------------------- FindProfileAndRender ------------------------------------ //
 
-func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error) {
-	assignment, err := svc.assignment.FindProfileBySelectors(ctx, selectors)
+func (i *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error) {
+	assignment, err := i.assignment.FindProfileBySelectors(ctx, selectors)
 	if errors.Is(err, adapter.ErrAssignmentNotFound) {
 		// fallback to default profile
-		defaultAssignment, defaultErr := svc.assignment.FindDefaultProfile(ctx, selectors.Buildarch)
+		defaultAssignment, defaultErr := i.assignment.FindDefaultProfile(ctx, selectors.Buildarch)
 		if defaultErr != nil {
 			return nil, errors.Join(defaultErr,
 				fmt.Errorf(fmtCannotSelectAssignmentWithSelectors, selectors.UUID, selectors.Buildarch),
@@ -66,12 +66,12 @@ func (svc *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeS
 		return nil, errors.Join(err, errSelectingAssignment, ErrIPXEFindProfileAndRender)
 	}
 
-	p, err := svc.profile.Get(ctx, assignment)
+	p, err := i.profile.Get(ctx, assignment)
 	if err != nil {
 		return nil, errors.Join(err, ErrIPXEFindProfileAndRender)
 	}
 
-	data, err := svc.mux.ResolveAndTransformBatch(ctx, p.AdditionalContent)
+	data, err := i.mux.ResolveAndTransformBatch(ctx, p.AdditionalContent, selectors)
 	if err != nil {
 		return nil, errors.Join(err, ErrIPXEFindProfileAndRender)
 	}
@@ -90,8 +90,13 @@ func templateIPXEProfile(ipxeTemplate string, data map[string][]byte) ([]byte, e
 		return nil, errors.Join(err, errTemplatingIPXEProfile)
 	}
 
+	stringData := make(map[string]string)
+	for k, v := range data {
+		stringData[k] = string(v)
+	}
+
 	buf := bytes.NewBuffer(make([]byte, 0))
-	if err := tpl.Execute(buf, data); err != nil {
+	if err := tpl.Execute(buf, stringData); err != nil {
 		return nil, errors.Join(err, errTemplatingIPXEProfile)
 	}
 
@@ -100,38 +105,38 @@ func templateIPXEProfile(ipxeTemplate string, data map[string][]byte) ([]byte, e
 
 // -------------------------------------------------------- Bootstrap ----------------------------------------------- //
 
-// TODO: mac should be `NETWORK_IFACE/mac`.
-
-func (svc *ipxe) Boostrap() []byte {
-	// init boostrap
-	if len(svc.bootstrap) == 0 {
-		params := ""
-		for p, t := range allowedParamsWithType {
-			if params != "" {
-				params = fmt.Sprintf("%s&", params)
-			}
-
-			if t == none {
-				params = fmt.Sprintf("%s%s=${%s}", params, p, p)
-			} else {
-				params = fmt.Sprintf("%s%s=${%s:%s}", params, p, p, t)
-			}
-		}
-
-		svc.bootstrap = []byte(fmt.Sprintf(ipxeBootstrapFormat, params))
+func (i *ipxe) Boostrap() []byte {
+	if len(i.cachedBootstrap) > 0 {
+		return bytes.Clone(i.cachedBootstrap)
 	}
 
-	return svc.bootstrap
+	// init boostrap
+	params := ""
+	for param, paramType := range allowedParamsWithType {
+		if params != "" {
+			params = fmt.Sprintf("%s&", params)
+		}
+
+		if paramType == none {
+			params = fmt.Sprintf("%s%s=${%s}", params, param, param)
+		} else {
+			params = fmt.Sprintf("%s%s=${%s:%s}", params, param, param, paramType)
+		}
+	}
+
+	i.cachedBootstrap = []byte(fmt.Sprintf(ipxeBootstrapFormat, params))
+
+	return bytes.Clone(i.cachedBootstrap)
 }
 
-const ipxeBootstrapFormat = `#!ipxe
-chain ipxe?%s
-`
-
-//#!ipxe
-//chain ipxe?uuid=${uuid}&mac=${mac:hexhyp}&domain=${domain}&hostname=${hostname}&serial=${serial}&arch=${buildarch:uristring}
+// TODO: mac should be `NETWORK_IFACE/mac`.
 
 const (
+	// #!ipxe
+	// chain ipxe?uuid=${uuid}&mac=${mac:hexhyp}&domain=${domain}&hostname=${hostname}&serial=${serial}&arch=${buildarch:uristring}
+	ipxeBootstrapFormat = `#!ipxe
+chain ipxe?%s
+`
 	none      ipxeParamType = ""
 	uriString ipxeParamType = "uristring"
 )

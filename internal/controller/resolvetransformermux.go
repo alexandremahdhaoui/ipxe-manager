@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
@@ -11,14 +10,18 @@ import (
 var (
 	ErrResolveAndTransformBatch = errors.New("batch resolving and transforming contents")
 
-	errResolverDoesNotExist    = errors.New("resolver does not exist")
-	errTransformerDoesNotExist = errors.New("transformer does not exist")
+	ErrResolverUnknown    = errors.New("unknown resolver")
+	ErrTransformerUnknown = errors.New("unknown transformer")
 )
 
 // ---------------------------------------------------- INTERFACES -------------------------------------------------- //
 
 type ResolveTransformerMux interface {
-	ResolveAndTransformBatch(ctx context.Context, batch []types.Content) (map[string][]byte, error)
+	ResolveAndTransformBatch(
+		ctx context.Context,
+		batch []types.Content,
+		selectors types.IpxeSelectors,
+	) (map[string][]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -40,33 +43,43 @@ type resolveTransformerMux struct {
 	transformers map[types.TransformerKind]adapter.Transformer
 }
 
+//TODO: ResolveAndTransformBatch should return the URL corresponding to the ConfigID of the content if the content has
+//      ExposedConfigID set to true. (only in the case that the func is called by controller.IPXE)
+//      !!! Otherwise create a special func for controller.Config called ResolveAndTransform which only takes a
+//          types.Content as an argument and fully compute the Resolve/Transformation.
+//      !!! Then ResolveAndTransformBatch will only resolve and transform if types.Content.ExposedConfigID != true.
+
 func (r *resolveTransformerMux) ResolveAndTransformBatch(
 	ctx context.Context,
 	batch []types.Content,
+	selectors types.IpxeSelectors,
 ) (map[string][]byte, error) {
 	output := make(map[string][]byte)
 
-	for _, c := range batch {
-		resolver, ok := r.resolvers[c.ResolverKind]
+	for _, content := range batch {
+		resolver, ok := r.resolvers[content.ResolverKind]
 		if !ok {
-			return nil, errors.Join(errResolverDoesNotExist, ErrResolveAndTransformBatch)
+			return nil, errors.Join(ErrResolverUnknown, ErrResolveAndTransformBatch)
 		}
 
-		result, err := resolver.Resolve(ctx, c)
+		result, err := resolver.Resolve(ctx, content)
 		if err != nil {
 			return nil, errors.Join(err, ErrResolveAndTransformBatch)
 		}
 
-		for _, t := range c.PostTransformers {
-			transformer, ok := r.transformers[t.Kind]
+		for _, transformerConfig := range content.PostTransformers {
+			transformer, ok := r.transformers[transformerConfig.Kind]
 			if !ok {
-				return nil, errors.Join(errTransformerDoesNotExist, ErrResolveAndTransformBatch)
+				return nil, errors.Join(ErrTransformerUnknown, ErrResolveAndTransformBatch)
 			}
 
-			result, err = transformer.Transform(ctx, result, t)
+			result, err = transformer.Transform(ctx, transformerConfig, result, selectors)
+			if err != nil {
+				return nil, errors.Join(err, ErrResolveAndTransformBatch)
+			}
 		}
 
-		output[c.Name] = result
+		output[content.Name] = result
 	}
 
 	return output, nil

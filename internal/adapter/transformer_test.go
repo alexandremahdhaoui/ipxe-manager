@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
-	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockadapters"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockadapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
 	"github.com/alexandremahdhaoui/ipxer/pkg/transformerserver"
 	"github.com/google/uuid"
@@ -66,7 +66,7 @@ func TestWebhookTransformer(t *testing.T) {
 		inputContent    []byte
 		inputAttributes types.IpxeSelectors
 
-		objectRefResolver *mockadapters.MockObjectRefResolver
+		objectRefResolver *mockadapter.MockObjectRefResolver
 		transformer       adapter.Transformer
 		serverMock        *transformerserver.Mock
 	)
@@ -90,7 +90,7 @@ func TestWebhookTransformer(t *testing.T) {
 
 		// -------------------------------------------------- Client and Adapter ------------------------------------ //
 
-		objectRefResolver = mockadapters.NewMockObjectRefResolver(t)
+		objectRefResolver = mockadapter.NewMockObjectRefResolver(t)
 		transformer = adapter.NewWebhookTransformer(objectRefResolver)
 
 		// -------------------------------------------------- Webhook Server Mock ----------------------------------- //

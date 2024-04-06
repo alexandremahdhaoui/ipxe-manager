@@ -2,7 +2,7 @@
 
 `ipxer` is a kubernetes based iPXE server.
 
-Consult [this document](./todo.yaml) to check what has to be done.
+Consult [this document](./.todo.yaml) to check what has to be done.
 
 ## iPXE booting workflow
 
