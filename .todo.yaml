@@ -1,4 +1,6 @@
 misc:
+  Log:
+    add logger.
   "*.go":
     - wrap errors
   Cache:
@@ -23,20 +25,9 @@ test:
     cmd:
       - cmd
       - config
-    controller:
-      Config:
-        - GetByID
-      IPXE:
-        - FindProfileAndRender
-        - Boostrap
-      ResolveTransformerMux:
-        - ResolveAndTransformBatch
     driver:
       server:
       webhook:
-    types:
-      ipxe:
-      profile:
 
   integration:
     TODO:

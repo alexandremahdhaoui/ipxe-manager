@@ -27,12 +27,12 @@ const (
 	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
 )
 
-// Defines values for GetIpxeBySelectorsParamsBuildarch.
+// Defines values for GetIPXEBySelectorsParamsBuildarch.
 const (
-	GetIpxeBySelectorsParamsBuildarchArm32 GetIpxeBySelectorsParamsBuildarch = "arm32"
-	GetIpxeBySelectorsParamsBuildarchArm64 GetIpxeBySelectorsParamsBuildarch = "arm64"
-	GetIpxeBySelectorsParamsBuildarchI386  GetIpxeBySelectorsParamsBuildarch = "i386"
-	GetIpxeBySelectorsParamsBuildarchX8664 GetIpxeBySelectorsParamsBuildarch = "x86_64"
+	GetIPXEBySelectorsParamsBuildarchArm32 GetIPXEBySelectorsParamsBuildarch = "arm32"
+	GetIPXEBySelectorsParamsBuildarchArm64 GetIPXEBySelectorsParamsBuildarch = "arm64"
+	GetIPXEBySelectorsParamsBuildarchI386  GetIPXEBySelectorsParamsBuildarch = "i386"
+	GetIPXEBySelectorsParamsBuildarchX8664 GetIPXEBySelectorsParamsBuildarch = "x86_64"
 )
 
 // Defines values for GetConfigByIDParamsBuildarch.
@@ -82,14 +82,14 @@ type N500 = Error
 // N503 defines model for 503.
 type N503 = Error
 
-// GetIpxeBySelectorsParams defines parameters for GetIpxeBySelectors.
-type GetIpxeBySelectorsParams struct {
+// GetIPXEBySelectorsParams defines parameters for GetIPXEBySelectors.
+type GetIPXEBySelectorsParams struct {
 	Uuid      UuidSelector                      `form:"uuid" json:"uuid"`
-	Buildarch GetIpxeBySelectorsParamsBuildarch `form:"buildarch" json:"buildarch"`
+	Buildarch GetIPXEBySelectorsParamsBuildarch `form:"buildarch" json:"buildarch"`
 }
 
-// GetIpxeBySelectorsParamsBuildarch defines parameters for GetIpxeBySelectors.
-type GetIpxeBySelectorsParamsBuildarch string
+// GetIPXEBySelectorsParamsBuildarch defines parameters for GetIPXEBySelectors.
+type GetIPXEBySelectorsParamsBuildarch string
 
 // GetConfigByIDParams defines parameters for GetConfigByID.
 type GetConfigByIDParams struct {
@@ -107,7 +107,7 @@ type ServerInterface interface {
 	GetIPXEBootstrap(ctx echo.Context) error
 	// Retrieve an iPXE manifest by selectors
 	// (GET /ipxe)
-	GetIpxeBySelectors(ctx echo.Context, params GetIpxeBySelectorsParams) error
+	GetIPXEBySelectors(ctx echo.Context, params GetIPXEBySelectorsParams) error
 	// Retrieve dynamically a configuration file by its profile name and config ID.
 	// (GET /profile/{profileName}/config/{configID})
 	GetConfigByID(ctx echo.Context, profileName string, configID UUID, params GetConfigByIDParams) error
@@ -127,12 +127,12 @@ func (w *ServerInterfaceWrapper) GetIPXEBootstrap(ctx echo.Context) error {
 	return err
 }
 
-// GetIpxeBySelectors converts echo context to params.
-func (w *ServerInterfaceWrapper) GetIpxeBySelectors(ctx echo.Context) error {
+// GetIPXEBySelectors converts echo context to params.
+func (w *ServerInterfaceWrapper) GetIPXEBySelectors(ctx echo.Context) error {
 	var err error
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetIpxeBySelectorsParams
+	var params GetIPXEBySelectorsParams
 	// ------------- Required query parameter "uuid" -------------
 
 	err = runtime.BindQueryParameter("form", true, true, "uuid", ctx.QueryParams(), &params.Uuid)
@@ -148,7 +148,7 @@ func (w *ServerInterfaceWrapper) GetIpxeBySelectors(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetIpxeBySelectors(ctx, params)
+	err = w.Handler.GetIPXEBySelectors(ctx, params)
 	return err
 }
 
@@ -221,7 +221,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/boot.ipxe", wrapper.GetIPXEBootstrap)
-	router.GET(baseURL+"/ipxe", wrapper.GetIpxeBySelectors)
+	router.GET(baseURL+"/ipxe", wrapper.GetIPXEBySelectors)
 	router.GET(baseURL+"/profile/:profileName/config/:configID", wrapper.GetConfigByID)
 
 }
@@ -229,32 +229,32 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"XwAAAP//AQmoIysUAAA=",
+	"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",
+	"/0agIYArFAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -48,7 +48,7 @@ paths:
           #     during the registration phase, to the state of the PSM.
     get:
       summary: Retrieve an iPXE manifest by selectors
-      operationId: getIpxeBySelectors
+      operationId: getIPXEBySelectors
       tags:
         - ipxe
       parameters:

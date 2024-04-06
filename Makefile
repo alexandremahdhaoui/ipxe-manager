@@ -4,7 +4,7 @@ PROJECT := ipxer
 
 OAPI_IPXER_SPEC        := ./api/ipxer.v1.yaml
 OAPI_IPXER_SERVER_PKG  := server
-OAPI_IPXER_SERVER_FILE := ./internal/drivers/server/zz_generated.server.go
+OAPI_IPXER_SERVER_FILE := ./internal/driver/server/zz_generated.server.go
 OAPI_IPXER_CLIENT_PKG  := ipxerclient
 OAPI_IPXER_CLIENT_FILE := ./pkg/ipxerclient/zz_generated.ipxerclient.go
 
