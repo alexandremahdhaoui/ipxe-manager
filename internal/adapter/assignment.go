@@ -20,8 +20,8 @@ var (
 // --------------------------------------------------- INTERFACES --------------------------------------------------- //
 
 type Assignment interface {
-	FindDefaultProfile(ctx context.Context, buildarch string) (string, error)
-	FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (string, error)
+	FindDefaultProfile(ctx context.Context, buildarch string) (types.Assignment, error)
+	FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -42,58 +42,70 @@ type assignment struct {
 
 // --------------------------------------------- FindDefaultProfile ------------------------------------------------- //
 
-func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (string, error) {
+func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (types.Assignment, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 
 	// Get the list of default matching the buildarch
 	if err := a.client.List(ctx, list, toDefaultListOptions(buildarch)...); err != nil {
-		return "", errors.Join(err, errAssignmentList, errAssignmentFindDefault)
+		return types.Assignment{}, errors.Join(err, errAssignmentList, errAssignmentFindDefault)
 	}
 
 	if list == nil || len(list.Items) == 0 {
-		return "", errors.Join(ErrAssignmentNotFound, errAssignmentFindDefault)
+		return types.Assignment{}, errors.Join(ErrAssignmentNotFound, errAssignmentFindDefault)
 	}
 
-	return list.Items[0].Spec.ProfileName, nil
+	return types.Assignment{
+		Name:        list.Items[0].Name,
+		ProfileName: list.Items[0].Spec.ProfileName,
+	}, nil
 }
 
 // --------------------------------------------- FindProfileBySelectors --------------------------------------------- //
 
-func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (string, error) {
+func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 	if err := a.client.List(ctx, list, toListOptions(selectors)...); err != nil {
-		return "", errors.Join(err, errAssignmentList, errAssignmentFindBySelectors)
+		return types.Assignment{}, errors.Join(err, errAssignmentList, errAssignmentFindBySelectors)
 	}
 
 	if list == nil || len(list.Items) == 0 {
-		return "", errors.Join(ErrAssignmentNotFound, errAssignmentFindBySelectors)
+		return types.Assignment{}, errors.Join(ErrAssignmentNotFound, errAssignmentFindBySelectors)
 	}
 
-	return list.Items[0].Spec.ProfileName, nil
+	return types.Assignment{
+		Name:        list.Items[0].Name,
+		ProfileName: list.Items[0].Spec.ProfileName,
+	}, nil
 }
 
 // --------------------------------------------- UTILS -------------------------------------------------------------- //
 
 func toListOptions(selectors types.IpxeSelectors) []client.ListOption {
-	return []client.ListOption{
-		client.MatchingLabels{
-			v1alpha1.BuildarchAssignmentLabel: selectors.Buildarch,
-		},
-		client.HasLabels{
-			v1alpha1.UUIDLabelSelector(selectors.UUID),
-		},
-	}
+	return setBuildarchLabelSelector(selectors.Buildarch, []client.ListOption{
+		client.HasLabels{v1alpha1.NewUUIDLabelSelector(selectors.UUID)},
+	})
 }
 
 func toDefaultListOptions(buildarch string) []client.ListOption {
-	return []client.ListOption{
-		client.MatchingLabels{
-			v1alpha1.BuildarchAssignmentLabel: buildarch,
-		},
-		client.HasLabels{
-			v1alpha1.DefaultAssignmentLabel,
-		},
+	return setBuildarchLabelSelector(buildarch, []client.ListOption{
+		client.HasLabels{v1alpha1.DefaultAssignmentLabel},
+	})
+}
+
+func setBuildarchLabelSelector(buildarch string, opts []client.ListOption) []client.ListOption {
+	switch v1alpha1.Buildarch(buildarch) {
+	case v1alpha1.Arm32:
+		return append(opts, client.HasLabels{v1alpha1.Arm32BuildarchLabelSelector})
+	case v1alpha1.Arm64:
+		return append(opts, client.HasLabels{v1alpha1.Arm64BuildarchLabelSelector})
+	case v1alpha1.I386:
+		return append(opts, client.HasLabels{v1alpha1.I386BuildarchLabelSelector})
+	case v1alpha1.X8664:
+		return append(opts, client.HasLabels{v1alpha1.X8664BuildarchLabelSelector})
+	default:
+		// not specifying anything implies any buildarch
+		return opts
 	}
 }

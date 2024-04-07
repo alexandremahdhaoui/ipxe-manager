@@ -1,3 +1,9 @@
+refactoring:
+  IMPORTANT: |-
+    For the `/config` endpoint, don't use the profile name (only use the config UUID).
+    Query the config by UUID by setting the uuid into a label to the profile. 
+    -> The key will hold the uuid; the value will be set to the additionalContent's name.
+
 misc:
   Log:
     add logger.

@@ -9,7 +9,7 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockadapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
-	"github.com/alexandremahdhaoui/ipxer/pkg/transformerserver"
+	"github.com/alexandremahdhaoui/ipxer/pkg/generated/transformerserver"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

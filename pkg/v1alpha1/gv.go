@@ -5,15 +5,18 @@ package v1alpha1
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
 const (
-	Group   = "ipxe.cloud.alexandre.mahdhaoui.com"
+	Group   = "ipxer.cloud.alexandre.mahdhaoui.com"
 	Version = "v1alpha1"
+
+	UUIDPrefix      = "uuid"
+	BuildarchPrefix = "buildarch"
 )
 
 var (
@@ -22,10 +25,12 @@ var (
 	AddToScheme   = SchemeBuilder.AddToScheme
 )
 
-func UUIDLabelSelector(id uuid.UUID) string {
-	return fmt.Sprintf("%s/%s", Group, id.String())
-}
+func LabelSelector(key string, prefixes ...string) string {
+	label := fmt.Sprintf("%s/%s", Group, key)
 
-func LabelSelector(key string) string {
-	return fmt.Sprintf("%s/%s", Group, key)
+	if len(prefixes) > 0 {
+		label = fmt.Sprintf("%s.%s", strings.Join(prefixes, "."), label)
+	}
+
+	return label
 }

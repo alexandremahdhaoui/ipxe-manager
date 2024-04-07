@@ -21,7 +21,6 @@ func init() {
 // spec:
 //   # ipxe: string.
 //   ipxe: |
-//     # ipxe
 //     command ... \
 //       --with-parameter "{{ .AdditionalContent.parameter-0 }}" \
 //       --ignition-url "{{ .AdditionalContent.ignitionFile }}" \

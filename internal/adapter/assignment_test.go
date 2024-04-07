@@ -117,7 +117,7 @@ func TestAssignment(t *testing.T) {
 
 			expectedListOptions = []interface{}{
 				client.MatchingLabels{v1alpha1.BuildarchAssignmentLabel: inputBuildarch},
-				client.HasLabels{v1alpha1.UUIDLabelSelector(id)},
+				client.HasLabels{v1alpha1.NewUUIDLabelSelector(id)},
 			}
 
 			list(t)

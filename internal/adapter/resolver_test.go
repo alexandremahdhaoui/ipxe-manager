@@ -8,7 +8,7 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
-	"github.com/alexandremahdhaoui/ipxer/pkg/resolverserver"
+	resolverserver2 "github.com/alexandremahdhaoui/ipxer/pkg/generated/resolverserver"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/assert"
@@ -106,7 +106,7 @@ func TestWebhookResolver(t *testing.T) {
 		mtlsObject      *unstructured.Unstructured
 		content         types.Content
 
-		mock *resolverserver.Mock
+		mock *resolverserver2.Mock
 
 		cl       *fake.FakeDynamicClient
 		resolver adapter.Resolver
@@ -129,7 +129,7 @@ func TestWebhookResolver(t *testing.T) {
 		// -------------------------------------------------- Webhook Server  --------------------------------------- //
 
 		addr := strings.SplitN(content.WebhookConfig.URL, "/", 2)[0]
-		mock = resolverserver.NewMock(t, addr)
+		mock = resolverserver2.NewMock(t, addr)
 
 		clientKey, clientCert, err := mock.CA.NewCertifiedKeyPEM(addr)
 		require.NoError(t, err)
@@ -195,7 +195,7 @@ func TestWebhookResolver(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			defer setup(t)()
 
-			mock.AppendExpectation(func(e echo.Context, params resolverserver.ResolveParams) error {
+			mock.AppendExpectation(func(e echo.Context, params resolverserver2.ResolveParams) error {
 				expected = []byte(fmt.Sprintf("hello world: %s + %s", params.Buildarch, params.Uuid.String()))
 				e.Response().Write(expected)
 				return nil
