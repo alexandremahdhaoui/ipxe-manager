@@ -47,7 +47,9 @@ func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (
 	list := new(v1alpha1.AssignmentList)
 
 	// Get the list of default matching the buildarch
-	if err := a.client.List(ctx, list, toDefaultListOptions(buildarch)...); err != nil {
+	if err := a.client.List(ctx, list, toBuildarchLabelSelector(buildarch, []client.ListOption{
+		client.HasLabels{v1alpha1.DefaultAssignmentLabel},
+	})...); err != nil {
 		return types.Assignment{}, errors.Join(err, errAssignmentList, errAssignmentFindDefault)
 	}
 
@@ -66,7 +68,9 @@ func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (
 func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
-	if err := a.client.List(ctx, list, toListOptions(selectors)...); err != nil {
+	if err := a.client.List(ctx, list, toBuildarchLabelSelector(selectors.Buildarch, []client.ListOption{
+		client.HasLabels{v1alpha1.NewUUIDLabelSelector(selectors.UUID)},
+	})...); err != nil {
 		return types.Assignment{}, errors.Join(err, errAssignmentList, errAssignmentFindBySelectors)
 	}
 
@@ -82,19 +86,7 @@ func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types
 
 // --------------------------------------------- UTILS -------------------------------------------------------------- //
 
-func toListOptions(selectors types.IpxeSelectors) []client.ListOption {
-	return setBuildarchLabelSelector(selectors.Buildarch, []client.ListOption{
-		client.HasLabels{v1alpha1.NewUUIDLabelSelector(selectors.UUID)},
-	})
-}
-
-func toDefaultListOptions(buildarch string) []client.ListOption {
-	return setBuildarchLabelSelector(buildarch, []client.ListOption{
-		client.HasLabels{v1alpha1.DefaultAssignmentLabel},
-	})
-}
-
-func setBuildarchLabelSelector(buildarch string, opts []client.ListOption) []client.ListOption {
+func toBuildarchLabelSelector(buildarch string, opts []client.ListOption) []client.ListOption {
 	switch v1alpha1.Buildarch(buildarch) {
 	case v1alpha1.Arm32:
 		return append(opts, client.HasLabels{v1alpha1.Arm32BuildarchLabelSelector})

@@ -80,38 +80,38 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 	out.IPXETemplate = input.Spec.IPXETemplate
 	out.AdditionalContent = make([]types.Content, 0)
 
-	for _, ac := range input.Spec.AdditionalContent {
+	for name, c := range input.Spec.AdditionalContent {
 
-		transformers, err := fromV1alpha1.toTransformerConfig(ac.PostTransformations)
+		transformers, err := fromV1alpha1.toTransformerConfig(c.PostTransformations)
 		if err != nil {
 			return types.Profile{}, err // TODO: wrap err
 		}
 
 		var content types.Content
 		switch {
-		case ac.Exposed:
-			id, err := fromV1alpha1.toProfileID(ac.Name, input.Status)
+		case c.Exposed:
+			id, err := fromV1alpha1.toProfileID(name, input.Status)
 			if err != nil {
 				return types.Profile{}, errors.Join(err, errConvertingProfile)
 			}
 
-			content = types.NewExposedContent(id, ac.Name)
-		case ac.Inline != nil:
-			content = types.NewInlineContent(ac.Name, *ac.Inline, transformers...)
-		case ac.ObjectRef != nil:
-			ref, err := fromV1alpha1.toObjectRef(ac.ObjectRef)
+			content = types.NewExposedContent(id, name)
+		case c.Inline != nil:
+			content = types.NewInlineContent(name, *c.Inline, transformers...)
+		case c.ObjectRef != nil:
+			ref, err := fromV1alpha1.toObjectRef(c.ObjectRef)
 			if err != nil {
 				return types.Profile{}, err // TODO: wrap err
 			}
 
-			content = types.NewObjectRefContent(ac.Name, ref, transformers...)
-		case ac.Webhook != nil:
-			config, err := fromV1alpha1.toWebhookConfig(ac.Webhook)
+			content = types.NewObjectRefContent(name, ref, transformers...)
+		case c.Webhook != nil:
+			config, err := fromV1alpha1.toWebhookConfig(c.Webhook)
 			if err != nil {
 				return types.Profile{}, err // TODO: wrap err
 			}
 
-			content = types.NewWebhookContent(ac.Name, config, transformers...)
+			content = types.NewWebhookContent(name, config, transformers...)
 		}
 
 		out.AdditionalContent = append(out.AdditionalContent, content)

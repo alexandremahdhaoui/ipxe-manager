@@ -11,10 +11,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	"slices"
 )
 
-var _ webhook.CustomValidator = &Assignment{}
-var _ webhook.CustomDefaulter = &Assignment{}
+var (
+	_ webhook.CustomValidator = &Assignment{}
+	_ webhook.CustomDefaulter = &Assignment{}
+)
 
 func NewAssignment(assignment adapter.Assignment, profile adapter.Profile) *Assignment {
 	return &Assignment{
@@ -52,14 +55,14 @@ func (a *Assignment) Default(ctx context.Context, obj runtime.Object) error {
 			return err //TODO: wrap err
 		}
 
-		assignment.SetUUIDLabelSelector(id)
+		v1alpha1.SetUUIDLabelSelector(assignment, id, "")
 	}
 
 	// 3. Add buildarch labels etc...
 	buildarchList := assignment.Spec.SubjectSelectors.BuildarchList
 	if len(buildarchList) == 0 {
 		// unspecified implies any buildarch.
-		buildarchList = []v1alpha1.Buildarch{v1alpha1.Arm32, v1alpha1.Arm64, v1alpha1.I386, v1alpha1.X8664}
+		buildarchList = slices.Clone(v1alpha1.AllowedBuildarchList)
 	}
 
 	for _, b := range buildarchList {
@@ -142,12 +145,10 @@ func validateBuildarchList(_ context.Context, obj runtime.Object) error {
 	assignment := obj.(*v1alpha1.Assignment)
 
 	for _, b := range assignment.Spec.SubjectSelectors.BuildarchList {
-		switch b {
-		case v1alpha1.Arm32, v1alpha1.Arm64, v1alpha1.I386, v1alpha1.X8664:
-		default:
+		if _, ok := v1alpha1.AllowedBuildarch[b]; !ok {
 			return errors.Join(
 				errors.New("specified buildarch is not supported"),
-				fmt.Errorf("TODO: got/want"),
+				fmt.Errorf("expected one of 'arm32', 'arm64', 'i386', 'x86_64'; received %q", b.String()),
 			) //TODO: err + wrap err
 		}
 	}
@@ -176,7 +177,7 @@ func validateIsDefault(_ context.Context, obj runtime.Object) error {
 	}
 
 	if len(assignment.Spec.SubjectSelectors.UUIDList) > 0 {
-		return errors.New("a default assignment must not specify any subject selectors of type UUID") //TODO: err + wrap err
+		return errors.New("a default assignment must not specify subject selectors of type UUID") //TODO: err + wrap err
 	}
 
 	return nil
@@ -188,7 +189,7 @@ func (a *Assignment) validateProfileName(ctx context.Context, obj runtime.Object
 	_, err := a.profile.Get(ctx, assignment.Spec.ProfileName)
 	if errors.Is(err, adapter.ErrProfileNotFound) {
 		// Return an error if the referred profile does not exist.
-		return errors.New("TODO") //TODO: err + wrap err
+		return errors.New("assignment must specify an existing profileName") //TODO: err + wrap err
 	} else if err != nil {
 		return err //TODO: wrap err
 	}
@@ -216,6 +217,8 @@ func (a *Assignment) validateDefaultAssignmentForBuildarchIsUnique(ctx context.C
 			// update scenario should pass
 			continue
 		}
+
+		return errors.New("TODO") //TODO: err + wrap err
 	}
 
 	return nil

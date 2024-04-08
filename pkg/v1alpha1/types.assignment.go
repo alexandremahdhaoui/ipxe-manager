@@ -1,9 +1,7 @@
 package v1alpha1
 
 import (
-	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func init() {
@@ -20,6 +18,26 @@ var (
 	X8664BuildarchLabelSelector = LabelSelector(X8664.String(), BuildarchPrefix)
 	Arm32BuildarchLabelSelector = LabelSelector(Arm32.String(), BuildarchPrefix)
 	Arm64BuildarchLabelSelector = LabelSelector(Arm64.String(), BuildarchPrefix)
+
+	// datastructures
+
+	AllowedBuildarchList = []Buildarch{Arm32, Arm64, I386, X8664}
+	AllowedBuildarch     = func() map[Buildarch]any {
+		out := make(map[Buildarch]any)
+
+		for _, b := range AllowedBuildarchList {
+			out[b] = nil
+		}
+
+		return out
+	}()
+
+	buildarchToLabel = map[Buildarch]string{
+		Arm32: Arm64BuildarchLabelSelector,
+		Arm64: Arm64BuildarchLabelSelector,
+		I386:  I386BuildarchLabelSelector,
+		X8664: X8664BuildarchLabelSelector,
+	}
 )
 
 type Buildarch string
@@ -123,26 +141,5 @@ func (a *Assignment) GetBuildarchList() []Buildarch {
 }
 
 func (a *Assignment) SetBuildarch(buildarch Buildarch) {
-	switch buildarch {
-	case Arm32:
-		a.Labels[Arm32BuildarchLabelSelector] = ""
-	case Arm64:
-		a.Labels[Arm64BuildarchLabelSelector] = ""
-	case I386:
-		a.Labels[I386BuildarchLabelSelector] = ""
-	case X8664:
-		a.Labels[X8664BuildarchLabelSelector] = ""
-	}
-}
-
-func (a *Assignment) SetUUIDLabelSelector(id uuid.UUID) {
-	a.Labels[NewUUIDLabelSelector(id)] = ""
-}
-
-func NewUUIDLabelSelector(id uuid.UUID) string {
-	return LabelSelector(id.String(), UUIDPrefix)
-}
-
-func IsInternalLabel(key string) bool {
-	return strings.Contains(key, Group)
+	a.Labels[buildarchToLabel[buildarch]] = ""
 }

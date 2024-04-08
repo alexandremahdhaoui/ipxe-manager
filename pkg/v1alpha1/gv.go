@@ -5,6 +5,8 @@ package v1alpha1
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -33,4 +35,20 @@ func LabelSelector(key string, prefixes ...string) string {
 	}
 
 	return label
+}
+
+func IsInternalLabel(key string) bool {
+	return strings.Contains(key, Group)
+}
+
+func SetUUIDLabelSelector(obj client.Object, id uuid.UUID, value string) {
+	obj.GetLabels()[NewUUIDLabelSelector(id)] = value
+}
+
+func NewUUIDLabelSelector(id uuid.UUID) string {
+	return LabelSelector(id.String(), UUIDPrefix)
+}
+
+func IsUUIDLabelSelector(key string) bool {
+	return strings.Contains(key, LabelSelector("", UUIDPrefix))
 }
