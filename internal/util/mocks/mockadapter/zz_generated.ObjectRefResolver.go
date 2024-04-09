@@ -24,9 +24,9 @@ func (_m *MockObjectRefResolver) EXPECT() *MockObjectRefResolver_Expecter {
 	return &MockObjectRefResolver_Expecter{mock: &_m.Mock}
 }
 
-// Resolve provides a mock function with given fields: ctx, c
-func (_m *MockObjectRefResolver) Resolve(ctx context.Context, c types.Content) ([]byte, error) {
-	ret := _m.Called(ctx, c)
+// Resolve provides a mock function with given fields: ctx, content, attributes
+func (_m *MockObjectRefResolver) Resolve(ctx context.Context, content types.Content, attributes types.IpxeSelectors) ([]byte, error) {
+	ret := _m.Called(ctx, content, attributes)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Resolve")
@@ -34,19 +34,19 @@ func (_m *MockObjectRefResolver) Resolve(ctx context.Context, c types.Content) (
 
 	var r0 []byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.Content) ([]byte, error)); ok {
-		return rf(ctx, c)
+	if rf, ok := ret.Get(0).(func(context.Context, types.Content, types.IpxeSelectors) ([]byte, error)); ok {
+		return rf(ctx, content, attributes)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.Content) []byte); ok {
-		r0 = rf(ctx, c)
+	if rf, ok := ret.Get(0).(func(context.Context, types.Content, types.IpxeSelectors) []byte); ok {
+		r0 = rf(ctx, content, attributes)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.Content) error); ok {
-		r1 = rf(ctx, c)
+	if rf, ok := ret.Get(1).(func(context.Context, types.Content, types.IpxeSelectors) error); ok {
+		r1 = rf(ctx, content, attributes)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -61,14 +61,15 @@ type MockObjectRefResolver_Resolve_Call struct {
 
 // Resolve is a helper method to define mock.On call
 //   - ctx context.Context
-//   - c types.Content
-func (_e *MockObjectRefResolver_Expecter) Resolve(ctx interface{}, c interface{}) *MockObjectRefResolver_Resolve_Call {
-	return &MockObjectRefResolver_Resolve_Call{Call: _e.mock.On("Resolve", ctx, c)}
+//   - content types.Content
+//   - attributes types.IpxeSelectors
+func (_e *MockObjectRefResolver_Expecter) Resolve(ctx interface{}, content interface{}, attributes interface{}) *MockObjectRefResolver_Resolve_Call {
+	return &MockObjectRefResolver_Resolve_Call{Call: _e.mock.On("Resolve", ctx, content, attributes)}
 }
 
-func (_c *MockObjectRefResolver_Resolve_Call) Run(run func(ctx context.Context, c types.Content)) *MockObjectRefResolver_Resolve_Call {
+func (_c *MockObjectRefResolver_Resolve_Call) Run(run func(ctx context.Context, content types.Content, attributes types.IpxeSelectors)) *MockObjectRefResolver_Resolve_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(types.Content))
+		run(args[0].(context.Context), args[1].(types.Content), args[2].(types.IpxeSelectors))
 	})
 	return _c
 }
@@ -78,7 +79,7 @@ func (_c *MockObjectRefResolver_Resolve_Call) Return(_a0 []byte, _a1 error) *Moc
 	return _c
 }
 
-func (_c *MockObjectRefResolver_Resolve_Call) RunAndReturn(run func(context.Context, types.Content) ([]byte, error)) *MockObjectRefResolver_Resolve_Call {
+func (_c *MockObjectRefResolver_Resolve_Call) RunAndReturn(run func(context.Context, types.Content, types.IpxeSelectors) ([]byte, error)) *MockObjectRefResolver_Resolve_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -145,6 +145,9 @@ type (
 
 		// CaBundleJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'ca-bundle.pem'`
 		CaBundleJSONPath string `json:"caBundleJSONPath,omitempty"`
+
+		// TLSInsecureSkipVerify allow usage of self-signed certificates.
+		TLSInsecureSkipVerify bool `json:"tlsInsecureSkipVerify"`
 	}
 )
 

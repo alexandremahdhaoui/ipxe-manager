@@ -27,6 +27,10 @@ impl:
     - profile
 
 test:
+  fix-unit-tests:
+    adapter:
+    controller:
+
   unit:
     cmd:
       - cmd

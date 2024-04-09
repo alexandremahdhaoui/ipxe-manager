@@ -224,9 +224,10 @@ func (ipxev1a1) toMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) (*types.MTLSObjectR
 			Namespace: ref.Namespace,
 			Name:      ref.Name,
 		},
-		ClientKeyJSONPath:  ckjp,
-		ClientCertJSONPath: ccjp,
-		CaBundleJSONPath:   cbjp,
+		ClientKeyJSONPath:     ckjp,
+		ClientCertJSONPath:    ccjp,
+		CaBundleJSONPath:      cbjp,
+		TLSInsecureSkipVerify: ref.TLSInsecureSkipVerify,
 	}, nil
 }
 

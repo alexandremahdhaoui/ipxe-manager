@@ -57,6 +57,8 @@ type MTLSObjectRef struct {
 	ClientKeyJSONPath  *jsonpath.JSONPath
 	ClientCertJSONPath *jsonpath.JSONPath
 	CaBundleJSONPath   *jsonpath.JSONPath
+
+	TLSInsecureSkipVerify bool
 }
 
 // --------------------------------------------------- RESOLVER ----------------------------------------------------- //

@@ -62,7 +62,7 @@ func (r *resolveTransformerMux) ResolveAndTransformBatch(
 			return nil, errors.Join(ErrResolverUnknown, ErrResolveAndTransformBatch)
 		}
 
-		result, err := resolver.Resolve(ctx, content)
+		result, err := resolver.Resolve(ctx, content, selectors)
 		if err != nil {
 			return nil, errors.Join(err, ErrResolveAndTransformBatch)
 		}

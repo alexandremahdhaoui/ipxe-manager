@@ -40,7 +40,7 @@ spec:
               IPXETemplate:
                 type: string
               additionalContent:
-                items:
+                additionalProperties:
                   properties:
                     exposed:
                       description: |-
@@ -52,10 +52,6 @@ spec:
                     inline:
                       description: Inline is used to directly template content from
                         the Custom Resource.
-                      type: string
-                    name:
-                      description: Name is the name given to the AdditionalContent.
-                        Name can be used to be templated into the IPXETemplate configuration.
                       type: string
                     objectRef:
                       description: |-
@@ -115,17 +111,17 @@ spec:
                                       resource
                                     type: string
                                   passwordJSONPath:
-                                    description: |-
-                                      PasswordJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.password`
-                                      TODO: Validate this jsonpath in the webhook.
+                                    description: PasswordJSONPath to the desired content
+                                      in the resource using jsonpath notation. E.g.
+                                      `.data.password`
                                     type: string
                                   resource:
                                     description: Resource is the kind of the resource.
                                     type: string
                                   usernameJSONPath:
-                                    description: |-
-                                      UsernameJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.username`
-                                      TODO: Validate this jsonpath in the webhook.
+                                    description: UsernameJSONPath to the desired content
+                                      in the resource using jsonpath notation. E.g.
+                                      `.data.username`
                                     type: string
                                   version:
                                     description: Version is the version of the apiVersion.
@@ -142,19 +138,19 @@ spec:
                               mTLSRef:
                                 properties:
                                   caBundleJSONPath:
-                                    description: |-
-                                      CaBundleJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'ca-bundle.pem'`
-                                      TODO: Validate this jsonpath in the webhook.
+                                    description: CaBundleJSONPath to the desired content
+                                      in the resource using jsonpath notation. E.g.
+                                      `.data.'ca-bundle.pem'`
                                     type: string
                                   clientCertJSONPath:
-                                    description: |-
-                                      ClientCertJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.crt'`
-                                      TODO: Validate this jsonpath in the webhook.
+                                    description: ClientCertJSONPath to the desired
+                                      content in the resource using jsonpath notation.
+                                      E.g. `.data.'client.crt'`
                                     type: string
                                   clientKeyJSONPath:
-                                    description: |-
-                                      ClientKeyJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.key'`
-                                      TODO: Validate this jsonpath in the webhook.
+                                    description: ClientKeyJSONPath to the desired
+                                      content in the resource using jsonpath notation.
+                                      E.g. `.data.'client.key'`
                                     type: string
                                   group:
                                     description: Group is the group of the apiVersion.
@@ -169,6 +165,10 @@ spec:
                                   resource:
                                     description: Resource is the kind of the resource.
                                     type: string
+                                  tlsInsecureSkipVerify:
+                                    description: TLSInsecureSkipVerify allow usage
+                                      of self-signed certificates.
+                                    type: boolean
                                   version:
                                     description: Version is the version of the apiVersion.
                                     type: string
@@ -179,6 +179,7 @@ spec:
                                 - name
                                 - namespace
                                 - resource
+                                - tlsInsecureSkipVerify
                                 - version
                                 type: object
                               url:
@@ -207,17 +208,15 @@ spec:
                               description: Namespace is the namespace of the resource
                               type: string
                             passwordJSONPath:
-                              description: |-
-                                PasswordJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.password`
-                                TODO: Validate this jsonpath in the webhook.
+                              description: PasswordJSONPath to the desired content
+                                in the resource using jsonpath notation. E.g. `.data.password`
                               type: string
                             resource:
                               description: Resource is the kind of the resource.
                               type: string
                             usernameJSONPath:
-                              description: |-
-                                UsernameJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.username`
-                                TODO: Validate this jsonpath in the webhook.
+                              description: UsernameJSONPath to the desired content
+                                in the resource using jsonpath notation. E.g. `.data.username`
                               type: string
                             version:
                               description: Version is the version of the apiVersion.
@@ -234,19 +233,16 @@ spec:
                         mTLSRef:
                           properties:
                             caBundleJSONPath:
-                              description: |-
-                                CaBundleJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'ca-bundle.pem'`
-                                TODO: Validate this jsonpath in the webhook.
+                              description: CaBundleJSONPath to the desired content
+                                in the resource using jsonpath notation. E.g. `.data.'ca-bundle.pem'`
                               type: string
                             clientCertJSONPath:
-                              description: |-
-                                ClientCertJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.crt'`
-                                TODO: Validate this jsonpath in the webhook.
+                              description: ClientCertJSONPath to the desired content
+                                in the resource using jsonpath notation. E.g. `.data.'client.crt'`
                               type: string
                             clientKeyJSONPath:
-                              description: |-
-                                ClientKeyJSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'client.key'`
-                                TODO: Validate this jsonpath in the webhook.
+                              description: ClientKeyJSONPath to the desired content
+                                in the resource using jsonpath notation. E.g. `.data.'client.key'`
                               type: string
                             group:
                               description: Group is the group of the apiVersion.
@@ -260,6 +256,10 @@ spec:
                             resource:
                               description: Resource is the kind of the resource.
                               type: string
+                            tlsInsecureSkipVerify:
+                              description: TLSInsecureSkipVerify allow usage of self-signed
+                                certificates.
+                              type: boolean
                             version:
                               description: Version is the version of the apiVersion.
                               type: string
@@ -270,6 +270,7 @@ spec:
                           - name
                           - namespace
                           - resource
+                          - tlsInsecureSkipVerify
                           - version
                           type: object
                         url:
@@ -278,10 +279,11 @@ spec:
                       - url
                       type: object
                   required:
-                  - name
                   - postTransformations
                   type: object
-                type: array
+                description: AdditionalContent can be templated into the IPXETemplate
+                  using the content's key.
+                type: object
             required:
             - IPXETemplate
             type: object

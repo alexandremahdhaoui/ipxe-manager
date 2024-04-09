@@ -98,11 +98,13 @@ func NewMock(t *testing.T, addr string) *Mock {
 		Addr:    addr,
 		Handler: echoServer, // set Echo as handler
 		TLSConfig: &tls.Config{
-			Certificates:       []tls.Certificate{tlsKeyPair},
-			RootCAs:            ca.Pool(),
-			ServerName:         serverName,
-			ClientAuth:         tls.RequireAndVerifyClientCert,
-			ClientCAs:          ca.Pool(),
+			Certificates: []tls.Certificate{tlsKeyPair},
+			RootCAs:      ca.Pool(),
+			ServerName:   serverName,
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    ca.Pool(),
+			//TODO: Parameterize InsecureSkipVerify to test use cases where use would allow self-signed certs.
+			//      We may also have to update the RootCAs var.
 			InsecureSkipVerify: false, //TODO?
 		},
 	}

@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 
@@ -34,7 +33,7 @@ var (
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
 type Resolver interface {
-	Resolve(ctx context.Context, c types.Content) ([]byte, error)
+	Resolve(ctx context.Context, content types.Content, attributes types.IpxeSelectors) ([]byte, error)
 }
 
 type ObjectRefResolver interface {
@@ -51,8 +50,8 @@ func NewInlineResolver() Resolver {
 
 type inlineResolver struct{}
 
-func (r *inlineResolver) Resolve(_ context.Context, c types.Content) ([]byte, error) {
-	return []byte(c.Inline), nil
+func (r *inlineResolver) Resolve(_ context.Context, content types.Content, _ types.IpxeSelectors) ([]byte, error) {
+	return []byte(content.Inline), nil
 }
 
 // ---------------------------------------------- OBJECT REF RESOLVER ----------------------------------------------- //
@@ -65,12 +64,16 @@ type objectRefResolver struct {
 	k8s dynamic.Interface
 }
 
-func (r *objectRefResolver) Resolve(ctx context.Context, c types.Content) ([]byte, error) {
-	if c.ObjectRef == nil {
+func (r *objectRefResolver) Resolve(
+	ctx context.Context,
+	content types.Content,
+	_ types.IpxeSelectors,
+) ([]byte, error) {
+	if content.ObjectRef == nil {
 		return nil, errors.Join(errObjectRefMustBeSpecified, ErrResolverResolve)
 	}
 
-	ref := *c.ObjectRef
+	ref := *content.ObjectRef
 
 	out, err := r.ResolvePaths(ctx, []*jsonpath.JSONPath{ref.JSONPath}, ref)
 	if err != nil {
@@ -113,6 +116,11 @@ func (r *objectRefResolver) ResolvePaths(ctx context.Context, paths []*jsonpath.
 
 // ------------------------------------------------ WEBHOOK RESOLVER ------------------------------------------------ //
 
+const (
+	buildarchParam = "buildarch"
+	uuidParam      = "uuid"
+)
+
 // NewWebhookResolver requires a k8sClient in order to resolve object reference if needed.
 func NewWebhookResolver(resolver ObjectRefResolver) Resolver {
 	return &webhookResolver{objectRefResolver: resolver}
@@ -120,18 +128,27 @@ func NewWebhookResolver(resolver ObjectRefResolver) Resolver {
 
 type webhookResolver struct {
 	objectRefResolver ObjectRefResolver
-	//TODO: add field to enable/disable insecure TLS communication.
-	//      - should it be specified for the whole deployment or explicitly enabled for each mTLSObjectRef config?
+
+	// Allow GLOBALLY disabling
+	disableTLSInsecureSkipVerify bool
 }
 
-func (r *webhookResolver) Resolve(ctx context.Context, content types.Content) ([]byte, error) {
+func (r *webhookResolver) Resolve(
+	ctx context.Context,
+	content types.Content,
+	attributes types.IpxeSelectors,
+) ([]byte, error) {
+	//TODO: make use of content.WebhookConfig.MTLSObjectRef.TLSInsecureSkipVerify
+
 	if content.WebhookConfig == nil {
 		return nil, errors.Join(errWebhookConfigShouldNotBeNil, ErrWebhookResolver, ErrResolverResolve)
 	}
 
-	//TODO: pass UUID and BUILDARCH as parameters
-	// Requires to change the interface Resolve() func signature
-	url := fmt.Sprintf("https://%s?uuid=%s&buildarch=%s", content.WebhookConfig.URL, uuid.Nil, "arm64")
+	url := fmt.Sprintf("https://%s?%s=%s&%s=%s",
+		content.WebhookConfig.URL,
+		buildarchParam, attributes.Buildarch,
+		uuidParam, attributes.UUID,
+	)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -176,7 +193,7 @@ func (r *webhookResolver) mTLSConfig(ctx context.Context, httpClient *http.Clien
 
 	if nRes := len(res); nRes < 3 {
 		return errors.Join(
-			fmt.Errorf("got: %d results; want: 3 results", nRes),
+			fmt.Errorf("expected: 3 results; actual: %d results", nRes),
 			errors.New("mTLS configuration expected 1 client key, 1 client crt, and 1 ca bundle/crt"),
 			errResolvingMTLSConfig)
 	}
@@ -197,6 +214,8 @@ func (r *webhookResolver) mTLSConfig(ctx context.Context, httpClient *http.Clien
 		TLSClientConfig: &tls.Config{
 			RootCAs:      caCertPool,
 			Certificates: []tls.Certificate{cert},
+			// disableTLSInsecureSkipVerify globally enforce tls verification. //TODO: add test cases.
+			InsecureSkipVerify: (!r.disableTLSInsecureSkipVerify) && ref.TLSInsecureSkipVerify,
 		},
 	}
 

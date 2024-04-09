@@ -7,6 +7,8 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
+	types "github.com/alexandremahdhaoui/ipxer/internal/types"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -23,9 +25,9 @@ func (_m *MockConfig) EXPECT() *MockConfig_Expecter {
 	return &MockConfig_Expecter{mock: &_m.Mock}
 }
 
-// GetByID provides a mock function with given fields: ctx, profileName, configID
-func (_m *MockConfig) GetByID(ctx context.Context, profileName string, configID uuid.UUID) ([]byte, error) {
-	ret := _m.Called(ctx, profileName, configID)
+// GetByID provides a mock function with given fields: ctx, profileName, configID, attributes
+func (_m *MockConfig) GetByID(ctx context.Context, profileName string, configID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error) {
+	ret := _m.Called(ctx, profileName, configID, attributes)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByID")
@@ -33,19 +35,19 @@ func (_m *MockConfig) GetByID(ctx context.Context, profileName string, configID 
 
 	var r0 []byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, uuid.UUID) ([]byte, error)); ok {
-		return rf(ctx, profileName, configID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uuid.UUID, types.IpxeSelectors) ([]byte, error)); ok {
+		return rf(ctx, profileName, configID, attributes)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, uuid.UUID) []byte); ok {
-		r0 = rf(ctx, profileName, configID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uuid.UUID, types.IpxeSelectors) []byte); ok {
+		r0 = rf(ctx, profileName, configID, attributes)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, uuid.UUID) error); ok {
-		r1 = rf(ctx, profileName, configID)
+	if rf, ok := ret.Get(1).(func(context.Context, string, uuid.UUID, types.IpxeSelectors) error); ok {
+		r1 = rf(ctx, profileName, configID, attributes)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -62,13 +64,14 @@ type MockConfig_GetByID_Call struct {
 //   - ctx context.Context
 //   - profileName string
 //   - configID uuid.UUID
-func (_e *MockConfig_Expecter) GetByID(ctx interface{}, profileName interface{}, configID interface{}) *MockConfig_GetByID_Call {
-	return &MockConfig_GetByID_Call{Call: _e.mock.On("GetByID", ctx, profileName, configID)}
+//   - attributes types.IpxeSelectors
+func (_e *MockConfig_Expecter) GetByID(ctx interface{}, profileName interface{}, configID interface{}, attributes interface{}) *MockConfig_GetByID_Call {
+	return &MockConfig_GetByID_Call{Call: _e.mock.On("GetByID", ctx, profileName, configID, attributes)}
 }
 
-func (_c *MockConfig_GetByID_Call) Run(run func(ctx context.Context, profileName string, configID uuid.UUID)) *MockConfig_GetByID_Call {
+func (_c *MockConfig_GetByID_Call) Run(run func(ctx context.Context, profileName string, configID uuid.UUID, attributes types.IpxeSelectors)) *MockConfig_GetByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(uuid.UUID))
+		run(args[0].(context.Context), args[1].(string), args[2].(uuid.UUID), args[3].(types.IpxeSelectors))
 	})
 	return _c
 }
@@ -78,7 +81,7 @@ func (_c *MockConfig_GetByID_Call) Return(_a0 []byte, _a1 error) *MockConfig_Get
 	return _c
 }
 
-func (_c *MockConfig_GetByID_Call) RunAndReturn(run func(context.Context, string, uuid.UUID) ([]byte, error)) *MockConfig_GetByID_Call {
+func (_c *MockConfig_GetByID_Call) RunAndReturn(run func(context.Context, string, uuid.UUID, types.IpxeSelectors) ([]byte, error)) *MockConfig_GetByID_Call {
 	_c.Call.Return(run)
 	return _c
 }

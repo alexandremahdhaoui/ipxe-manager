@@ -23,22 +23,22 @@ func (_m *MockAssignment) EXPECT() *MockAssignment_Expecter {
 }
 
 // FindDefaultProfile provides a mock function with given fields: ctx, buildarch
-func (_m *MockAssignment) FindDefaultProfile(ctx context.Context, buildarch string) (string, error) {
+func (_m *MockAssignment) FindDefaultProfile(ctx context.Context, buildarch string) (types.Assignment, error) {
 	ret := _m.Called(ctx, buildarch)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindDefaultProfile")
 	}
 
-	var r0 string
+	var r0 types.Assignment
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (types.Assignment, error)); ok {
 		return rf(ctx, buildarch)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) types.Assignment); ok {
 		r0 = rf(ctx, buildarch)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(types.Assignment)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
@@ -69,33 +69,33 @@ func (_c *MockAssignment_FindDefaultProfile_Call) Run(run func(ctx context.Conte
 	return _c
 }
 
-func (_c *MockAssignment_FindDefaultProfile_Call) Return(_a0 string, _a1 error) *MockAssignment_FindDefaultProfile_Call {
+func (_c *MockAssignment_FindDefaultProfile_Call) Return(_a0 types.Assignment, _a1 error) *MockAssignment_FindDefaultProfile_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockAssignment_FindDefaultProfile_Call) RunAndReturn(run func(context.Context, string) (string, error)) *MockAssignment_FindDefaultProfile_Call {
+func (_c *MockAssignment_FindDefaultProfile_Call) RunAndReturn(run func(context.Context, string) (types.Assignment, error)) *MockAssignment_FindDefaultProfile_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // FindProfileBySelectors provides a mock function with given fields: ctx, selectors
-func (_m *MockAssignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (string, error) {
+func (_m *MockAssignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
 	ret := _m.Called(ctx, selectors)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindProfileBySelectors")
 	}
 
-	var r0 string
+	var r0 types.Assignment
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) (types.Assignment, error)); ok {
 		return rf(ctx, selectors)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) types.Assignment); ok {
 		r0 = rf(ctx, selectors)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(types.Assignment)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, types.IpxeSelectors) error); ok {
@@ -126,12 +126,12 @@ func (_c *MockAssignment_FindProfileBySelectors_Call) Run(run func(ctx context.C
 	return _c
 }
 
-func (_c *MockAssignment_FindProfileBySelectors_Call) Return(_a0 string, _a1 error) *MockAssignment_FindProfileBySelectors_Call {
+func (_c *MockAssignment_FindProfileBySelectors_Call) Return(_a0 types.Assignment, _a1 error) *MockAssignment_FindProfileBySelectors_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockAssignment_FindProfileBySelectors_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) (string, error)) *MockAssignment_FindProfileBySelectors_Call {
+func (_c *MockAssignment_FindProfileBySelectors_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) (types.Assignment, error)) *MockAssignment_FindProfileBySelectors_Call {
 	_c.Call.Return(run)
 	return _c
 }

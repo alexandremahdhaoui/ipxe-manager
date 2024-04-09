@@ -18,7 +18,7 @@ var (
 // ---------------------------------------------------- INTERFACE --------------------------------------------------- //
 
 type Config interface {
-	GetByID(ctx context.Context, profileName string, configID uuid.UUID) ([]byte, error)
+	GetByID(ctx context.Context, profileName string, configID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -37,7 +37,12 @@ type config struct {
 	mux     ResolveTransformerMux
 }
 
-func (c *config) GetByID(ctx context.Context, profileName string, configID uuid.UUID) ([]byte, error) {
+func (c *config) GetByID(
+	ctx context.Context,
+	profileName string,
+	configID uuid.UUID,
+	attributes types.IpxeSelectors,
+) ([]byte, error) {
 	if configID == uuid.Nil {
 		return nil, errors.Join(errUUIDCannotBeNil, ErrConfigGetById)
 	}
@@ -68,9 +73,8 @@ func (c *config) GetByID(ctx context.Context, profileName string, configID uuid.
 	}
 
 	res, err := c.mux.ResolveAndTransformBatch(ctx, []types.Content{content}, types.IpxeSelectors{
-		UUID: configID,
-		//TODO: allow config.GetByID to accept types.IPXESelectors as argument.
-		// Buildarch: "",
+		UUID:      configID, // the configID is authoritative! It should always overwrite the attribute uuid.
+		Buildarch: attributes.Buildarch,
 	})
 	if err != nil {
 		return nil, errors.Join(err, ErrConfigGetById)

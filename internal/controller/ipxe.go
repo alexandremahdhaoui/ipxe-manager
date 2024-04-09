@@ -66,7 +66,7 @@ func (i *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSel
 		return nil, errors.Join(err, errSelectingAssignment, ErrIPXEFindProfileAndRender)
 	}
 
-	p, err := i.profile.Get(ctx, assignment)
+	p, err := i.profile.Get(ctx, assignment.ProfileName)
 	if err != nil {
 		return nil, errors.Join(err, ErrIPXEFindProfileAndRender)
 	}

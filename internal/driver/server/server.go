@@ -41,9 +41,17 @@ func (s *server) GetIPXEBootstrap(c echo.Context) error {
 	return nil
 }
 
-func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID, _ GetConfigByIDParams) error {
+func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID, params GetConfigByIDParams) error {
+	//TODO: create new context with correlation ID.
+	ctx := context.Background()
+
+	attributes, err := types.NewIpxeSelectorsFromContext(c)
+	if err != nil {
+		return writeErr(c, 500, errors.Join(err, ErrGetConfigByID))
+	}
+
 	// call controller
-	b, err := s.config.GetByID(context.Background(), profileName, configID)
+	b, err := s.config.GetByID(ctx, profileName, configID, attributes)
 	if err != nil {
 		return writeErr(c, 500, errors.Join(err, ErrGetConfigByID))
 	}
@@ -59,6 +67,9 @@ func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID
 }
 
 func (s *server) GetIPXEBySelectors(c echo.Context, params GetIPXEBySelectorsParams) error {
+	//TODO: create new context with correlation ID.
+	ctx := context.Background()
+
 	// convert into type
 	//TODO: use params instead of converting the echo context?
 	selectors, err := types.NewIpxeSelectorsFromContext(c)
@@ -67,7 +78,7 @@ func (s *server) GetIPXEBySelectors(c echo.Context, params GetIPXEBySelectorsPar
 	}
 
 	// call controller
-	b, err := s.ipxe.FindProfileAndRender(context.Background(), selectors)
+	b, err := s.ipxe.FindProfileAndRender(ctx, selectors)
 	if err != nil {
 		return writeErr(c, 500, errors.Join(err, ErrGetIPXEBySelectors))
 	}
