@@ -65,9 +65,7 @@ type ProfileSpec struct {
 	AdditionalContent map[string]AdditionalContent `json:"additionalContent,omitempty"`
 }
 
-type ProfileStatus struct {
-	ExposedAdditionalContent map[string]string `json:"exposedAdditionalContent"`
-}
+type ProfileStatus struct{}
 
 //+kubebuilder:object:root=true
 

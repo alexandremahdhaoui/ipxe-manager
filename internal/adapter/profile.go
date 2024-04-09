@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	ErrProfileNotFound = errors.New("profile cannot be found")
+	ErrProfileNotFound = errors.New("profile not found")
+	errProfileGet      = errors.New("error getting profile")
 
-	errProfileGet = errors.New("error getting profile")
+	errProfileListByConfigID = errors.New("listing profile by config id")
 
 	// Conversions
 
@@ -29,6 +30,7 @@ var (
 
 type Profile interface {
 	Get(ctx context.Context, name string) (types.Profile, error)
+	ListByConfigID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -69,6 +71,34 @@ func (p *v1a1Profile) Get(ctx context.Context, name string) (types.Profile, erro
 	return out, nil
 }
 
+// --------------------------------------------- ListByConfigID ------------------------------------------------------ //
+
+// ListByConfigID retrieve at most one Profile by a config ID. The nature of UUIDs and the defaulting webhook driver
+// ensures the list contains at most 1 ID.
+func (p *v1a1Profile) ListByConfigID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error) {
+	// list profiles
+	obj := new(v1alpha1.ProfileList)
+	if err := p.client.List(ctx, obj,
+		uuidLabelSelector(configID),
+	); apierrors.IsNotFound(err) || len(obj.Items) == 0 {
+		return nil, errors.Join(err, ErrProfileNotFound, errProfileListByConfigID)
+	} else if err != nil {
+		return nil, errors.Join(err, errProfileListByConfigID)
+	}
+
+	out := make([]types.Profile, 0, len(obj.Items))
+	for i := range obj.Items {
+		profile, err := fromV1alpha1.toProfile(&obj.Items[i])
+		if err != nil {
+			return nil, errors.Join(err, errProfileListByConfigID)
+		}
+
+		out = append(out, profile)
+	}
+
+	return out, nil
+}
+
 // --------------------------------------------------- CONVERSION --------------------------------------------------- //
 
 var fromV1alpha1 ipxev1a1
@@ -78,7 +108,7 @@ type ipxev1a1 struct{}
 func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 	out := types.Profile{}
 	out.IPXETemplate = input.Spec.IPXETemplate
-	out.AdditionalContent = make([]types.Content, 0)
+	out.AdditionalContent = make(map[string]types.Content)
 
 	for name, c := range input.Spec.AdditionalContent {
 
@@ -97,24 +127,24 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 
 			content = types.NewExposedContent(id, name)
 		case c.Inline != nil:
-			content = types.NewInlineContent(name, *c.Inline, transformers...)
+			content = types.NewInlineContent(*c.Inline, transformers...)
 		case c.ObjectRef != nil:
 			ref, err := fromV1alpha1.toObjectRef(c.ObjectRef)
 			if err != nil {
 				return types.Profile{}, err // TODO: wrap err
 			}
 
-			content = types.NewObjectRefContent(name, ref, transformers...)
+			content = types.NewObjectRefContent(ref, transformers...)
 		case c.Webhook != nil:
 			config, err := fromV1alpha1.toWebhookConfig(c.Webhook)
 			if err != nil {
 				return types.Profile{}, err // TODO: wrap err
 			}
 
-			content = types.NewWebhookContent(name, config, transformers...)
+			content = types.NewWebhookContent(config, transformers...)
 		}
 
-		out.AdditionalContent = append(out.AdditionalContent, content)
+		out.AdditionalContent[name] = content
 	}
 
 	return out, nil

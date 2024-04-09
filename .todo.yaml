@@ -6,11 +6,9 @@ refactoring:
 
 misc:
   Log:
-    add logger.
+    add logger
   "*.go":
     - wrap errors
-  Cache:
-    - create an LRU cache for inline configs
   CachePolicies:
     - allow caching for objectRef and webhook content.
     - create multiple caching strategies such as lru, timeout and allow users to choose between multiple strategies.

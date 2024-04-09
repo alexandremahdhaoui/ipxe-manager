@@ -17,6 +17,7 @@ var (
 // ---------------------------------------------------- INTERFACES -------------------------------------------------- //
 
 type ResolveTransformerMux interface {
+	ResolveAndTransform(ctx context.Context, content types.Content, selectors types.IpxeSelectors) ([]byte, error)
 	ResolveAndTransformBatch(
 		ctx context.Context,
 		batch []types.Content,
@@ -41,6 +42,15 @@ func NewResolveTransformerMux(
 type resolveTransformerMux struct {
 	resolvers    map[types.ResolverKind]adapter.Resolver
 	transformers map[types.TransformerKind]adapter.Transformer
+}
+
+func (r *resolveTransformerMux) ResolveAndTransform(
+	ctx context.Context,
+	content types.Content,
+	selectors types.IpxeSelectors,
+) ([]byte, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 //TODO: ResolveAndTransformBatch should return the URL corresponding to the ConfigID of the content if the content has

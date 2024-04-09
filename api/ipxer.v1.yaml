@@ -70,8 +70,8 @@ paths:
         503:
           $ref: '#/components/responses/503'
 
-  # ---------------------------------------------------------- /profile/{profileID}/config/{configID} ------------------
-  /profile/{profileName}/config/{configID}:
+  # ---------------------------------------------------------- /config/{configID} ------------------
+  /config/{configID}:
     get:
       summary: Retrieve dynamically a configuration file by its profile name and config ID.
       operationId: getConfigByID

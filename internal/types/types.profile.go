@@ -8,22 +8,21 @@ import (
 // ---------------------------------------------------- PROFILE ----------------------------------------------------- //
 
 type Profile struct {
-	IPXETemplate      string
-	AdditionalContent []Content
+	IPXETemplate string
+
+	AdditionalContent        map[string]*Content
+	AdditionalExposedContent map[uuid.UUID]*Content
 }
 
 // ---------------------------------------------------- CONTENT ----------------------------------------------------- //
 
 type Content struct {
-	Name string
-
 	PostTransformers []TransformerConfig
 	ResolverKind     ResolverKind
 
-	Inline          string
-	ObjectRef       *ObjectRef
-	WebhookConfig   *WebhookConfig
-	ExposedConfigID uuid.UUID
+	Inline        string
+	ObjectRef     *ObjectRef
+	WebhookConfig *WebhookConfig
 }
 
 type ObjectRef struct {
@@ -84,51 +83,4 @@ type TransformerConfig struct {
 	Kind TransformerKind
 
 	Webhook *WebhookConfig
-}
-
-// ---------------------------------------------- CONTENT CONSTRUCTORS ---------------------------------------------- //
-
-func NewInlineContent(
-	name, inline string,
-	postTransformers ...TransformerConfig,
-) Content {
-	return Content{
-		Name:             name,
-		ResolverKind:     InlineResolverKind,
-		PostTransformers: postTransformers,
-		Inline:           inline,
-	}
-}
-
-func NewObjectRefContent(
-	name string,
-	objectRef ObjectRef,
-	postTransformers ...TransformerConfig,
-) Content {
-	return Content{
-		Name:             name,
-		ResolverKind:     ObjectRefResolverKind,
-		PostTransformers: postTransformers,
-		ObjectRef:        &objectRef,
-	}
-}
-
-func NewWebhookContent(
-	name string,
-	cfg WebhookConfig,
-	postTransformers ...TransformerConfig,
-) Content {
-	return Content{
-		Name:             name,
-		ResolverKind:     WebhookResolverKind,
-		PostTransformers: postTransformers,
-		WebhookConfig:    &cfg,
-	}
-}
-
-func NewExposedContent(id uuid.UUID, name string) Content {
-	return Content{
-		Name:            name,
-		ExposedConfigID: id,
-	}
 }

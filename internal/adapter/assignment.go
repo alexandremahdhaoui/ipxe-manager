@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
@@ -10,7 +11,7 @@ import (
 )
 
 var (
-	ErrAssignmentNotFound = errors.New("assignment cannot be found")
+	ErrAssignmentNotFound = errors.New("assignment not found")
 
 	errAssignmentFindDefault     = errors.New("finding default assignment")
 	errAssignmentFindBySelectors = errors.New("error finding assignment by selectors")
@@ -47,9 +48,10 @@ func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (
 	list := new(v1alpha1.AssignmentList)
 
 	// Get the list of default matching the buildarch
-	if err := a.client.List(ctx, list, toBuildarchLabelSelector(buildarch, []client.ListOption{
-		client.HasLabels{v1alpha1.DefaultAssignmentLabel},
-	})...); err != nil {
+	if err := a.client.List(ctx, list,
+		buildarchLabelSelector(buildarch),
+		defaultAssignmentLabelSelector(),
+	); err != nil {
 		return types.Assignment{}, errors.Join(err, errAssignmentList, errAssignmentFindDefault)
 	}
 
@@ -68,9 +70,10 @@ func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (
 func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
-	if err := a.client.List(ctx, list, toBuildarchLabelSelector(selectors.Buildarch, []client.ListOption{
-		client.HasLabels{v1alpha1.NewUUIDLabelSelector(selectors.UUID)},
-	})...); err != nil {
+	if err := a.client.List(ctx, list,
+		buildarchLabelSelector(selectors.Buildarch),
+		uuidLabelSelector(selectors.UUID),
+	); err != nil {
 		return types.Assignment{}, errors.Join(err, errAssignmentList, errAssignmentFindBySelectors)
 	}
 
@@ -86,18 +89,26 @@ func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types
 
 // --------------------------------------------- UTILS -------------------------------------------------------------- //
 
-func toBuildarchLabelSelector(buildarch string, opts []client.ListOption) []client.ListOption {
+func buildarchLabelSelector(buildarch string) client.ListOption {
 	switch v1alpha1.Buildarch(buildarch) {
 	case v1alpha1.Arm32:
-		return append(opts, client.HasLabels{v1alpha1.Arm32BuildarchLabelSelector})
+		return client.HasLabels{v1alpha1.Arm32BuildarchLabelSelector}
 	case v1alpha1.Arm64:
-		return append(opts, client.HasLabels{v1alpha1.Arm64BuildarchLabelSelector})
+		return client.HasLabels{v1alpha1.Arm64BuildarchLabelSelector}
 	case v1alpha1.I386:
-		return append(opts, client.HasLabels{v1alpha1.I386BuildarchLabelSelector})
+		return client.HasLabels{v1alpha1.I386BuildarchLabelSelector}
 	case v1alpha1.X8664:
-		return append(opts, client.HasLabels{v1alpha1.X8664BuildarchLabelSelector})
+		return client.HasLabels{v1alpha1.X8664BuildarchLabelSelector}
 	default:
 		// not specifying anything implies any buildarch
-		return opts
+		return nil
 	}
+}
+
+func defaultAssignmentLabelSelector() client.ListOption {
+	return client.HasLabels{v1alpha1.DefaultAssignmentLabel}
+}
+
+func uuidLabelSelector(id uuid.UUID) client.ListOption {
+	return client.HasLabels{v1alpha1.NewUUIDLabelSelector(id)}
 }

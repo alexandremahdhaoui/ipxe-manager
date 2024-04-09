@@ -17,8 +17,10 @@ var (
 
 // ---------------------------------------------------- INTERFACE --------------------------------------------------- //
 
+// TODO: RENAME CONFIG TO CONTENT.
+
 type Config interface {
-	GetByID(ctx context.Context, profileName string, configID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error)
+	GetByID(ctx context.Context, configID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -39,7 +41,6 @@ type config struct {
 
 func (c *config) GetByID(
 	ctx context.Context,
-	profileName string,
 	configID uuid.UUID,
 	attributes types.IpxeSelectors,
 ) ([]byte, error) {
@@ -47,32 +48,17 @@ func (c *config) GetByID(
 		return nil, errors.Join(errUUIDCannotBeNil, ErrConfigGetById)
 	}
 
-	profile, err := c.profile.Get(ctx, profileName)
-	if err != nil {
-		return nil, errors.Join(err, ErrConfigGetById)
+	list, err := c.profile.ListByConfigID(ctx, configID)
+	if errors.Is(err, adapter.ErrProfileNotFound) || len(list) == 0 {
+		return nil, errors.Join(err, ErrConfigNotFound, ErrConfigGetById)
 	}
 
-	var (
-		content types.Content
-		found   bool
-	)
-
-	// This can be constant time by building a map if we let users name the additional content.
-	// Constant time can also be achieved by building that map during the v1alpha1-to-types conversion.
-	// NB: these comments are pointless because we don't expect len(profile.AdditionalContent) to be big.
-	for _, ctt := range profile.AdditionalContent {
-		if ctt.ExposedConfigID == configID {
-			content = ctt
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return nil, errors.Join(ErrConfigNotFound, ErrConfigGetById)
-	}
-
-	res, err := c.mux.ResolveAndTransformBatch(ctx, []types.Content{content}, types.IpxeSelectors{
+	content := list[0].AdditionalExposedContent[configID]
+	// TODO: create `mux.ResolveAndTransform()`.
+	// TODO: to choose b/w template exposed-content as a URL with ID or resolving+transforming:
+	//       - add a boolean param to `mux` to either return a URL or a template.
+	//       - add a parameter to `mux` for the baseURL.
+	out, err := c.mux.ResolveAndTransform(ctx, content, types.IpxeSelectors{
 		UUID:      configID, // the configID is authoritative! It should always overwrite the attribute uuid.
 		Buildarch: attributes.Buildarch,
 	})
@@ -80,5 +66,5 @@ func (c *config) GetByID(
 		return nil, errors.Join(err, ErrConfigGetById)
 	}
 
-	return res[content.Name], nil
+	return out, nil
 }
