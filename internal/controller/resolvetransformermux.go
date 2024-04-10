@@ -24,6 +24,7 @@ var (
 
 type ResolveTransformerMux interface {
 	ResolveAndTransform(ctx context.Context, content types.Content, selectors types.IpxeSelectors) ([]byte, error)
+
 	ResolveAndTransformBatch(
 		ctx context.Context,
 		batch map[string]types.Content,

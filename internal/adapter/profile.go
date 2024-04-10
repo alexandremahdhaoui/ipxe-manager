@@ -106,62 +106,66 @@ var fromV1alpha1 ipxev1a1
 type ipxev1a1 struct{}
 
 func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
-	out := types.Profile{}
-	out.IPXETemplate = input.Spec.IPXETemplate
-	out.AdditionalContent = make(map[string]types.Content)
+	idNameMap, rev, err := v1alpha1.UUIDLabelSelectors(input.Labels)
+	if err != nil {
+		return types.Profile{}, err //TODO: wrap err
+	}
+
+	out := types.Profile{
+		IPXETemplate:       input.Spec.IPXETemplate,
+		AdditionalContent:  make(map[string]types.Content),
+		ContentIDToNameMap: idNameMap,
+	}
 
 	for name, c := range input.Spec.AdditionalContent {
+		content := types.Content{}
 
+		// exposed
+		if c.Exposed {
+			content.Exposed = true
+
+			id, ok := rev[name]
+			if !ok {
+				return types.Profile{}, errors.New("additional content is exposed but doesn't have a UUID") //TODO: err + wrap err
+			}
+
+			content.ExposedUUID = id
+		}
+
+		// post transformers
 		transformers, err := fromV1alpha1.toTransformerConfig(c.PostTransformations)
 		if err != nil {
 			return types.Profile{}, err // TODO: wrap err
 		}
 
-		var content types.Content
-		switch {
-		case c.Exposed:
-			id, err := fromV1alpha1.toProfileID(name, input.Status)
-			if err != nil {
-				return types.Profile{}, errors.Join(err, errConvertingProfile)
-			}
+		content.PostTransformers = transformers
 
-			content = types.NewExposedContent(id, name)
+		switch {
 		case c.Inline != nil:
-			content = types.NewInlineContent(*c.Inline, transformers...)
+			content.ResolverKind = types.InlineResolverKind
+			content.Inline = *c.Inline
 		case c.ObjectRef != nil:
 			ref, err := fromV1alpha1.toObjectRef(c.ObjectRef)
 			if err != nil {
 				return types.Profile{}, err // TODO: wrap err
 			}
 
-			content = types.NewObjectRefContent(ref, transformers...)
+			content.ResolverKind = types.ObjectRefResolverKind
+			content.ObjectRef = &ref
 		case c.Webhook != nil:
-			config, err := fromV1alpha1.toWebhookConfig(c.Webhook)
+			cfg, err := fromV1alpha1.toWebhookConfig(c.Webhook)
 			if err != nil {
 				return types.Profile{}, err // TODO: wrap err
 			}
 
-			content = types.NewWebhookContent(config, transformers...)
+			content.ResolverKind = types.WebhookResolverKind
+			content.WebhookConfig = &cfg
 		}
 
 		out.AdditionalContent[name] = content
 	}
 
 	return out, nil
-}
-
-func (ipxev1a1) toProfileID(name string, status v1alpha1.ProfileStatus) (uuid.UUID, error) {
-	id, ok := status.ExposedAdditionalContent[name]
-	if !ok {
-		return uuid.Nil, errors.Join(errExposedAdditionalContentCannotBeFound, errToProfileID)
-	}
-
-	uid, err := uuid.Parse(id)
-	if err != nil {
-		return uuid.Nil, errors.Join(err, errToProfileID)
-	}
-
-	return uid, nil
 }
 
 func (ipxev1a1) toObjectRef(objectRef *v1alpha1.ObjectRef) (types.ObjectRef, error) {

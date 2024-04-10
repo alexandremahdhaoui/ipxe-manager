@@ -37,18 +37,38 @@ func LabelSelector(key string, prefixes ...string) string {
 	return label
 }
 
-func IsInternalLabel(key string) bool {
-	return strings.Contains(key, Group)
+func NewUUIDLabelSelector(id uuid.UUID) string {
+	return LabelSelector(id.String(), UUIDPrefix)
 }
 
 func SetUUIDLabelSelector(obj client.Object, id uuid.UUID, value string) {
 	obj.GetLabels()[NewUUIDLabelSelector(id)] = value
 }
 
-func NewUUIDLabelSelector(id uuid.UUID) string {
-	return LabelSelector(id.String(), UUIDPrefix)
-}
-
 func IsUUIDLabelSelector(key string) bool {
 	return strings.Contains(key, LabelSelector("", UUIDPrefix))
+}
+
+func IsInternalLabel(key string) bool {
+	return strings.Contains(key, Group)
+}
+
+func UUIDLabelSelectors(labels map[string]string) (idNameMap map[uuid.UUID]string, reverse map[string]uuid.UUID, err error) {
+	idNameMap = make(map[uuid.UUID]string)
+	reverse = make(map[string]uuid.UUID)
+	for k, v := range labels {
+		if !IsUUIDLabelSelector(k) {
+			continue
+		}
+
+		id, err := uuid.Parse(strings.TrimPrefix(k, LabelSelector("", UUIDPrefix)))
+		if err != nil {
+			return nil, nil, err //TODO: wrap err
+		}
+
+		idNameMap[id] = v
+		reverse[k] = id
+	}
+
+	return idNameMap, reverse, nil
 }
