@@ -10,13 +10,16 @@ import (
 type Profile struct {
 	IPXETemplate string
 
-	AdditionalContent        map[string]*Content
-	AdditionalExposedContent map[uuid.UUID]*Content
+	AdditionalContent  map[string]Content
+	ContentIDToNameMap map[uuid.UUID]string
 }
 
 // ---------------------------------------------------- CONTENT ----------------------------------------------------- //
 
 type Content struct {
+	Exposed     bool
+	ExposedUUID uuid.UUID
+
 	PostTransformers []TransformerConfig
 	ResolverKind     ResolverKind
 

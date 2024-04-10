@@ -71,7 +71,7 @@ func (i *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSel
 		return nil, errors.Join(err, ErrIPXEFindProfileAndRender)
 	}
 
-	data, err := i.mux.ResolveAndTransformBatch(ctx, p.AdditionalContent, selectors)
+	data, err := i.mux.ResolveAndTransformBatch(ctx, p.AdditionalContent, selectors, ReturnExposedContentURL)
 	if err != nil {
 		return nil, errors.Join(err, ErrIPXEFindProfileAndRender)
 	}
