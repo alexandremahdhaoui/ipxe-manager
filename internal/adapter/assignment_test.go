@@ -21,7 +21,8 @@ func TestAssignment(t *testing.T) {
 		ctx       context.Context
 		namespace string
 
-		inputBuildarch string
+		inputBuildarch                 string
+		expectedBuildarchLabelSelector string
 
 		expectedProfile     string
 		expectedListOptions []interface{}
@@ -36,7 +37,8 @@ func TestAssignment(t *testing.T) {
 		ctx = context.Background()
 		namespace = "test-assignment"
 
-		inputBuildarch = "arm64"
+		inputBuildarch = string(v1alpha1.Arm64)
+		expectedBuildarchLabelSelector = v1alpha1.Arm64BuildarchLabelSelector
 
 		cl = mockclient.NewMockClient(t)
 		assignment = adapter.NewAssignment(cl, namespace)
@@ -68,7 +70,7 @@ func TestAssignment(t *testing.T) {
 
 			expectedProfile = uuid.New().String()
 			expectedListOptions = []interface{}{
-				client.MatchingLabels{v1alpha1.BuildarchAssignmentLabel: inputBuildarch},
+				client.HasLabels{expectedBuildarchLabelSelector},
 				client.HasLabels{v1alpha1.DefaultAssignmentLabel},
 			}
 
@@ -115,8 +117,8 @@ func TestAssignment(t *testing.T) {
 				Buildarch: inputBuildarch,
 			}
 
-			expectedListOptions = []interface{}{
-				client.MatchingLabels{v1alpha1.BuildarchAssignmentLabel: inputBuildarch},
+			expectedListOptions = []any{
+				client.HasLabels{expectedBuildarchLabelSelector},
 				client.HasLabels{v1alpha1.NewUUIDLabelSelector(id)},
 			}
 

@@ -86,6 +86,10 @@ const (
 	Vram       = "vram"        // Video RAM contents
 )
 
+var (
+	errUnsupportedParameterType = errors.New("unsupported parameter type")
+)
+
 // --- PARAMS --- //
 
 type IpxeParams struct {
@@ -405,7 +409,7 @@ func getParam[T any](c echo.Context, key string) (*T, error) {
 
 		return any(Ptr(uint8(i))).(*T), nil
 	default:
-		return nil, errors.New("TODO ERROR") // TODO: write this err.
+		return nil, errUnsupportedParameterType
 	}
 }
 

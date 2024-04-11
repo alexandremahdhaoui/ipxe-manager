@@ -90,7 +90,7 @@ func (r *resolveTransformerMux) ResolveAndTransform(
 
 //TODO: ResolveAndTransformBatch should return the URL corresponding to the ConfigID of the content if the content has
 //      ExposedConfigID set to true. (only in the case that the func is called by controller.IPXE)
-//      !!! Otherwise create a special func for controller.Config called ResolveAndTransform which only takes a
+//      !!! Otherwise create a special func for controller.Content called ResolveAndTransform which only takes a
 //          types.Content as an argument and fully compute the Resolve/Transformation.
 //      !!! Then ResolveAndTransformBatch will only resolve and transform if types.Content.ExposedConfigID != true.
 

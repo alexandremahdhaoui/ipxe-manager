@@ -28,7 +28,7 @@ func TestConfig(t *testing.T) {
 
 		profile *mockadapter.MockProfile
 		mux     *mockcontroller.MockResolveTransformerMux
-		config  controller.Config
+		config  controller.Content
 	)
 
 	setup := func(t *testing.T) func() {
@@ -95,7 +95,7 @@ func TestConfig(t *testing.T) {
 		})
 
 		t.Run("Failure", func(t *testing.T) {
-			t.Run("Config not found", func(t *testing.T) {
+			t.Run("Content not found", func(t *testing.T) {
 				defer setup(t)()
 
 				expectedProfileResult = types.Profile{

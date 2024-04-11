@@ -288,13 +288,6 @@ spec:
             - IPXETemplate
             type: object
           status:
-            properties:
-              exposedAdditionalContent:
-                additionalProperties:
-                  type: string
-                type: object
-            required:
-            - exposedAdditionalContent
             type: object
         type: object
     served: true

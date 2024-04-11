@@ -19,13 +19,13 @@ var (
 
 // TODO: RENAME CONFIG TO CONTENT.
 
-type Config interface {
-	GetByID(ctx context.Context, configID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error)
+type Content interface {
+	GetByID(ctx context.Context, contentID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
-func NewConfig(profile adapter.Profile, mux ResolveTransformerMux) Config {
+func NewConfig(profile adapter.Profile, mux ResolveTransformerMux) Content {
 	return &config{
 		profile: profile,
 		mux:     mux,
@@ -41,25 +41,26 @@ type config struct {
 
 func (c *config) GetByID(
 	ctx context.Context,
-	configID uuid.UUID,
+	contentID uuid.UUID,
 	attributes types.IpxeSelectors,
 ) ([]byte, error) {
-	if configID == uuid.Nil {
+	if contentID == uuid.Nil {
 		return nil, errors.Join(errUUIDCannotBeNil, ErrConfigGetById)
 	}
 
-	list, err := c.profile.ListByConfigID(ctx, configID)
+	list, err := c.profile.ListByConfigID(ctx, contentID)
 	if errors.Is(err, adapter.ErrProfileNotFound) || len(list) == 0 {
 		return nil, errors.Join(err, ErrConfigNotFound, ErrConfigGetById)
 	}
 
-	content := list[0].AdditionalExposedContent[configID]
+	contentName := list[0].ContentIDToNameMap[contentID]
+	content := list[0].AdditionalContent[contentName]
 	// TODO: create `mux.ResolveAndTransform()`.
 	// TODO: to choose b/w template exposed-content as a URL with ID or resolving+transforming:
 	//       - add a boolean param to `mux` to either return a URL or a template.
 	//       - add a parameter to `mux` for the baseURL.
 	out, err := c.mux.ResolveAndTransform(ctx, content, types.IpxeSelectors{
-		UUID:      configID, // the configID is authoritative! It should always overwrite the attribute uuid.
+		UUID:      contentID, // the contentID is authoritative! It should always overwrite the attribute uuid.
 		Buildarch: attributes.Buildarch,
 	})
 	if err != nil {

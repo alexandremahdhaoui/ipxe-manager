@@ -15,7 +15,7 @@ var (
 	ErrGetIPXEBySelectors = errors.New("getting ipxe by labels")
 )
 
-func New(ipxe controller.IPXE, config controller.Config) ServerInterface {
+func New(ipxe controller.IPXE, config controller.Content) ServerInterface {
 	return &server{
 		ipxe:   ipxe,
 		config: config,
@@ -24,7 +24,7 @@ func New(ipxe controller.IPXE, config controller.Config) ServerInterface {
 
 type server struct {
 	ipxe   controller.IPXE
-	config controller.Config
+	config controller.Content
 }
 
 func (s *server) GetIPXEBootstrap(c echo.Context) error {

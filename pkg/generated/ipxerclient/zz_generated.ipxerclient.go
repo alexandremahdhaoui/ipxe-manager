@@ -24,20 +24,20 @@ const (
 	BuildarchSelectorX8664 BuildarchSelector = "x86_64"
 )
 
-// Defines values for GetIPXEBySelectorsParamsBuildarch.
+// Defines values for GetContentByIDParamsBuildarch.
 const (
-	GetIPXEBySelectorsParamsBuildarchArm32 GetIPXEBySelectorsParamsBuildarch = "arm32"
-	GetIPXEBySelectorsParamsBuildarchArm64 GetIPXEBySelectorsParamsBuildarch = "arm64"
-	GetIPXEBySelectorsParamsBuildarchI386  GetIPXEBySelectorsParamsBuildarch = "i386"
-	GetIPXEBySelectorsParamsBuildarchX8664 GetIPXEBySelectorsParamsBuildarch = "x86_64"
+	GetContentByIDParamsBuildarchArm32 GetContentByIDParamsBuildarch = "arm32"
+	GetContentByIDParamsBuildarchArm64 GetContentByIDParamsBuildarch = "arm64"
+	GetContentByIDParamsBuildarchI386  GetContentByIDParamsBuildarch = "i386"
+	GetContentByIDParamsBuildarchX8664 GetContentByIDParamsBuildarch = "x86_64"
 )
 
-// Defines values for GetConfigByIDParamsBuildarch.
+// Defines values for GetIPXEBySelectorsParamsBuildarch.
 const (
-	Arm32 GetConfigByIDParamsBuildarch = "arm32"
-	Arm64 GetConfigByIDParamsBuildarch = "arm64"
-	I386  GetConfigByIDParamsBuildarch = "i386"
-	X8664 GetConfigByIDParamsBuildarch = "x86_64"
+	Arm32 GetIPXEBySelectorsParamsBuildarch = "arm32"
+	Arm64 GetIPXEBySelectorsParamsBuildarch = "arm64"
+	I386  GetIPXEBySelectorsParamsBuildarch = "i386"
+	X8664 GetIPXEBySelectorsParamsBuildarch = "x86_64"
 )
 
 // Error defines model for Error.
@@ -49,8 +49,8 @@ type Error struct {
 // UUID defines model for UUID.
 type UUID = openapi_types.UUID
 
-// Config Any butane/ignition or cloud-init manifest.
-type Config = string
+// Content Any content, e.g. a butane/ignition or cloud-init manifest.
+type Content = string
 
 // IPXE An iPXE manifest.
 type IPXE = string
@@ -79,6 +79,15 @@ type N500 = Error
 // N503 defines model for 503.
 type N503 = Error
 
+// GetContentByIDParams defines parameters for GetContentByID.
+type GetContentByIDParams struct {
+	Uuid      UuidSelector                  `form:"uuid" json:"uuid"`
+	Buildarch GetContentByIDParamsBuildarch `form:"buildarch" json:"buildarch"`
+}
+
+// GetContentByIDParamsBuildarch defines parameters for GetContentByID.
+type GetContentByIDParamsBuildarch string
+
 // GetIPXEBySelectorsParams defines parameters for GetIPXEBySelectors.
 type GetIPXEBySelectorsParams struct {
 	Uuid      UuidSelector                      `form:"uuid" json:"uuid"`
@@ -87,15 +96,6 @@ type GetIPXEBySelectorsParams struct {
 
 // GetIPXEBySelectorsParamsBuildarch defines parameters for GetIPXEBySelectors.
 type GetIPXEBySelectorsParamsBuildarch string
-
-// GetConfigByIDParams defines parameters for GetConfigByID.
-type GetConfigByIDParams struct {
-	Uuid      UuidSelector                 `form:"uuid" json:"uuid"`
-	Buildarch GetConfigByIDParamsBuildarch `form:"buildarch" json:"buildarch"`
-}
-
-// GetConfigByIDParamsBuildarch defines parameters for GetConfigByID.
-type GetConfigByIDParamsBuildarch string
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -173,11 +173,11 @@ type ClientInterface interface {
 	// GetIPXEBootstrap request
 	GetIPXEBootstrap(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetContentByID request
+	GetContentByID(ctx context.Context, contentID UUID, params *GetContentByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetIPXEBySelectors request
 	GetIPXEBySelectors(ctx context.Context, params *GetIPXEBySelectorsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetConfigByID request
-	GetConfigByID(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetIPXEBootstrap(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -192,8 +192,8 @@ func (c *Client) GetIPXEBootstrap(ctx context.Context, reqEditors ...RequestEdit
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetIPXEBySelectors(ctx context.Context, params *GetIPXEBySelectorsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetIPXEBySelectorsRequest(c.Server, params)
+func (c *Client) GetContentByID(ctx context.Context, contentID UUID, params *GetContentByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetContentByIDRequest(c.Server, contentID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +204,8 @@ func (c *Client) GetIPXEBySelectors(ctx context.Context, params *GetIPXEBySelect
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetConfigByID(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetConfigByIDRequest(c.Server, profileName, configID, params)
+func (c *Client) GetIPXEBySelectors(ctx context.Context, params *GetIPXEBySelectorsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetIPXEBySelectorsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -243,16 +243,23 @@ func NewGetIPXEBootstrapRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetIPXEBySelectorsRequest generates requests for GetIPXEBySelectors
-func NewGetIPXEBySelectorsRequest(server string, params *GetIPXEBySelectorsParams) (*http.Request, error) {
+// NewGetContentByIDRequest generates requests for GetContentByID
+func NewGetContentByIDRequest(server string, contentID UUID, params *GetContentByIDParams) (*http.Request, error) {
 	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "contentID", runtime.ParamLocationPath, contentID)
+	if err != nil {
+		return nil, err
+	}
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/ipxe")
+	operationPath := fmt.Sprintf("/content/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -300,30 +307,16 @@ func NewGetIPXEBySelectorsRequest(server string, params *GetIPXEBySelectorsParam
 	return req, nil
 }
 
-// NewGetConfigByIDRequest generates requests for GetConfigByID
-func NewGetConfigByIDRequest(server string, profileName string, configID UUID, params *GetConfigByIDParams) (*http.Request, error) {
+// NewGetIPXEBySelectorsRequest generates requests for GetIPXEBySelectors
+func NewGetIPXEBySelectorsRequest(server string, params *GetIPXEBySelectorsParams) (*http.Request, error) {
 	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "profileName", runtime.ParamLocationPath, profileName)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "configID", runtime.ParamLocationPath, configID)
-	if err != nil {
-		return nil, err
-	}
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/profile/%s/config/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/ipxe")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -417,11 +410,11 @@ type ClientWithResponsesInterface interface {
 	// GetIPXEBootstrapWithResponse request
 	GetIPXEBootstrapWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetIPXEBootstrapResponse, error)
 
+	// GetContentByIDWithResponse request
+	GetContentByIDWithResponse(ctx context.Context, contentID UUID, params *GetContentByIDParams, reqEditors ...RequestEditorFn) (*GetContentByIDResponse, error)
+
 	// GetIPXEBySelectorsWithResponse request
 	GetIPXEBySelectorsWithResponse(ctx context.Context, params *GetIPXEBySelectorsParams, reqEditors ...RequestEditorFn) (*GetIPXEBySelectorsResponse, error)
-
-	// GetConfigByIDWithResponse request
-	GetConfigByIDWithResponse(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error)
 }
 
 type GetIPXEBootstrapResponse struct {
@@ -445,6 +438,33 @@ func (r GetIPXEBootstrapResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetIPXEBootstrapResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetContentByIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON503      *N503
+}
+
+// Status returns HTTPResponse.Status
+func (r GetContentByIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetContentByIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -478,33 +498,6 @@ func (r GetIPXEBySelectorsResponse) StatusCode() int {
 	return 0
 }
 
-type GetConfigByIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON503      *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r GetConfigByIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetConfigByIDResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 // GetIPXEBootstrapWithResponse request returning *GetIPXEBootstrapResponse
 func (c *ClientWithResponses) GetIPXEBootstrapWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetIPXEBootstrapResponse, error) {
 	rsp, err := c.GetIPXEBootstrap(ctx, reqEditors...)
@@ -514,6 +507,15 @@ func (c *ClientWithResponses) GetIPXEBootstrapWithResponse(ctx context.Context, 
 	return ParseGetIPXEBootstrapResponse(rsp)
 }
 
+// GetContentByIDWithResponse request returning *GetContentByIDResponse
+func (c *ClientWithResponses) GetContentByIDWithResponse(ctx context.Context, contentID UUID, params *GetContentByIDParams, reqEditors ...RequestEditorFn) (*GetContentByIDResponse, error) {
+	rsp, err := c.GetContentByID(ctx, contentID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetContentByIDResponse(rsp)
+}
+
 // GetIPXEBySelectorsWithResponse request returning *GetIPXEBySelectorsResponse
 func (c *ClientWithResponses) GetIPXEBySelectorsWithResponse(ctx context.Context, params *GetIPXEBySelectorsParams, reqEditors ...RequestEditorFn) (*GetIPXEBySelectorsResponse, error) {
 	rsp, err := c.GetIPXEBySelectors(ctx, params, reqEditors...)
@@ -521,15 +523,6 @@ func (c *ClientWithResponses) GetIPXEBySelectorsWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseGetIPXEBySelectorsResponse(rsp)
-}
-
-// GetConfigByIDWithResponse request returning *GetConfigByIDResponse
-func (c *ClientWithResponses) GetConfigByIDWithResponse(ctx context.Context, profileName string, configID UUID, params *GetConfigByIDParams, reqEditors ...RequestEditorFn) (*GetConfigByIDResponse, error) {
-	rsp, err := c.GetConfigByID(ctx, profileName, configID, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetConfigByIDResponse(rsp)
 }
 
 // ParseGetIPXEBootstrapResponse parses an HTTP response from a GetIPXEBootstrapWithResponse call
@@ -593,15 +586,15 @@ func ParseGetIPXEBootstrapResponse(rsp *http.Response) (*GetIPXEBootstrapRespons
 	return response, nil
 }
 
-// ParseGetIPXEBySelectorsResponse parses an HTTP response from a GetIPXEBySelectorsWithResponse call
-func ParseGetIPXEBySelectorsResponse(rsp *http.Response) (*GetIPXEBySelectorsResponse, error) {
+// ParseGetContentByIDResponse parses an HTTP response from a GetContentByIDWithResponse call
+func ParseGetContentByIDResponse(rsp *http.Response) (*GetContentByIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetIPXEBySelectorsResponse{
+	response := &GetContentByIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -654,15 +647,15 @@ func ParseGetIPXEBySelectorsResponse(rsp *http.Response) (*GetIPXEBySelectorsRes
 	return response, nil
 }
 
-// ParseGetConfigByIDResponse parses an HTTP response from a GetConfigByIDWithResponse call
-func ParseGetConfigByIDResponse(rsp *http.Response) (*GetConfigByIDResponse, error) {
+// ParseGetIPXEBySelectorsResponse parses an HTTP response from a GetIPXEBySelectorsWithResponse call
+func ParseGetIPXEBySelectorsResponse(rsp *http.Response) (*GetIPXEBySelectorsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetConfigByIDResponse{
+	response := &GetIPXEBySelectorsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
