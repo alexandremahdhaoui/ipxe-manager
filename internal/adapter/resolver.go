@@ -10,12 +10,12 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/alexandremahdhaoui/ipxer/internal/types"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/util/jsonpath"
+
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
 
 var (
@@ -33,13 +33,21 @@ var (
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
 type Resolver interface {
-	Resolve(ctx context.Context, content types.Content, attributes types.IpxeSelectors) ([]byte, error)
+	Resolve(
+		ctx context.Context,
+		content types.Content,
+		attributes types.IpxeSelectors,
+	) ([]byte, error)
 }
 
 type ObjectRefResolver interface {
 	Resolver
 
-	ResolvePaths(ctx context.Context, paths []*jsonpath.JSONPath, ref types.ObjectRef) ([][]byte, error)
+	ResolvePaths(
+		ctx context.Context,
+		paths []*jsonpath.JSONPath,
+		ref types.ObjectRef,
+	) ([][]byte, error)
 }
 
 // ------------------------------------------------- INLINE RESOLVER ------------------------------------------------ //
@@ -50,7 +58,11 @@ func NewInlineResolver() Resolver {
 
 type inlineResolver struct{}
 
-func (r *inlineResolver) Resolve(_ context.Context, content types.Content, _ types.IpxeSelectors) ([]byte, error) {
+func (r *inlineResolver) Resolve(
+	_ context.Context,
+	content types.Content,
+	_ types.IpxeSelectors,
+) ([]byte, error) {
 	return []byte(content.Inline), nil
 }
 
@@ -87,7 +99,11 @@ func (r *objectRefResolver) Resolve(
 	return out[0], nil
 }
 
-func (r *objectRefResolver) ResolvePaths(ctx context.Context, paths []*jsonpath.JSONPath, ref types.ObjectRef) ([][]byte, error) { //nolint:lll
+func (r *objectRefResolver) ResolvePaths(
+	ctx context.Context,
+	paths []*jsonpath.JSONPath,
+	ref types.ObjectRef,
+) ([][]byte, error) { //nolint:lll
 	obj, err := r.k8s.
 		Resource(schema.GroupVersionResource{
 			Group:    ref.Group,
@@ -138,10 +154,14 @@ func (r *webhookResolver) Resolve(
 	content types.Content,
 	attributes types.IpxeSelectors,
 ) ([]byte, error) {
-	//TODO: make use of content.WebhookConfig.MTLSObjectRef.TLSInsecureSkipVerify
+	// TODO: make use of content.WebhookConfig.MTLSObjectRef.TLSInsecureSkipVerify
 
 	if content.WebhookConfig == nil {
-		return nil, errors.Join(errWebhookConfigShouldNotBeNil, ErrWebhookResolver, ErrResolverResolve)
+		return nil, errors.Join(
+			errWebhookConfigShouldNotBeNil,
+			ErrWebhookResolver,
+			ErrResolverResolve,
+		)
 	}
 
 	url := fmt.Sprintf("https://%s?%s=%s&%s=%s",
@@ -179,12 +199,20 @@ func (r *webhookResolver) Resolve(
 }
 
 // TODO: lru cache that config?
-func (r *webhookResolver) mTLSConfig(ctx context.Context, httpClient *http.Client, ref *types.MTLSObjectRef) error {
+func (r *webhookResolver) mTLSConfig(
+	ctx context.Context,
+	httpClient *http.Client,
+	ref *types.MTLSObjectRef,
+) error {
 	if ref == nil {
 		return nil
 	}
 
-	paths := []*jsonpath.JSONPath{ref.ClientKeyJSONPath, ref.ClientCertJSONPath, ref.CaBundleJSONPath}
+	paths := []*jsonpath.JSONPath{
+		ref.ClientKeyJSONPath,
+		ref.ClientCertJSONPath,
+		ref.CaBundleJSONPath,
+	}
 
 	res, err := r.objectRefResolver.ResolvePaths(ctx, paths, ref.ObjectRef)
 	if err != nil {
@@ -194,8 +222,11 @@ func (r *webhookResolver) mTLSConfig(ctx context.Context, httpClient *http.Clien
 	if nRes := len(res); nRes < 3 {
 		return errors.Join(
 			fmt.Errorf("expected: 3 results; actual: %d results", nRes),
-			errors.New("mTLS configuration expected 1 client key, 1 client crt, and 1 ca bundle/crt"),
-			errResolvingMTLSConfig)
+			errors.New(
+				"mTLS configuration expected 1 client key, 1 client crt, and 1 ca bundle/crt",
+			),
+			errResolvingMTLSConfig,
+		)
 	}
 
 	clientKey := res[0]
@@ -222,7 +253,11 @@ func (r *webhookResolver) mTLSConfig(ctx context.Context, httpClient *http.Clien
 	return nil
 }
 
-func (r *webhookResolver) setBasicAuth(ctx context.Context, req *http.Request, ref *types.BasicAuthObjectRef) error {
+func (r *webhookResolver) setBasicAuth(
+	ctx context.Context,
+	req *http.Request,
+	ref *types.BasicAuthObjectRef,
+) error {
 	if ref == nil {
 		return nil
 	}

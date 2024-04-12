@@ -3,17 +3,18 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
-	"github.com/alexandremahdhaoui/ipxer/internal/controller"
-	"github.com/alexandremahdhaoui/ipxer/internal/types"
-	"k8s.io/client-go/dynamic"
 	"net/http"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
-	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
+	"k8s.io/client-go/dynamic"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
+	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
+	"github.com/alexandremahdhaoui/ipxer/internal/controller"
+	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
 
 const (
@@ -32,7 +33,7 @@ func main() {
 
 	// --------------------------------------------- Config --------------------------------------------------------- //
 
-	//TODO: specify all those values through config file
+	// TODO: specify all those values through config file
 	//      which should derive from a k8s manifests/helmchart values.
 	var (
 		assignmentNamespace string
@@ -48,8 +49,8 @@ func main() {
 
 	// --------------------------------------------- Client --------------------------------------------------------- //
 
-	var cl client.Client        //TODO
-	var dynCl dynamic.Interface //TODO
+	var cl client.Client        // TODO
+	var dynCl dynamic.Interface // TODO
 
 	// --------------------------------------------- Adapter -------------------------------------------------------- //
 
