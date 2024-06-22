@@ -22,14 +22,15 @@ const (
 )
 
 var (
-	Version   = "dev" //nolint:gochecknoglobals // set by ldflags
-	CommitSHA = "dev" //nolint:gochecknoglobals // set by ldflags
+	Version        = "dev" //nolint:gochecknoglobals // set by ldflags
+	CommitSHA      = "n/a" //nolint:gochecknoglobals // set by ldflags
+	BuildTimestamp = "n/a" //nolint:gochecknoglobals // set by ldflags
 )
 
 // ------------------------------------------------- Main ----------------------------------------------------------- //
 
 func main() {
-	fmt.Printf("Starting %s version %s (%s)\n", Name, Version, CommitSHA)
+	fmt.Printf("Starting %s version %s (%s) %s\n", Name, Version, CommitSHA, BuildTimestamp)
 
 	// --------------------------------------------- Config --------------------------------------------------------- //
 

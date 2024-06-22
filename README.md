@@ -1,6 +1,6 @@
 # ipxer
 
-`ipxer` is a kubernetes based iPXE server.
+IPXER leverages Kubernetes to assign and expose fine-grained server configurations.
 
 [This document](./.todo.yaml) lists tasks to be done.
 

@@ -4,7 +4,7 @@ PROJECT    := ipxer
 
 COMMIT_SHA := $(shell git rev-parse --short HEAD)
 TIMESTAMP  := $(shell date --utc --iso-8601=seconds)
-VERSION    := $(shell git describe --tags --always --dirty)
+VERSION    ?= $(shell git describe --tags --always --dirty)
 
 CHARTS     := $(shell ./hack/list-subprojects.sh charts)
 CONTAINERS := $(shell ./hack/list-subprojects.sh containers)
@@ -116,6 +116,7 @@ build-containers: generate
 	echo $(CONTAINERS) | \
 	  CONTAINER_ENGINE=$(CONTAINER_ENGINE) \
 	  GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) \
+	  VERSION=$(VERSION) \
 	  xargs -n1 ./hack/build-container.sh
 
 # ------------------------------------------------------- FMT -------------------------------------------------------- #
