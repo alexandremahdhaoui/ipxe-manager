@@ -2,7 +2,9 @@ refactoring:
   IMPORTANT: |-
     For the `/config` endpoint, don't use the profile name (only use the config UUID).
     Query the config by UUID by setting the uuid into a label to the profile. 
-    -> The key will hold the uuid; the value will be set to the additionalContent's name.
+    The key will hold the uuid; the value will be set to the additionalContent's name.
+
+    => Ongoing
 
 misc:
   Log:
@@ -13,7 +15,7 @@ misc:
     - allow caching for objectRef and webhook content.
     - create multiple caching strategies such as lru, timeout and allow users to choose between multiple strategies.
     - the NoCache policy should be enabled by default. Users who wants to optimize can optimize.
-    - NB: Always implement the cache as lru or as a ring buffer of pointers to avoid uncontrolled mem consumptions.
+    - NB: implement the cache as lru or a ring buffer of pointers to avoid uncontrolled mem consumptions.
           Also allow other strategies such as timeouts e.g. by creating a small DS to store pointers to cache entries 
           that should be deleted after a timestamp.
 
@@ -48,6 +50,7 @@ test:
       - scope: create VMs + DHCP server + a kubeadm cluster.
       - considerations:
         - make it quite extensible.
-        - use different k8s distros (e.g. k3s)
+        - think about e2e on bare metal or cloud provider infrastructures.
+        - use different k8s distros?
         - use different DHCP server.
         - NB: don't bother using a different hypervisor than KVM.

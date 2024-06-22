@@ -21,8 +21,8 @@ var (
 // --------------------------------------------------- INTERFACES --------------------------------------------------- //
 
 type Assignment interface {
-	FindDefaultProfile(ctx context.Context, buildarch string) (types.Assignment, error)
-	FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error)
+	FindDefaultByBuildarch(ctx context.Context, buildarch string) (types.Assignment, error)
+	FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -41,9 +41,9 @@ type assignment struct {
 	namespace string
 }
 
-// --------------------------------------------- FindDefaultProfile ------------------------------------------------- //
+// --------------------------------------------- FindDefaultByBuildarch ------------------------------------------------- //
 
-func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (types.Assignment, error) {
+func (a *assignment) FindDefaultByBuildarch(ctx context.Context, buildarch string) (types.Assignment, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 
@@ -65,9 +65,9 @@ func (a *assignment) FindDefaultProfile(ctx context.Context, buildarch string) (
 	}, nil
 }
 
-// --------------------------------------------- FindProfileBySelectors --------------------------------------------- //
+// --------------------------------------------- FindBySelectors --------------------------------------------- //
 
-func (a *assignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
+func (a *assignment) FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 	if err := a.client.List(ctx, list,

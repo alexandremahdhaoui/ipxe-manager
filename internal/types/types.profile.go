@@ -17,6 +17,7 @@ type Profile struct {
 // ---------------------------------------------------- CONTENT ----------------------------------------------------- //
 
 type Content struct {
+	Name        string
 	Exposed     bool
 	ExposedUUID uuid.UUID
 

@@ -205,7 +205,7 @@ func (a *Assignment) validateDefaultAssignmentForBuildarchIsUnique(ctx context.C
 	}
 
 	for _, b := range assignment.GetBuildarchList() {
-		assign, err := a.assignment.FindDefaultProfile(ctx, b.String())
+		assign, err := a.assignment.FindDefaultByBuildarch(ctx, b.String())
 		if errors.Is(err, adapter.ErrAssignmentNotFound) {
 			// this is the good scenario
 			continue
@@ -247,7 +247,7 @@ func (a *Assignment) validateUUIDAssignmentIsUnique(ctx context.Context, obj run
 	//TODO: looping over selectors is a very poor operation; use a better solution, such as listing all then filtering.
 	for _, selectors := range selectorsList {
 		// Verify no other Assignment exist for the specified selector.
-		matchedAssignment, err := a.assignment.FindProfileBySelectors(ctx, selectors)
+		matchedAssignment, err := a.assignment.FindBySelectors(ctx, selectors)
 		if errors.Is(err, adapter.ErrAssignmentNotFound) {
 			// ignore if assignment is not found.
 			continue

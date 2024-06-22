@@ -110,7 +110,7 @@ type (
 	ObjectRef struct {
 		ResourceRef `json:",inline"`
 
-		// JSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'private.key'`
+		// JSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.private\.key`
 		// TODO: Validate this jsonpath in the webhook.
 		JSONPath string `json:"jsonpath"`
 	}

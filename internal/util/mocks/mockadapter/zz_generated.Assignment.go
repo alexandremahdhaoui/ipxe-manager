@@ -22,69 +22,12 @@ func (_m *MockAssignment) EXPECT() *MockAssignment_Expecter {
 	return &MockAssignment_Expecter{mock: &_m.Mock}
 }
 
-// FindDefaultProfile provides a mock function with given fields: ctx, buildarch
-func (_m *MockAssignment) FindDefaultProfile(ctx context.Context, buildarch string) (types.Assignment, error) {
-	ret := _m.Called(ctx, buildarch)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindDefaultProfile")
-	}
-
-	var r0 types.Assignment
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (types.Assignment, error)); ok {
-		return rf(ctx, buildarch)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) types.Assignment); ok {
-		r0 = rf(ctx, buildarch)
-	} else {
-		r0 = ret.Get(0).(types.Assignment)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, buildarch)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// MockAssignment_FindDefaultProfile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindDefaultProfile'
-type MockAssignment_FindDefaultProfile_Call struct {
-	*mock.Call
-}
-
-// FindDefaultProfile is a helper method to define mock.On call
-//   - ctx context.Context
-//   - buildarch string
-func (_e *MockAssignment_Expecter) FindDefaultProfile(ctx interface{}, buildarch interface{}) *MockAssignment_FindDefaultProfile_Call {
-	return &MockAssignment_FindDefaultProfile_Call{Call: _e.mock.On("FindDefaultProfile", ctx, buildarch)}
-}
-
-func (_c *MockAssignment_FindDefaultProfile_Call) Run(run func(ctx context.Context, buildarch string)) *MockAssignment_FindDefaultProfile_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *MockAssignment_FindDefaultProfile_Call) Return(_a0 types.Assignment, _a1 error) *MockAssignment_FindDefaultProfile_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *MockAssignment_FindDefaultProfile_Call) RunAndReturn(run func(context.Context, string) (types.Assignment, error)) *MockAssignment_FindDefaultProfile_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// FindProfileBySelectors provides a mock function with given fields: ctx, selectors
-func (_m *MockAssignment) FindProfileBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
+// FindBySelectors provides a mock function with given fields: ctx, selectors
+func (_m *MockAssignment) FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
 	ret := _m.Called(ctx, selectors)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindProfileBySelectors")
+		panic("no return value specified for FindBySelectors")
 	}
 
 	var r0 types.Assignment
@@ -107,31 +50,88 @@ func (_m *MockAssignment) FindProfileBySelectors(ctx context.Context, selectors 
 	return r0, r1
 }
 
-// MockAssignment_FindProfileBySelectors_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindProfileBySelectors'
-type MockAssignment_FindProfileBySelectors_Call struct {
+// MockAssignment_FindBySelectors_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindBySelectors'
+type MockAssignment_FindBySelectors_Call struct {
 	*mock.Call
 }
 
-// FindProfileBySelectors is a helper method to define mock.On call
+// FindBySelectors is a helper method to define mock.On call
 //   - ctx context.Context
 //   - selectors types.IpxeSelectors
-func (_e *MockAssignment_Expecter) FindProfileBySelectors(ctx interface{}, selectors interface{}) *MockAssignment_FindProfileBySelectors_Call {
-	return &MockAssignment_FindProfileBySelectors_Call{Call: _e.mock.On("FindProfileBySelectors", ctx, selectors)}
+func (_e *MockAssignment_Expecter) FindBySelectors(ctx interface{}, selectors interface{}) *MockAssignment_FindBySelectors_Call {
+	return &MockAssignment_FindBySelectors_Call{Call: _e.mock.On("FindBySelectors", ctx, selectors)}
 }
 
-func (_c *MockAssignment_FindProfileBySelectors_Call) Run(run func(ctx context.Context, selectors types.IpxeSelectors)) *MockAssignment_FindProfileBySelectors_Call {
+func (_c *MockAssignment_FindBySelectors_Call) Run(run func(ctx context.Context, selectors types.IpxeSelectors)) *MockAssignment_FindBySelectors_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(types.IpxeSelectors))
 	})
 	return _c
 }
 
-func (_c *MockAssignment_FindProfileBySelectors_Call) Return(_a0 types.Assignment, _a1 error) *MockAssignment_FindProfileBySelectors_Call {
+func (_c *MockAssignment_FindBySelectors_Call) Return(_a0 types.Assignment, _a1 error) *MockAssignment_FindBySelectors_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockAssignment_FindProfileBySelectors_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) (types.Assignment, error)) *MockAssignment_FindProfileBySelectors_Call {
+func (_c *MockAssignment_FindBySelectors_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) (types.Assignment, error)) *MockAssignment_FindBySelectors_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindDefaultByBuildarch provides a mock function with given fields: ctx, buildarch
+func (_m *MockAssignment) FindDefaultByBuildarch(ctx context.Context, buildarch string) (types.Assignment, error) {
+	ret := _m.Called(ctx, buildarch)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindDefaultByBuildarch")
+	}
+
+	var r0 types.Assignment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (types.Assignment, error)); ok {
+		return rf(ctx, buildarch)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) types.Assignment); ok {
+		r0 = rf(ctx, buildarch)
+	} else {
+		r0 = ret.Get(0).(types.Assignment)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, buildarch)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockAssignment_FindDefaultByBuildarch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindDefaultByBuildarch'
+type MockAssignment_FindDefaultByBuildarch_Call struct {
+	*mock.Call
+}
+
+// FindDefaultByBuildarch is a helper method to define mock.On call
+//   - ctx context.Context
+//   - buildarch string
+func (_e *MockAssignment_Expecter) FindDefaultByBuildarch(ctx interface{}, buildarch interface{}) *MockAssignment_FindDefaultByBuildarch_Call {
+	return &MockAssignment_FindDefaultByBuildarch_Call{Call: _e.mock.On("FindDefaultByBuildarch", ctx, buildarch)}
+}
+
+func (_c *MockAssignment_FindDefaultByBuildarch_Call) Run(run func(ctx context.Context, buildarch string)) *MockAssignment_FindDefaultByBuildarch_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockAssignment_FindDefaultByBuildarch_Call) Return(_a0 types.Assignment, _a1 error) *MockAssignment_FindDefaultByBuildarch_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockAssignment_FindDefaultByBuildarch_Call) RunAndReturn(run func(context.Context, string) (types.Assignment, error)) *MockAssignment_FindDefaultByBuildarch_Call {
 	_c.Call.Return(run)
 	return _c
 }

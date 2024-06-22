@@ -93,12 +93,16 @@ func NewV1alpha1AdditionalContentWebhook() v1alpha1.AdditionalContent {
 }
 
 func NewTypesProfile() types.Profile {
+	ctInline := NewTypesContentInline()
+	ctObjectRef := NewTypesContentObjectRef()
+	ctWebhook := NewTypesContentWebhook()
+
 	return types.Profile{
 		IPXETemplate: ipxeTemplate,
-		AdditionalContent: []types.Content{
-			NewTypesContentInline(),
-			NewTypesContentObjectRef(),
-			NewTypesContentWebhook(),
+		AdditionalContent: map[string]types.Content{
+			ctInline.Name:    ctInline,
+			ctObjectRef.Name: ctObjectRef,
+			ctWebhook.Name:   ctWebhook,
 		},
 	}
 }

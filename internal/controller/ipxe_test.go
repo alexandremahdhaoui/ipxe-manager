@@ -50,7 +50,7 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		t.Run("FindProfileBySelectors", func(t *testing.T) {
+		t.Run("FindBySelectors", func(t *testing.T) {
 			t.Run("No additional content", func(t *testing.T) {
 				defer setup(t)()
 
@@ -59,9 +59,14 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 				expectedProfile := types.Profile{IPXETemplate: string(expected)}
 				expectedResolvedAndTransformedContent := make(map[string][]byte)
 
+				expectedAssignment := types.Assignment{
+					Name:        "an-assignment",
+					ProfileName: expectedProfileName,
+				}
+
 				assignment.EXPECT().
-					FindProfileBySelectors(ctx, inputSelectors).
-					Return(expectedProfileName, nil).
+					FindBySelectors(ctx, inputSelectors).
+					Return(expectedAssignment, nil).
 					Once()
 
 				profile.EXPECT().
@@ -102,12 +107,12 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 
 						expectedProfile := types.Profile{
 							IPXETemplate:      "kernel",
-							AdditionalContent: make([]types.Content, 0),
+							AdditionalContent: make(map[string]types.Content),
 						}
 
 						for i := 0; i < 3; i++ {
 							name := fmt.Sprintf("additionalContent%d", i)
-							expectedProfile.AdditionalContent = append(expectedProfile.AdditionalContent, types.Content{
+							content := types.Content{
 								Name: name,
 								PostTransformers: []types.TransformerConfig{{
 									Kind: types.ButaneTransformerKind,
@@ -115,13 +120,12 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 									Kind:    types.WebhookTransformerKind,
 									Webhook: types.Ptr(testutil.NewTypesWebhookConfig()),
 								}},
-								ResolverKind:    types.ResolverKind(i),
-								ExposedConfigID: uuid.UUID{},
-							})
+								ResolverKind: types.ResolverKind(i),
+							}
 
 							if tt.ExposedConfig {
 								id := uuid.New()
-								expectedProfile.AdditionalContent[i].ExposedConfigID = id
+								content.ExposedUUID = id
 								expectedResolvedAndTransformedContent[name] = []byte(fmt.Sprintf(
 									"https://localhost:30443/config/%s/%s", expectedProfileName, id.String()))
 							} else {
@@ -133,11 +137,18 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 
 							expected = append(expected, byte(' '))
 							expected = append(expected, expectedResolvedAndTransformedContent[name]...)
+
+							expectedProfile.AdditionalContent[name] = content
+						}
+
+						expectedAssignment := types.Assignment{
+							Name:        "an-assignment",
+							ProfileName: expectedProfileName,
 						}
 
 						assignment.EXPECT().
-							FindProfileBySelectors(ctx, inputSelectors).
-							Return(expectedProfileName, nil).
+							FindBySelectors(ctx, inputSelectors).
+							Return(expectedAssignment, nil).
 							Once()
 
 						profile.EXPECT().
@@ -158,31 +169,37 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 			})
 		})
 
-		t.Run("FindDefaultProfile", func(t *testing.T) {
+		t.Run("FindDefaultByBuildarch", func(t *testing.T) {
 			defer setup(t)()
 
 			expectedDefaultProfileName := "default-profile-arm64"
 			expectedDefaultProfile := types.Profile{
 				IPXETemplate: "this is the default profile with {{ .anAdditionalContent }}",
-				AdditionalContent: []types.Content{{
-					Name: "anAdditionalContent",
-				}},
+				AdditionalContent: map[string]types.Content{
+					mustBeReturned: {
+						Name: mustBeReturned,
+					}},
 			}
 
 			expectedResolvedAndTransformedAdditionalBatch := map[string][]byte{
-				expectedDefaultProfile.AdditionalContent[0].Name: []byte("an additional content"),
+				expectedDefaultProfile.AdditionalContent[mustBeReturned].Name: []byte("an additional content"),
 			}
 
 			expected := []byte(fmt.Sprintf("this is the default profile with an additional content"))
 
+			expectedDefaultAssignment := types.Assignment{
+				Name:        "a-default-assignment",
+				ProfileName: expectedDefaultProfileName,
+			}
+
 			assignment.EXPECT().
-				FindProfileBySelectors(ctx, inputSelectors).
-				Return("", adapter.ErrAssignmentNotFound).
+				FindBySelectors(ctx, inputSelectors).
+				Return(types.Assignment{}, adapter.ErrAssignmentNotFound).
 				Once()
 
 			assignment.EXPECT().
-				FindDefaultProfile(ctx, inputSelectors.Buildarch).
-				Return(expectedDefaultProfileName, nil).
+				FindDefaultByBuildarch(ctx, inputSelectors.Buildarch).
+				Return(expectedDefaultAssignment, nil).
 				Once()
 
 			profile.EXPECT().

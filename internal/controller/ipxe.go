@@ -51,10 +51,10 @@ type ipxe struct {
 // -------------------------------------------------------- FindProfileAndRender ------------------------------------ //
 
 func (i *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error) {
-	assignment, err := i.assignment.FindProfileBySelectors(ctx, selectors)
+	assignment, err := i.assignment.FindBySelectors(ctx, selectors)
 	if errors.Is(err, adapter.ErrAssignmentNotFound) {
 		// fallback to default profile
-		defaultAssignment, defaultErr := i.assignment.FindDefaultProfile(ctx, selectors.Buildarch)
+		defaultAssignment, defaultErr := i.assignment.FindDefaultByBuildarch(ctx, selectors.Buildarch)
 		if defaultErr != nil {
 			return nil, errors.Join(defaultErr,
 				fmt.Errorf(fmtCannotSelectAssignmentWithSelectors, selectors.UUID, selectors.Buildarch),

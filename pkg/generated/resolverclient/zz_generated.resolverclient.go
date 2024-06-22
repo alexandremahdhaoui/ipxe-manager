@@ -63,8 +63,8 @@ type N500 = Error
 // N503 defines model for 503.
 type N503 = Error
 
-// ResolveResponse defines model for ResolveResponse.
-type ResolveResponse struct {
+// ResolveResp defines model for ResolveResp.
+type ResolveResp struct {
 	Data *string `json:"data,omitempty"`
 }
 
@@ -277,7 +277,7 @@ type ClientWithResponsesInterface interface {
 type ResolveResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResolveResponse
+	JSON200      *ResolveResp
 	JSON400      *N400
 	JSON401      *N401
 	JSON403      *N403
@@ -326,7 +326,7 @@ func ParseResolveResponse(rsp *http.Response) (*ResolveResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResolveResponse
+		var dest ResolveResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

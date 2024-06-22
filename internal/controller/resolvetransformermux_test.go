@@ -20,7 +20,7 @@ func TestResolveTransformerMux(t *testing.T) {
 	var (
 		ctx            context.Context
 		inputSelectors types.IpxeSelectors
-		inputBatch     []types.Content
+		inputBatch     map[string]types.Content
 
 		inlineResolver    *mockadapter.MockResolver
 		objectRefResolver *mockadapter.MockResolver
@@ -35,6 +35,8 @@ func TestResolveTransformerMux(t *testing.T) {
 		mux controller.ResolveTransformerMux
 	)
 
+	const baseURL = "https://example.com"
+
 	setup := func(t *testing.T) func() {
 		t.Helper()
 
@@ -44,7 +46,7 @@ func TestResolveTransformerMux(t *testing.T) {
 			Buildarch: "arm64",
 		}
 
-		inputBatch = make([]types.Content, 0)
+		inputBatch = make(map[string]types.Content)
 
 		inlineResolver = mockadapter.NewMockResolver(t)
 		objectRefResolver = mockadapter.NewMockResolver(t)
@@ -64,7 +66,7 @@ func TestResolveTransformerMux(t *testing.T) {
 			types.WebhookTransformerKind: webhookTransformer,
 		}
 
-		mux = controller.NewResolveTransformerMux(resolvers, transformers)
+		mux = controller.NewResolveTransformerMux(baseURL, resolvers, transformers)
 
 		return func() {
 			t.Helper()
@@ -105,7 +107,7 @@ func TestResolveTransformerMux(t *testing.T) {
 							WebhookConfig: types.Ptr(testutil.NewTypesWebhookConfig()),
 						}
 
-						inputBatch = append(inputBatch, inputContent)
+						inputBatch[inputContent.Name] = inputContent
 
 						expectedResolverResult := []byte("expectedResolverResult")
 						expectedTransformationResult0 := []byte("expectedTransformationResult0")
@@ -113,7 +115,7 @@ func TestResolveTransformerMux(t *testing.T) {
 						expected[inputContent.Name] = expectedTransformationResult1
 
 						resolvers[kind].(*mockadapter.MockResolver).EXPECT().
-							Resolve(ctx, inputContent).
+							Resolve(ctx, inputContent, inputSelectors).
 							Return(expectedResolverResult, nil).
 							Once()
 
@@ -139,10 +141,10 @@ func TestResolveTransformerMux(t *testing.T) {
 			t.Run("unknown resolver", func(t *testing.T) {
 				defer setup(t)()
 
-				inputBatch = append(inputBatch, types.Content{
+				inputBatch[t.Name()] = types.Content{
 					Name:         t.Name(),
 					ResolverKind: -1,
-				})
+				}
 
 				_, err := mux.ResolveAndTransformBatch(ctx, inputBatch, inputSelectors)
 				assert.ErrorIs(t, err, controller.ErrResolverUnknown)
@@ -151,17 +153,17 @@ func TestResolveTransformerMux(t *testing.T) {
 			t.Run("unknown transformer", func(t *testing.T) {
 				defer setup(t)()
 
-				inputBatch = append(inputBatch, types.Content{
+				inputBatch[t.Name()] = types.Content{
 					Name: t.Name(),
 					PostTransformers: []types.TransformerConfig{{
 						Kind: -1,
 					}},
 					ResolverKind: types.InlineResolverKind,
-				})
+				}
 
 				resolvers[types.InlineResolverKind].(*mockadapter.MockResolver).EXPECT().
-					Resolve(mock.Anything, mock.Anything).
-					Return([]byte("whatever"), nil).
+					Resolve(mock.Anything, mock.Anything, mock.Anything).
+					Return([]byte("something"), nil).
 					Once()
 
 				_, err := mux.ResolveAndTransformBatch(ctx, inputBatch, inputSelectors)
@@ -171,13 +173,13 @@ func TestResolveTransformerMux(t *testing.T) {
 			t.Run("resolver error", func(t *testing.T) {
 				defer setup(t)()
 
-				inputBatch = append(inputBatch, types.Content{
+				inputBatch[t.Name()] = types.Content{
 					Name:         t.Name(),
 					ResolverKind: types.InlineResolverKind,
-				})
+				}
 
 				resolvers[types.InlineResolverKind].(*mockadapter.MockResolver).EXPECT().
-					Resolve(mock.Anything, mock.Anything).
+					Resolve(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil, assert.AnError).
 					Once()
 
@@ -188,20 +190,20 @@ func TestResolveTransformerMux(t *testing.T) {
 			t.Run("transformer error", func(t *testing.T) {
 				defer setup(t)()
 
-				inputBatch = append(inputBatch, types.Content{
+				inputBatch[t.Name()] = types.Content{
 					Name:         t.Name(),
 					ResolverKind: types.InlineResolverKind,
 					PostTransformers: []types.TransformerConfig{{
 						Kind: types.ButaneTransformerKind,
 					}},
-				})
+				}
 
-				resolvers[inputBatch[0].ResolverKind].(*mockadapter.MockResolver).EXPECT().
-					Resolve(mock.Anything, mock.Anything).
+				resolvers[inputBatch[t.Name()].ResolverKind].(*mockadapter.MockResolver).EXPECT().
+					Resolve(mock.Anything, mock.Anything, mock.Anything).
 					Return([]byte("whatever"), nil).
 					Once()
 
-				transformers[inputBatch[0].PostTransformers[0].Kind].(*mockadapter.MockTransformer).EXPECT().
+				transformers[inputBatch[t.Name()].PostTransformers[0].Kind].(*mockadapter.MockTransformer).EXPECT().
 					Transform(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil, assert.AnError).
 					Once()

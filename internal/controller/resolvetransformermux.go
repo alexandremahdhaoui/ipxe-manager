@@ -29,7 +29,7 @@ type ResolveTransformerMux interface {
 		ctx context.Context,
 		batch map[string]types.Content,
 		selectors types.IpxeSelectors,
-		options ...resolveTransformBatchOption,
+		options ...ResolveTransformBatchOption,
 	) (map[string][]byte, error)
 }
 
@@ -98,9 +98,9 @@ func (r *resolveTransformerMux) ResolveAndTransformBatch(
 	ctx context.Context,
 	batch map[string]types.Content,
 	selectors types.IpxeSelectors,
-	options ...resolveTransformBatchOption,
+	options ...ResolveTransformBatchOption,
 ) (map[string][]byte, error) {
-	opts := new(resolveTransformBatchOptions).apply(options...)
+	opts := new(ResolveTransformBatchOptions).apply(options...)
 
 	output := make(map[string][]byte)
 
@@ -123,14 +123,14 @@ func (r *resolveTransformerMux) ResolveAndTransformBatch(
 }
 
 type (
-	resolveTransformBatchOptions struct {
+	ResolveTransformBatchOptions struct {
 		returnURLInsteadOfResolveAndTransform bool
 	}
 
-	resolveTransformBatchOption func(options *resolveTransformBatchOptions)
+	ResolveTransformBatchOption func(options *ResolveTransformBatchOptions)
 )
 
-func (o *resolveTransformBatchOptions) apply(options ...resolveTransformBatchOption) *resolveTransformBatchOptions {
+func (o *ResolveTransformBatchOptions) apply(options ...ResolveTransformBatchOption) *ResolveTransformBatchOptions {
 	for _, f := range options {
 		f(o)
 	}
@@ -140,6 +140,6 @@ func (o *resolveTransformBatchOptions) apply(options ...resolveTransformBatchOpt
 
 // ReturnExposedContentURL will ensure resolvetransformermux.ResolveAndTransformBatch does not resolve and transform the
 // content but return a URL to that content.
-func ReturnExposedContentURL(options *resolveTransformBatchOptions) {
+func ReturnExposedContentURL(options *ResolveTransformBatchOptions) {
 	options.returnURLInsteadOfResolveAndTransform = true
 }

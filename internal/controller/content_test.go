@@ -14,11 +14,17 @@ import (
 	"testing"
 )
 
+const (
+	mustBeFilteredOut = "mustBeFilteredOut"
+	mustBeReturned    = "mustBeReturned"
+)
+
 func TestConfig(t *testing.T) {
 	var (
 		ctx              context.Context
 		inputProfileName string
 		inputConfigID    uuid.UUID
+		ipxeSelectors    types.IpxeSelectors
 
 		expectedProfileResult types.Profile
 		expectedProfileErr    error
@@ -37,6 +43,7 @@ func TestConfig(t *testing.T) {
 		ctx = context.Background()
 		inputProfileName = "profile-name"
 		inputConfigID = uuid.New()
+		ipxeSelectors = types.IpxeSelectors{}
 
 		profile = mockadapter.NewMockProfile(t)
 		mux = mockcontroller.NewMockResolveTransformerMux(t)
@@ -73,23 +80,26 @@ func TestConfig(t *testing.T) {
 			expected := []byte("qwe")
 			expectedProfileResult = types.Profile{
 				IPXETemplate: "ipxe qwerty",
-				AdditionalContent: []types.Content{{
-					Name: "this will shouldn't be returned",
-				}, {
-					Name:            "this should be returned",
-					ExposedConfigID: inputConfigID,
-				}},
+				AdditionalContent: map[string]types.Content{
+					mustBeFilteredOut: {
+						Name: mustBeFilteredOut,
+					},
+					mustBeReturned: {
+						Name:        mustBeReturned,
+						ExposedUUID: inputConfigID,
+					},
+				},
 			}
 
 			expectedMuxResult = map[string][]byte{
-				expectedProfileResult.AdditionalContent[0].Name: []byte("asd"),
-				expectedProfileResult.AdditionalContent[1].Name: expected,
+				expectedProfileResult.AdditionalContent[mustBeFilteredOut].Name: []byte("asd"),
+				expectedProfileResult.AdditionalContent[mustBeReturned].Name:    expected,
 			}
 
 			expectProfile()
 			expectMux()
 
-			actual, err := config.GetByID(ctx, inputProfileName, inputConfigID)
+			actual, err := config.GetByID(ctx, inputConfigID, types.IpxeSelectors{})
 			assert.NoError(t, err)
 			assert.Equal(t, expected, actual)
 		})
@@ -100,14 +110,15 @@ func TestConfig(t *testing.T) {
 
 				expectedProfileResult = types.Profile{
 					IPXETemplate: "ipxe qwerty",
-					AdditionalContent: []types.Content{{
-						Name: "this will shouldn't be returned",
-					}},
+					AdditionalContent: map[string]types.Content{
+						mustBeFilteredOut: {
+							Name: mustBeFilteredOut,
+						}},
 				}
 
 				expectProfile()
 
-				_, err := config.GetByID(ctx, inputProfileName, inputConfigID)
+				_, err := config.GetByID(ctx, inputConfigID, ipxeSelectors)
 				assert.ErrorIs(t, err, controller.ErrConfigNotFound)
 			})
 
@@ -117,7 +128,7 @@ func TestConfig(t *testing.T) {
 				expectedProfileErr = assert.AnError
 				expectProfile()
 
-				_, err := config.GetByID(ctx, inputProfileName, inputConfigID)
+				_, err := config.GetByID(ctx, inputConfigID, ipxeSelectors)
 				assert.ErrorIs(t, err, expectedProfileErr)
 			})
 
@@ -126,12 +137,14 @@ func TestConfig(t *testing.T) {
 
 				expectedProfileResult = types.Profile{
 					IPXETemplate: "ipxe qwerty",
-					AdditionalContent: []types.Content{{
-						Name: "this will shouldn't be returned",
-					}, {
-						Name:            "this should be returned",
-						ExposedConfigID: inputConfigID,
-					}},
+					AdditionalContent: map[string]types.Content{
+						mustBeFilteredOut: {
+							Name: mustBeFilteredOut,
+						},
+						mustBeReturned: {
+							Name:        mustBeReturned,
+							ExposedUUID: inputConfigID,
+						}},
 				}
 
 				expectedMuxErr = assert.AnError
@@ -139,7 +152,7 @@ func TestConfig(t *testing.T) {
 				expectProfile()
 				expectMux()
 
-				_, err := config.GetByID(ctx, inputProfileName, inputConfigID)
+				_, err := config.GetByID(ctx, inputConfigID, ipxeSelectors)
 				assert.ErrorIs(t, err, expectedMuxErr)
 			})
 		})

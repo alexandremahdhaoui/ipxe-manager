@@ -63,7 +63,7 @@ spec:
                           type: string
                         jsonpath:
                           description: |-
-                            JSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.'private.key'`
+                            JSONPath to the desired content in the resource using jsonpath notation. E.g. `.data.private\.key`
                             TODO: Validate this jsonpath in the webhook.
                           type: string
                         name:

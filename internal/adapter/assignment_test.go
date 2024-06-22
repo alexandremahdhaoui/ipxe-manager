@@ -64,7 +64,7 @@ func TestAssignment(t *testing.T) {
 			})
 	}
 
-	t.Run("FindDefaultProfile", func(t *testing.T) {
+	t.Run("FindDefaultByBuildarch", func(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			defer setup(t)()
 
@@ -76,7 +76,7 @@ func TestAssignment(t *testing.T) {
 
 			list(t)
 
-			actual, err := assignment.FindDefaultProfile(ctx, inputBuildarch)
+			actual, err := assignment.FindDefaultByBuildarch(ctx, inputBuildarch)
 			assert.NoError(t, err)
 			assert.Equal(t, expectedProfile, actual)
 		})
@@ -87,7 +87,7 @@ func TestAssignment(t *testing.T) {
 
 				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
 
-				actual, err := assignment.FindDefaultProfile(ctx, inputBuildarch)
+				actual, err := assignment.FindDefaultByBuildarch(ctx, inputBuildarch)
 				assert.ErrorIs(t, err, assert.AnError)
 				assert.Empty(t, actual)
 			})
@@ -98,14 +98,14 @@ func TestAssignment(t *testing.T) {
 				// No assignment found.
 				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-				actual, err := assignment.FindDefaultProfile(ctx, inputBuildarch)
+				actual, err := assignment.FindDefaultByBuildarch(ctx, inputBuildarch)
 				assert.ErrorIs(t, err, adapter.ErrAssignmentNotFound)
 				assert.Empty(t, actual)
 			})
 		})
 	})
 
-	t.Run("FindProfileBySelectors", func(t *testing.T) {
+	t.Run("FindBySelectors", func(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			defer setup(t)()
 
@@ -124,7 +124,7 @@ func TestAssignment(t *testing.T) {
 
 			list(t)
 
-			actual, err := assignment.FindProfileBySelectors(ctx, selectors)
+			actual, err := assignment.FindBySelectors(ctx, selectors)
 			assert.NoError(t, err)
 			assert.Equal(t, expectedProfile, actual)
 		})
@@ -135,7 +135,7 @@ func TestAssignment(t *testing.T) {
 
 				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
 
-				actual, err := assignment.FindProfileBySelectors(ctx, types.IpxeSelectors{})
+				actual, err := assignment.FindBySelectors(ctx, types.IpxeSelectors{})
 				assert.ErrorIs(t, err, assert.AnError)
 				assert.Empty(t, actual)
 			})
@@ -146,7 +146,7 @@ func TestAssignment(t *testing.T) {
 				// No assignment found.
 				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-				actual, err := assignment.FindProfileBySelectors(ctx, types.IpxeSelectors{})
+				actual, err := assignment.FindBySelectors(ctx, types.IpxeSelectors{})
 				assert.ErrorIs(t, err, adapter.ErrAssignmentNotFound)
 				assert.Empty(t, actual)
 			})

@@ -65,8 +65,10 @@ func main() {
 	webhookTransformer := adapter.NewWebhookTransformer(objectRefResolver)
 
 	// --------------------------------------------- Controller ----------------------------------------------------- //
+	var baseURL string
 
 	mux := controller.NewResolveTransformerMux(
+		baseURL,
 		map[types.ResolverKind]adapter.Resolver{
 			types.InlineResolverKind:    inlineResolver,
 			types.ObjectRefResolverKind: objectRefResolver,

@@ -29,7 +29,7 @@ paths:
         - resolve
       responses:
         200:
-          $ref: '#/components/responses/ResolveResponse'
+          $ref: '#/components/responses/ResolveResp'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -108,8 +108,8 @@ components:
   # ---------------------------------------------------------- RESPONSES -----------------------------------------------
   responses:
 
-    # -------------------------------------------------------- resolveResponse -----------------------------------------
-    ResolveResponse:
+    # -------------------------------------------------------- ResolveResp ---------------------------------------------
+    ResolveResp:
       description: the expected response from the resolve endpoint
       content:
         application/json:

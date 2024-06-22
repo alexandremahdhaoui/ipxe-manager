@@ -35,11 +35,11 @@ func TestInlineResolver(t *testing.T) {
 		setup()
 
 		expected := []byte("test")
-		input := types.Content{
-			Inline: string(expected),
-		}
 
-		out, err := resolver.Resolve(nil, input)
+		content := types.Content{Inline: string(expected)}
+		ipxeSelectors := types.IpxeSelectors{}
+
+		out, err := resolver.Resolve(nil, content, ipxeSelectors)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, out)
 	})
@@ -49,9 +49,10 @@ func TestObjectRefResolver(t *testing.T) {
 	var (
 		ctx context.Context
 
-		expected []byte
-		content  types.Content
-		object   *unstructured.Unstructured
+		expected      []byte
+		content       types.Content
+		ipxeSelectors types.IpxeSelectors
+		object        *unstructured.Unstructured
 
 		cl       *fake.FakeDynamicClient
 		resolver adapter.Resolver
@@ -78,6 +79,9 @@ func TestObjectRefResolver(t *testing.T) {
 
 		cl = fake.NewSimpleDynamicClient(runtime.NewScheme(), object)
 		resolver = adapter.NewObjectRefResolver(cl)
+
+		ipxeSelectors = types.IpxeSelectors{}
+
 	}
 
 	t.Run("Resolve", func(t *testing.T) {
@@ -89,7 +93,7 @@ func TestObjectRefResolver(t *testing.T) {
 				return true, object, nil
 			})
 
-			actual, err := resolver.Resolve(ctx, content)
+			actual, err := resolver.Resolve(ctx, content, ipxeSelectors)
 			assert.NoError(t, err)
 			assert.Equal(t, expected, actual)
 		})
@@ -105,6 +109,7 @@ func TestWebhookResolver(t *testing.T) {
 		basicAuthObject *unstructured.Unstructured
 		mtlsObject      *unstructured.Unstructured
 		content         types.Content
+		ipxeSelectors   types.IpxeSelectors
 
 		mock *resolverserver2.Mock
 
@@ -125,6 +130,8 @@ func TestWebhookResolver(t *testing.T) {
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.ClientKeyJSONPath.Parse(`{.data.client\.key}`))
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.ClientCertJSONPath.Parse(`{.data.client\.crt}`))
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.CaBundleJSONPath.Parse(`{.data.ca\.crt}`))
+
+		ipxeSelectors = types.IpxeSelectors{}
 
 		// -------------------------------------------------- Webhook Server  --------------------------------------- //
 
@@ -209,7 +216,7 @@ func TestWebhookResolver(t *testing.T) {
 				return true, mtlsObject, nil
 			})
 
-			actual, err := resolver.Resolve(ctx, content)
+			actual, err := resolver.Resolve(ctx, content, ipxeSelectors)
 			assert.NoError(t, err)
 			assert.Equal(t, expected, actual)
 		})
@@ -233,7 +240,7 @@ func TestWebhookResolver(t *testing.T) {
 			expected = []byte(`{"message":"Unauthorized"}`)
 			expected = append(expected, byte(0x0a))
 
-			actual, err := resolver.Resolve(ctx, content)
+			actual, err := resolver.Resolve(ctx, content, ipxeSelectors)
 			assert.NoError(t, err)
 			assert.Equal(t, expected, actual)
 		})

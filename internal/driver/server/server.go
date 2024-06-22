@@ -41,7 +41,7 @@ func (s *server) GetIPXEBootstrap(c echo.Context) error {
 	return nil
 }
 
-func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID, params GetConfigByIDParams) error {
+func (s *server) GetContentByID(c echo.Context, configID UUID, params GetContentByIDParams) error {
 	//TODO: create new context with correlation ID.
 	ctx := context.Background()
 
@@ -51,7 +51,7 @@ func (s *server) GetConfigByID(c echo.Context, profileName string, configID UUID
 	}
 
 	// call controller
-	b, err := s.config.GetByID(ctx, profileName, configID, attributes)
+	b, err := s.config.GetByID(ctx, configID, attributes)
 	if err != nil {
 		return writeErr(c, 500, errors.Join(err, ErrGetConfigByID))
 	}
