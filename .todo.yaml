@@ -26,6 +26,13 @@ impl:
     - assignment
     - profile
 
+fakes:
+  adapterfake:
+    - assignment
+    - profile
+    - resolver
+    - transformer
+
 test:
   fix-unit-tests:
     adapter:
