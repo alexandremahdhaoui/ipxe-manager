@@ -1,10 +1,11 @@
-package resolverserver
+package transformerserverfake
 
 import (
 	"context"
 	"crypto/tls"
 	"errors"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/certutil"
+	"github.com/alexandremahdhaoui/ipxer/pkg/generated/transformerserver"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,9 +14,9 @@ import (
 	"testing"
 )
 
-type Expectation = func(echo.Context, ResolveParams) error
+type Expectation = func(echo.Context) error
 
-type Mock struct {
+type Fake struct {
 	t            *testing.T
 	expectations []Expectation
 	counter      int
@@ -25,49 +26,49 @@ type Mock struct {
 	Echo *echo.Echo
 }
 
-func (m *Mock) Resolve(ctx echo.Context, _ AnyRoutes, params ResolveParams) error {
-	m.t.Helper()
+func (f *Fake) Transform(ctx echo.Context, _ transformerserver.AnyRoutes) error {
+	f.t.Helper()
 
-	counter := m.counter
-	m.counter += 1
+	counter := f.counter
+	f.counter += 1
 
-	return m.expectations[counter](ctx, params)
+	return f.expectations[counter](ctx)
 }
 
-func (m *Mock) Start() *Mock {
+func (f *Fake) Start() *Fake {
 	go func() {
-		if err := m.server.ListenAndServeTLS("", ""); !errors.Is(err, http.ErrServerClosed) {
-			require.NoError(m.t, err)
+		if err := f.server.ListenAndServeTLS("", ""); !errors.Is(err, http.ErrServerClosed) {
+			require.NoError(f.t, err)
 		}
 	}()
 
-	return m
+	return f
 }
 
-func (m *Mock) PrependExpectation(f Expectation) *Mock {
-	m.expectations = append([]Expectation{f}, m.expectations...)
+func (f *Fake) PrependExpectation(expectation Expectation) *Fake {
+	f.expectations = append([]Expectation{expectation}, f.expectations...)
 
-	return m
+	return f
 }
 
-func (m *Mock) AppendExpectation(f Expectation) *Mock {
-	m.expectations = append(m.expectations, f)
+func (f *Fake) AppendExpectation(expectation Expectation) *Fake {
+	f.expectations = append(f.expectations, expectation)
 
-	return m
+	return f
 }
 
-func (m *Mock) AssertExpectationsAndShutdown() *Mock {
-	m.t.Helper()
+func (f *Fake) AssertExpectationsAndShutdown() *Fake {
+	f.t.Helper()
 
 	ctx := context.Background()
 
-	assert.Equal(m.t, m.counter, len(m.expectations))
-	require.NoError(m.t, m.server.Shutdown(ctx))
+	assert.Equal(f.t, f.counter, len(f.expectations))
+	require.NoError(f.t, f.server.Shutdown(ctx))
 
-	return m
+	return f
 }
 
-func NewMock(t *testing.T, addr string) *Mock {
+func New(t *testing.T, addr string) *Fake {
 	t.Helper()
 
 	serverName := strings.SplitN(addr, ":", 2)[0] // a bit hacky
@@ -80,7 +81,7 @@ func NewMock(t *testing.T, addr string) *Mock {
 	require.NoError(t, err)
 
 	echoServer := echo.New()
-	mock := &Mock{
+	fake := &Fake{
 		t:            t,
 		expectations: make([]Expectation, 0),
 		counter:      0,
@@ -89,12 +90,12 @@ func NewMock(t *testing.T, addr string) *Mock {
 		Echo: echoServer,
 	}
 
-	RegisterHandlers(echoServer, mock)
+	transformerserver.RegisterHandlers(echoServer, fake)
 
 	tlsKeyPair, err := tls.X509KeyPair(serverCrt, serverKey)
 	require.NoError(t, err)
 
-	mock.server = http.Server{
+	fake.server = http.Server{
 		Addr:    addr,
 		Handler: echoServer, // set Echo as handler
 		TLSConfig: &tls.Config{
@@ -105,11 +106,11 @@ func NewMock(t *testing.T, addr string) *Mock {
 			ClientCAs:    ca.Pool(),
 			//TODO: Parameterize InsecureSkipVerify to test use cases where use would allow self-signed certs.
 			//      We may also have to update the RootCAs var.
-			InsecureSkipVerify: false,
+			InsecureSkipVerify: false, //TODO?
 		},
 	}
 
-	mock.Start()
+	fake.Start()
 
-	return mock
+	return fake
 }

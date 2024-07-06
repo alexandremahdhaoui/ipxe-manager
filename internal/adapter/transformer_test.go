@@ -9,7 +9,7 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockadapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
-	"github.com/alexandremahdhaoui/ipxer/pkg/generated/transformerserver"
+	"github.com/alexandremahdhaoui/ipxer/pkg/fakes/transformerserverfake"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -68,7 +68,7 @@ func TestWebhookTransformer(t *testing.T) {
 
 		objectRefResolver *mockadapter.MockObjectRefResolver
 		transformer       adapter.Transformer
-		serverMock        *transformerserver.Mock
+		serverMock        *transformerserverfake.Fake
 	)
 
 	setup := func(t *testing.T) func() {
@@ -93,10 +93,10 @@ func TestWebhookTransformer(t *testing.T) {
 		objectRefResolver = mockadapter.NewMockObjectRefResolver(t)
 		transformer = adapter.NewWebhookTransformer(objectRefResolver)
 
-		// -------------------------------------------------- Webhook Server Mock ----------------------------------- //
+		// -------------------------------------------------- Webhook Server Fake ----------------------------------- //
 
 		addr := strings.SplitN(inputConfig.Webhook.URL, "/", 2)[0]
-		serverMock = transformerserver.NewMock(t, addr)
+		serverMock = transformerserverfake.New(t, addr)
 
 		clientKey, clientCert, err := serverMock.CA.NewCertifiedKeyPEM(addr)
 		require.NoError(t, err)

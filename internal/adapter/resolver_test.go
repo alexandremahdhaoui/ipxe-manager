@@ -8,6 +8,7 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
+	"github.com/alexandremahdhaoui/ipxer/pkg/fakes/resolverserverfake"
 	resolverserver2 "github.com/alexandremahdhaoui/ipxer/pkg/generated/resolverserver"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -111,7 +112,7 @@ func TestWebhookResolver(t *testing.T) {
 		content         types.Content
 		ipxeSelectors   types.IpxeSelectors
 
-		mock *resolverserver2.Mock
+		mock *resolverserverfake.Fake
 
 		cl       *fake.FakeDynamicClient
 		resolver adapter.Resolver
@@ -136,7 +137,7 @@ func TestWebhookResolver(t *testing.T) {
 		// -------------------------------------------------- Webhook Server  --------------------------------------- //
 
 		addr := strings.SplitN(content.WebhookConfig.URL, "/", 2)[0]
-		mock = resolverserver2.NewMock(t, addr)
+		mock = resolverserverfake.New(t, addr)
 
 		clientKey, clientCert, err := mock.CA.NewCertifiedKeyPEM(addr)
 		require.NoError(t, err)
