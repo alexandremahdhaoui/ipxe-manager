@@ -2,7 +2,7 @@ FROM docker.io/golang:1.22 as downloader
 
 WORKDIR /workdir
 
-COPY . ./
+COPY ./go.* ./
 
 RUN go mod download
 
@@ -14,6 +14,10 @@ ARG NAME=ipxer-api
 ARG INPUT_CMD="./cmd/${NAME}"
 ARG OUTPUT_BIN="/bin/${NAME}"
 
+WORKDIR /workdir
+
+COPY . ./
+
 RUN CG0_ENABLED=0 \
     GOOS=linux \
     go build \
@@ -21,8 +25,9 @@ RUN CG0_ENABLED=0 \
       -o "${OUTPUT_BIN}" \
       "${INPUT_CMD}"
 
-FROM gcr.io/distroless/static-debian11
+FROM docker.io/alpine:3.20.1
 
+ARG NAME=ipxer-api
+ARG OUTPUT_BIN="/bin/${NAME}"
 COPY --from=builder ${OUTPUT_BIN} ${OUTPUT_BIN}
-
-CMD [ "/bin/ipxer-api" ]
+CMD [ "ipxer-api" ]

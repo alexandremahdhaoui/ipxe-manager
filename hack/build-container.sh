@@ -9,7 +9,7 @@ USAGE:
 ${0} [BINARY_NAME]
 
 Required environment variables:
-    CONTAINER_ENGINER   container engine such as podman or docker.
+    CONTAINER_ENGINE   container engine such as podman or docker.
     GO_BUILD_LDFLAGS    go linker flags.
     VERSION             tag semver.
 EOF
