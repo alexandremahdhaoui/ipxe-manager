@@ -51,6 +51,11 @@ test:
       - define integration
       - scope: kind or "k8s w/o kubelet" (kwok)
 
+  functional-tests:
+    TODO:
+      - define functional testing for this project.
+      - scope: kind/kwok + fakes
+
   e2e:
     TODO:
       - define e2e
