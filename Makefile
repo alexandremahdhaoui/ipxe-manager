@@ -170,5 +170,5 @@ githooks: ## Initializes Git hooks to run before a push.
 	git config core.hooksPath .githooks
 
 .PHONY: pre-push
-pre-push: generate fmt lint
+pre-push: generate fmt lint test
 	git status

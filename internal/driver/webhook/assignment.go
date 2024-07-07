@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
@@ -11,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-	"slices"
 )
 
 var (
@@ -34,15 +35,15 @@ type Assignment struct {
 func (a *Assignment) Default(ctx context.Context, obj runtime.Object) error {
 	assignment, ok := obj.(*v1alpha1.Assignment)
 	if !ok {
-		return NewUnsupportedResource(obj) //TODO: wrap err
+		return NewUnsupportedResource(obj) // TODO: wrap err
 	}
 
 	if err := a.validateAssignmentStatic(ctx, obj); err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	// 1. Remove all "internal" labels. (remove ones created by users && clean up old ones)
-	for k, _ := range assignment.Labels {
+	for k := range assignment.Labels {
 		if !v1alpha1.IsInternalLabel(k) {
 			delete(assignment.Labels, k)
 		}
@@ -52,7 +53,7 @@ func (a *Assignment) Default(ctx context.Context, obj runtime.Object) error {
 	for _, subjectID := range assignment.Spec.SubjectSelectors.UUIDList {
 		id, err := uuid.Parse(subjectID)
 		if err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 
 		v1alpha1.SetUUIDLabelSelector(assignment, id, "")
@@ -78,12 +79,12 @@ func (a *Assignment) ValidateCreate(
 ) (admission.Warnings, error) {
 	// simple validations should happen first.
 	if err := a.validateAssignmentStatic(ctx, obj); err != nil {
-		return nil, err //TODO: log + wrap err
+		return nil, err // TODO: log + wrap err
 	}
 
 	// Validations making requesting to external services should happen after simple validations.
 	if err := a.validateAssignmentDynamic(ctx, obj); err != nil {
-		return nil, err //TODO: log + wrap err
+		return nil, err // TODO: log + wrap err
 	}
 
 	return nil, nil
@@ -95,12 +96,12 @@ func (a *Assignment) ValidateUpdate(
 ) (admission.Warnings, error) {
 	// simple validations should happen first.
 	if err := a.validateAssignmentStatic(ctx, newObj); err != nil {
-		return nil, err //TODO: log + wrap err
+		return nil, err // TODO: log + wrap err
 	}
 
 	// Validations making requesting to external services should happen after simple validations.
 	if err := a.validateAssignmentDynamic(ctx, newObj); err != nil {
-		return nil, err //TODO: log + wrap err
+		return nil, err // TODO: log + wrap err
 	}
 
 	return nil, nil
@@ -149,7 +150,7 @@ func validateBuildarchList(_ context.Context, obj runtime.Object) error {
 			return errors.Join(
 				errors.New("specified buildarch is not supported"),
 				fmt.Errorf("expected one of 'arm32', 'arm64', 'i386', 'x86_64'; received %q", b.String()),
-			) //TODO: err + wrap err
+			) // TODO: err + wrap err
 		}
 	}
 
@@ -162,7 +163,7 @@ func validateUUIDList(_ context.Context, obj runtime.Object) error {
 	for _, id := range assignment.Spec.SubjectSelectors.UUIDList {
 		_, err := uuid.Parse(id)
 		if err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
@@ -177,7 +178,7 @@ func validateIsDefault(_ context.Context, obj runtime.Object) error {
 	}
 
 	if len(assignment.Spec.SubjectSelectors.UUIDList) > 0 {
-		return errors.New("a default assignment must not specify subject selectors of type UUID") //TODO: err + wrap err
+		return errors.New("a default assignment must not specify subject selectors of type UUID") // TODO: err + wrap err
 	}
 
 	return nil
@@ -189,9 +190,9 @@ func (a *Assignment) validateProfileName(ctx context.Context, obj runtime.Object
 	_, err := a.profile.Get(ctx, assignment.Spec.ProfileName)
 	if errors.Is(err, adapter.ErrProfileNotFound) {
 		// Return an error if the referred profile does not exist.
-		return errors.New("assignment must specify an existing profileName") //TODO: err + wrap err
+		return errors.New("assignment must specify an existing profileName") // TODO: err + wrap err
 	} else if err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	return nil
@@ -210,7 +211,7 @@ func (a *Assignment) validateDefaultAssignmentForBuildarchIsUnique(ctx context.C
 			// this is the good scenario
 			continue
 		} else if err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 
 		if assign.Name == assignment.Name {
@@ -218,7 +219,7 @@ func (a *Assignment) validateDefaultAssignmentForBuildarchIsUnique(ctx context.C
 			continue
 		}
 
-		return errors.New("TODO") //TODO: err + wrap err
+		return errors.New("TODO") // TODO: err + wrap err
 	}
 
 	return nil
@@ -244,7 +245,7 @@ func (a *Assignment) validateUUIDAssignmentIsUnique(ctx context.Context, obj run
 	}
 
 	// 1.b. check if we find any match.
-	//TODO: looping over selectors is a very poor operation; use a better solution, such as listing all then filtering.
+	// TODO: looping over selectors is a very poor operation; use a better solution, such as listing all then filtering.
 	for _, selectors := range selectorsList {
 		// Verify no other Assignment exist for the specified selector.
 		matchedAssignment, err := a.assignment.FindBySelectors(ctx, selectors)
@@ -252,7 +253,7 @@ func (a *Assignment) validateUUIDAssignmentIsUnique(ctx context.Context, obj run
 			// ignore if assignment is not found.
 			continue
 		} else if err != nil {
-			return err //TODO: wrap error
+			return err // TODO: wrap error
 		}
 
 		if matchedAssignment.Name == assignment.GetName() {
@@ -262,7 +263,7 @@ func (a *Assignment) validateUUIDAssignmentIsUnique(ctx context.Context, obj run
 
 		return errors.Join(
 			errors.New("assignment cannot reference a subject selector referenced "),
-		) //TODO: wrap err
+		) // TODO: wrap err
 	}
 
 	return nil

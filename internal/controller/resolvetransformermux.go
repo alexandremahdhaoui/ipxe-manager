@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 )
 
 const (
-	ipxerAPIConfigPath = "config"
+	ipxerAPIContentPath = "content"
 )
 
 var (
@@ -88,7 +89,7 @@ func (r *resolveTransformerMux) ResolveAndTransform(
 
 // -------------------------------------------------- ResolveAndTransformBatch -------------------------------------- //
 
-//TODO: ResolveAndTransformBatch should return the URL corresponding to the ConfigID of the content if the content has
+// TODO: ResolveAndTransformBatch should return the URL corresponding to the ConfigID of the content if the content has
 //      ExposedConfigID set to true. (only in the case that the func is called by controller.IPXE)
 //      !!! Otherwise create a special func for controller.Content called ResolveAndTransform which only takes a
 //          types.Content as an argument and fully compute the Resolve/Transformation.
@@ -104,14 +105,14 @@ func (r *resolveTransformerMux) ResolveAndTransformBatch(
 
 	output := make(map[string][]byte)
 
-	for name, content := range batch {
-		if opts.returnURLInsteadOfResolveAndTransform && content.Exposed {
+	for name, cont := range batch {
+		if opts.returnURLInsteadOfResolveAndTransform && cont.Exposed {
 			output[name] = []byte(fmt.Sprintf(
-				"%s/%s/%s", r.ipxerBaseURL, ipxerAPIConfigPath, content.ExposedUUID.String()))
+				"%s/%s/%s", r.ipxerBaseURL, ipxerAPIContentPath, cont.ExposedUUID.String()))
 			continue
 		}
 
-		result, err := r.ResolveAndTransform(ctx, content, selectors)
+		result, err := r.ResolveAndTransform(ctx, cont, selectors)
 		if err != nil {
 			return nil, errors.Join(err, ErrResolveAndTransformBatch)
 		}

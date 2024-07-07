@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"github.com/google/uuid"

@@ -75,7 +75,7 @@ func (t *webhookTransformer) Transform(
 
 	requestBody := webhookTransformerRequest{
 		Content: content,
-		Attributes: map[string]string{ //TODO: use const for keys && a type-conversion func to build that map
+		Attributes: map[string]string{ // TODO: use const for keys && a type-conversion func to build that map
 			"uuid":      attributes.UUID.String(),
 			"buildarch": attributes.Buildarch,
 		},
@@ -83,7 +83,7 @@ func (t *webhookTransformer) Transform(
 
 	body, err := json.Marshal(requestBody)
 	if err != nil {
-		return nil, errors.Join(err) //TODO: wrap err
+		return nil, errors.Join(err) // TODO: wrap err
 	}
 
 	url := fmt.Sprintf("https://%s?uuid=%s&buildarch=%s",
@@ -93,7 +93,7 @@ func (t *webhookTransformer) Transform(
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
-		return nil, errors.Join(err) //TODO: wrap err
+		return nil, errors.Join(err) // TODO: wrap err
 	}
 
 	httpClient := new(http.Client)
@@ -132,7 +132,7 @@ func (t *webhookTransformer) mTLSConfig(ctx context.Context, httpClient *http.Cl
 	}
 
 	if len(res) < 3 {
-		return errors.New("TODO") //TODO
+		return errors.New("TODO") // TODO
 	}
 
 	clientKey := res[0]

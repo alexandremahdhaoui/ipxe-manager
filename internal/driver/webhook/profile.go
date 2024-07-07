@@ -3,11 +3,13 @@ package webhook
 import (
 	"context"
 	"errors"
+	"regexp"
+
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/jsonpath"
-	"regexp"
+
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -30,11 +32,11 @@ type Profile struct{}
 func (p *Profile) Default(ctx context.Context, obj runtime.Object) error {
 	profile, ok := obj.(*v1alpha1.Profile)
 	if !ok {
-		return NewUnsupportedResource(obj) //TODO: wrap err
+		return NewUnsupportedResource(obj) // TODO: wrap err
 	}
 
 	if err := p.validateProfileStatic(ctx, obj); err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	// 1. get config UUIDs
@@ -46,7 +48,7 @@ func (p *Profile) Default(ctx context.Context, obj runtime.Object) error {
 	}
 
 	// 2. Remove all "internal" labels.
-	for k, _ := range profile.Labels {
+	for k := range profile.Labels {
 		if !v1alpha1.IsInternalLabel(k) {
 			delete(profile.Labels, k)
 		}
@@ -68,11 +70,11 @@ func (p *Profile) Default(ctx context.Context, obj runtime.Object) error {
 
 func (p *Profile) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	if err := p.validateProfileStatic(ctx, obj); err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	if err := p.validateProfileDynamic(ctx, obj); err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	return nil, nil
@@ -80,11 +82,11 @@ func (p *Profile) ValidateCreate(ctx context.Context, obj runtime.Object) (admis
 
 func (p *Profile) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	if err := p.validateProfileStatic(ctx, newObj); err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	if err := p.validateProfileDynamic(ctx, newObj); err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	return nil, nil
@@ -100,7 +102,7 @@ func (p *Profile) validateProfileStatic(ctx context.Context, obj runtime.Object)
 		validateAdditionalContent,
 	} {
 		if err := f(ctx, obj); err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
@@ -109,10 +111,10 @@ func (p *Profile) validateProfileStatic(ctx context.Context, obj runtime.Object)
 
 func (p *Profile) validateProfileDynamic(ctx context.Context, obj runtime.Object) error {
 	for _, f := range []validatingFunc{
-		//TODO
+		// TODO
 	} {
 		if err := f(ctx, obj); err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
@@ -127,13 +129,13 @@ func validateAdditionalContent(ctx context.Context, obj runtime.Object) error {
 	profile := obj.(*v1alpha1.Profile)
 
 	for name, content := range profile.Spec.AdditionalContent {
-		if !contentNameRegex.MatchString(name) { //TODO: create the regex
-			return errors.New("TODO") //TODO: err + wrap err
+		if !contentNameRegex.MatchString(name) { // TODO: create the regex
+			return errors.New("TODO") // TODO: err + wrap err
 		}
 
 		for _, transformer := range content.PostTransformations {
 			if err := validateTransformer(transformer); err != nil {
-				return err //TODO: wrap err
+				return err // TODO: wrap err
 			}
 		}
 
@@ -150,18 +152,18 @@ func validateAdditionalContent(ctx context.Context, obj runtime.Object) error {
 
 		switch {
 		case i == 0:
-			return errors.New("TODO") //TODO: err + wrap err
+			return errors.New("TODO") // TODO: err + wrap err
 		case i > 1:
-			return errors.New("TODO") //TODO: err + wrap err
+			return errors.New("TODO") // TODO: err + wrap err
 		case content.Inline != nil:
 			return nil
 		case content.ObjectRef != nil:
 			if err := validateObjectRef(content.ObjectRef); err != nil {
-				return err //TODO: wrap err
+				return err // TODO: wrap err
 			}
 		case content.Webhook != nil:
 			if err := validateWebhookConfig(content.Webhook); err != nil {
-				return err //TODO: wrap err
+				return err // TODO: wrap err
 			}
 		}
 	}
@@ -171,11 +173,11 @@ func validateAdditionalContent(ctx context.Context, obj runtime.Object) error {
 
 func validateObjectRef(ref *v1alpha1.ObjectRef) error {
 	if err := validateResourceRef(ref.ResourceRef); err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	if err := validateJSONPath(ref.JSONPath); err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	return nil
@@ -184,13 +186,13 @@ func validateObjectRef(ref *v1alpha1.ObjectRef) error {
 func validateWebhookConfig(cfg *v1alpha1.WebhookConfig) error {
 	if cfg.BasicAuthObjectRef != nil {
 		if err := validateBasicAuthObjectRef(cfg.BasicAuthObjectRef); err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
 	if cfg.MTLSObjectRef != nil {
 		if err := validateMTLSObjectRef(cfg.MTLSObjectRef); err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
@@ -200,11 +202,11 @@ func validateWebhookConfig(cfg *v1alpha1.WebhookConfig) error {
 func validateTransformer(transformer v1alpha1.Transformer) error {
 	if transformer.Webhook != nil {
 		if transformer.ButaneToIgnition == true {
-			return errors.New("a transformer must either enable butaneToIgnition or specify a webhook") //TODO: wrap err
+			return errors.New("a transformer must either enable butaneToIgnition or specify a webhook") // TODO: wrap err
 		}
 
 		if err := validateWebhookConfig(transformer.Webhook); err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
@@ -213,7 +215,7 @@ func validateTransformer(transformer v1alpha1.Transformer) error {
 
 func validateBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) error {
 	if err := validateResourceRef(ref.ResourceRef); err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	for _, s := range []string{
@@ -221,7 +223,7 @@ func validateBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) error {
 		ref.PasswordJSONPath,
 	} {
 		if err := validateJSONPath(s); err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
@@ -230,7 +232,7 @@ func validateBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) error {
 
 func validateMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) error {
 	if err := validateResourceRef(ref.ResourceRef); err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	for _, s := range []string{
@@ -239,7 +241,7 @@ func validateMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) error {
 		ref.ClientKeyJSONPath,
 	} {
 		if err := validateJSONPath(s); err != nil {
-			return err //TODO: wrap err
+			return err // TODO: wrap err
 		}
 	}
 
@@ -256,7 +258,7 @@ func validateResourceRef(ref v1alpha1.ResourceRef) error {
 
 func validateJSONPath(s string) error {
 	if _, err := jsonpath.Parse("", s); err != nil {
-		return err //TODO: wrap err
+		return err // TODO: wrap err
 	}
 
 	return nil

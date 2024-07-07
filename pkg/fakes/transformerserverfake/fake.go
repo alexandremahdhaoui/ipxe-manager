@@ -4,14 +4,15 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"net/http"
+	"strings"
+	"testing"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/util/certutil"
 	"github.com/alexandremahdhaoui/ipxer/pkg/generated/transformerserver"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"strings"
-	"testing"
 )
 
 type Expectation = func(echo.Context) error
@@ -104,9 +105,9 @@ func New(t *testing.T, addr string) *Fake {
 			ServerName:   serverName,
 			ClientAuth:   tls.RequireAndVerifyClientCert,
 			ClientCAs:    ca.Pool(),
-			//TODO: Parameterize InsecureSkipVerify to test use cases where use would allow self-signed certs.
+			// TODO: Parameterize InsecureSkipVerify to test use cases where use would allow self-signed certs.
 			//      We may also have to update the RootCAs var.
-			InsecureSkipVerify: false, //TODO?
+			InsecureSkipVerify: false, // TODO?
 		},
 	}
 

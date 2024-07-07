@@ -86,9 +86,7 @@ const (
 	Vram       = "vram"        // Video RAM contents
 )
 
-var (
-	errUnsupportedParameterType = errors.New("unsupported parameter type")
-)
+var errUnsupportedParameterType = errors.New("unsupported parameter type")
 
 // --- PARAMS --- //
 

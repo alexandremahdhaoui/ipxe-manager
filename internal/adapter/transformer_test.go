@@ -5,6 +5,9 @@ package adapter_test
 import (
 	"context"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockadapter"
@@ -16,14 +19,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 func TestButaneTransformer(t *testing.T) {
-	var (
-		transformer adapter.Transformer
-	)
+	var transformer adapter.Transformer
 
 	setup := func(t *testing.T) {
 		t.Helper()

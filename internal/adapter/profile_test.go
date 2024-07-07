@@ -4,6 +4,8 @@ package adapter_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockclient"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
@@ -12,7 +14,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	types2 "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
 )
 
 func TestProfile(t *testing.T) {

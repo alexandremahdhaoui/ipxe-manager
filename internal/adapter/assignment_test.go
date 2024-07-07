@@ -4,8 +4,9 @@ package adapter_test
 
 import (
 	"context"
-	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"testing"
+
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockclient"

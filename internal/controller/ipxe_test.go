@@ -5,6 +5,8 @@ package controller_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
@@ -13,7 +15,6 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestIpxe_FindProfileAndRender(t *testing.T) {
@@ -178,7 +179,8 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 				AdditionalContent: map[string]types.Content{
 					mustBeReturned: {
 						Name: mustBeReturned,
-					}},
+					},
+				},
 			}
 
 			expectedResolvedAndTransformedAdditionalBatch := map[string][]byte{

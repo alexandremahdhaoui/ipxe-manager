@@ -5,6 +5,8 @@ package controller_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
@@ -13,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 func TestResolveTransformerMux(t *testing.T) {
@@ -84,7 +85,6 @@ func TestResolveTransformerMux(t *testing.T) {
 
 	t.Run("ResolveAndTransformBatch", func(t *testing.T) {
 		for kind := range resolvers {
-
 			t.Run(resolverKindString(t, kind), func(t *testing.T) {
 				t.Run("Success", func(t *testing.T) {
 					defer setup(t)()

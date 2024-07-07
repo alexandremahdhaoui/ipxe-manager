@@ -41,23 +41,23 @@ func NewCA() (*CA, error) {
 	// 2. create private key.
 	caKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	// 3. self sign a certificate with the CA's own cert and the previously generated private key.
 	selfSignedCertRaw, err := x509.CreateCertificate(rand.Reader, caCert, caCert, caKey.Public(), caKey)
 	if err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	// 4. Add self-signed cert to pool
 	certPool := x509.NewCertPool()
-	//certPool.AppendCertsFromPEM(selfSignedCertRaw)
-	//TODO: check if the code below cannot be replaced with above code.
+	// certPool.AppendCertsFromPEM(selfSignedCertRaw)
+	// TODO: check if the code below cannot be replaced with above code.
 
 	selfSignedCert, err := x509.ParseCertificate(selfSignedCertRaw)
 	if err != nil {
-		return nil, err //TODO: wrap err
+		return nil, err // TODO: wrap err
 	}
 
 	certPool.AddCert(selfSignedCert)
@@ -95,17 +95,17 @@ func (ca *CA) NewCertifiedKey(domains ...string) (*ecdsa.PrivateKey, *x509.Certi
 
 	key, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
-		return nil, nil, err //TODO: wrap err
+		return nil, nil, err // TODO: wrap err
 	}
 
 	signedRaw, err := x509.CreateCertificate(rand.Reader, crtTemplate, ca.rootCert, key.Public(), ca.key)
 	if err != nil {
-		return nil, nil, err //TODO: wrap err
+		return nil, nil, err // TODO: wrap err
 	}
 
 	signed, err := x509.ParseCertificate(signedRaw)
 	if err != nil {
-		return nil, nil, err //TODO: wrap err
+		return nil, nil, err // TODO: wrap err
 	}
 
 	return key, signed, nil
@@ -114,12 +114,12 @@ func (ca *CA) NewCertifiedKey(domains ...string) (*ecdsa.PrivateKey, *x509.Certi
 func (ca *CA) NewCertifiedKeyPEM(domains ...string) (key []byte, cert []byte, err error) {
 	k, c, err := ca.NewCertifiedKey(domains...)
 	if err != nil {
-		return nil, nil, err //TODO: wrap err
+		return nil, nil, err // TODO: wrap err
 	}
 
 	keyPEM, err := privateKeyToPem(k)
 	if err != nil {
-		return nil, nil, err //TODO: wrap err
+		return nil, nil, err // TODO: wrap err
 	}
 
 	return keyPEM, certToPEM(c), nil
@@ -128,7 +128,7 @@ func (ca *CA) NewCertifiedKeyPEM(domains ...string) (key []byte, cert []byte, er
 func privateKeyToPem(key *ecdsa.PrivateKey) ([]byte, error) {
 	kb, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("could not marshal private key - %w", err) //TODO: wrap err
+		return nil, fmt.Errorf("could not marshal private key - %w", err) // TODO: wrap err
 	}
 
 	return pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: kb}), nil

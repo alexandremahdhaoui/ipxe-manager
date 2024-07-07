@@ -30,7 +30,7 @@ var (
 
 type Profile interface {
 	Get(ctx context.Context, name string) (types.Profile, error)
-	ListByConfigID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error)
+	ListByContentID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -71,11 +71,11 @@ func (p *v1a1Profile) Get(ctx context.Context, name string) (types.Profile, erro
 	return out, nil
 }
 
-// --------------------------------------------- ListByConfigID ------------------------------------------------------ //
+// --------------------------------------------- ListByContentID ------------------------------------------------------ //
 
 // ListByConfigID retrieve at most one Profile by a config ID. The nature of UUIDs and the defaulting webhook driver
 // ensures the list contains at most 1 ID.
-func (p *v1a1Profile) ListByConfigID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error) {
+func (p *v1a1Profile) ListByContentID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error) {
 	// list profiles
 	obj := new(v1alpha1.ProfileList)
 	if err := p.client.List(ctx, obj,
@@ -108,7 +108,7 @@ type ipxev1a1 struct{}
 func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 	idNameMap, rev, err := v1alpha1.UUIDLabelSelectors(input.Labels)
 	if err != nil {
-		return types.Profile{}, err //TODO: wrap err
+		return types.Profile{}, err // TODO: wrap err
 	}
 
 	out := types.Profile{
@@ -127,7 +127,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 
 			id, ok := rev[name]
 			if !ok {
-				return types.Profile{}, errors.New("additional content is exposed but doesn't have a UUID") //TODO: err + wrap err
+				return types.Profile{}, errors.New("additional content is exposed but doesn't have a UUID") // TODO: err + wrap err
 			}
 
 			content.ExposedUUID = id

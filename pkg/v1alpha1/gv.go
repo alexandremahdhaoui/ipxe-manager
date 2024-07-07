@@ -5,9 +5,10 @@ package v1alpha1
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/google/uuid"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
@@ -63,7 +64,7 @@ func UUIDLabelSelectors(labels map[string]string) (idNameMap map[uuid.UUID]strin
 
 		id, err := uuid.Parse(strings.TrimPrefix(k, LabelSelector("", UUIDPrefix)))
 		if err != nil {
-			return nil, nil, err //TODO: wrap err
+			return nil, nil, err // TODO: wrap err
 		}
 
 		idNameMap[id] = v

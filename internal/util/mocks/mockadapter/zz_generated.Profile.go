@@ -81,12 +81,12 @@ func (_c *MockProfile_Get_Call) RunAndReturn(run func(context.Context, string) (
 	return _c
 }
 
-// ListByConfigID provides a mock function with given fields: ctx, configID
-func (_m *MockProfile) ListByConfigID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error) {
+// ListByContentID provides a mock function with given fields: ctx, configID
+func (_m *MockProfile) ListByContentID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error) {
 	ret := _m.Called(ctx, configID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListByConfigID")
+		panic("no return value specified for ListByContentID")
 	}
 
 	var r0 []types.Profile
@@ -111,31 +111,31 @@ func (_m *MockProfile) ListByConfigID(ctx context.Context, configID uuid.UUID) (
 	return r0, r1
 }
 
-// MockProfile_ListByConfigID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByConfigID'
-type MockProfile_ListByConfigID_Call struct {
+// MockProfile_ListByContentID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByContentID'
+type MockProfile_ListByContentID_Call struct {
 	*mock.Call
 }
 
-// ListByConfigID is a helper method to define mock.On call
+// ListByContentID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - configID uuid.UUID
-func (_e *MockProfile_Expecter) ListByConfigID(ctx interface{}, configID interface{}) *MockProfile_ListByConfigID_Call {
-	return &MockProfile_ListByConfigID_Call{Call: _e.mock.On("ListByConfigID", ctx, configID)}
+func (_e *MockProfile_Expecter) ListByContentID(ctx interface{}, configID interface{}) *MockProfile_ListByContentID_Call {
+	return &MockProfile_ListByContentID_Call{Call: _e.mock.On("ListByContentID", ctx, configID)}
 }
 
-func (_c *MockProfile_ListByConfigID_Call) Run(run func(ctx context.Context, configID uuid.UUID)) *MockProfile_ListByConfigID_Call {
+func (_c *MockProfile_ListByContentID_Call) Run(run func(ctx context.Context, configID uuid.UUID)) *MockProfile_ListByContentID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uuid.UUID))
 	})
 	return _c
 }
 
-func (_c *MockProfile_ListByConfigID_Call) Return(_a0 []types.Profile, _a1 error) *MockProfile_ListByConfigID_Call {
+func (_c *MockProfile_ListByContentID_Call) Return(_a0 []types.Profile, _a1 error) *MockProfile_ListByContentID_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockProfile_ListByConfigID_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]types.Profile, error)) *MockProfile_ListByConfigID_Call {
+func (_c *MockProfile_ListByContentID_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]types.Profile, error)) *MockProfile_ListByContentID_Call {
 	_c.Call.Return(run)
 	return _c
 }

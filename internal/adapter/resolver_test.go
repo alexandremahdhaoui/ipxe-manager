@@ -5,6 +5,9 @@ package adapter_test
 import (
 	"context"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
@@ -19,14 +22,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic/fake"
 	k8stesting "k8s.io/client-go/testing"
-	"strings"
-	"testing"
 )
 
 func TestInlineResolver(t *testing.T) {
-	var (
-		resolver adapter.Resolver
-	)
+	var resolver adapter.Resolver
 
 	setup := func() {
 		resolver = adapter.NewInlineResolver()
@@ -82,7 +81,6 @@ func TestObjectRefResolver(t *testing.T) {
 		resolver = adapter.NewObjectRefResolver(cl)
 
 		ipxeSelectors = types.IpxeSelectors{}
-
 	}
 
 	t.Run("Resolve", func(t *testing.T) {

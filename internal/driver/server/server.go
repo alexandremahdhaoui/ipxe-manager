@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/labstack/echo/v4"
@@ -42,7 +43,7 @@ func (s *server) GetIPXEBootstrap(c echo.Context) error {
 }
 
 func (s *server) GetContentByID(c echo.Context, configID UUID, params GetContentByIDParams) error {
-	//TODO: create new context with correlation ID.
+	// TODO: create new context with correlation ID.
 	ctx := context.Background()
 
 	attributes, err := types.NewIpxeSelectorsFromContext(c)
@@ -67,11 +68,11 @@ func (s *server) GetContentByID(c echo.Context, configID UUID, params GetContent
 }
 
 func (s *server) GetIPXEBySelectors(c echo.Context, params GetIPXEBySelectorsParams) error {
-	//TODO: create new context with correlation ID.
+	// TODO: create new context with correlation ID.
 	ctx := context.Background()
 
 	// convert into type
-	//TODO: use params instead of converting the echo context?
+	// TODO: use params instead of converting the echo context?
 	selectors, err := types.NewIpxeSelectorsFromContext(c)
 	if err != nil {
 		return writeErr(c, 500, errors.Join(err, ErrGetIPXEBySelectors))

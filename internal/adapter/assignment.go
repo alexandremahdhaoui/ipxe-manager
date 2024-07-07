@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"errors"
+
 	"github.com/google/uuid"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
