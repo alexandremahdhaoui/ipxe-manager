@@ -12,8 +12,7 @@ import (
 	"time"
 )
 
-// Just copied this over from:
-// https://github.com/madflojo/testcerts/blob/main/testcerts.go
+// Inspired from: https://github.com/madflojo/testcerts/blob/main/testcerts.go
 
 // ------------------------------------------------------- CA ------------------------------------------------------- //
 
