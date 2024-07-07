@@ -119,8 +119,9 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 
 	for name, c := range input.Spec.AdditionalContent {
 		content := types.Content{}
+		content.Name = name
 
-		// exposed
+		// 1. Is content exposed?
 		if c.Exposed {
 			content.Exposed = true
 
@@ -132,7 +133,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 			content.ExposedUUID = id
 		}
 
-		// post transformers
+		// 2. Post transformers.
 		transformers, err := fromV1alpha1.toTransformerConfig(c.PostTransformations)
 		if err != nil {
 			return types.Profile{}, err // TODO: wrap err
@@ -140,6 +141,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 
 		content.PostTransformers = transformers
 
+		// 3. Content kind.
 		switch {
 		case c.Inline != nil:
 			content.ResolverKind = types.InlineResolverKind
@@ -162,6 +164,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 			content.WebhookConfig = &cfg
 		}
 
+		// 4. Add content to the map.
 		out.AdditionalContent[name] = content
 	}
 

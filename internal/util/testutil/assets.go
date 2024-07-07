@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
+	"github.com/google/uuid"
 	"k8s.io/client-go/util/jsonpath"
 )
 
@@ -104,6 +105,7 @@ func NewTypesProfile() types.Profile {
 			ctObjectRef.Name: ctObjectRef,
 			ctWebhook.Name:   ctWebhook,
 		},
+		ContentIDToNameMap: make(map[uuid.UUID]string),
 	}
 }
 
