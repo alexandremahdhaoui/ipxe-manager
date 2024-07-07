@@ -24,7 +24,7 @@ func TestAssignment(t *testing.T) {
 		inputBuildarch                 string
 		expectedBuildarchLabelSelector string
 
-		expectedProfile     string
+		expectedAssignment  types.Assignment
 		expectedListOptions []interface{}
 
 		cl         *mockclient.MockClient
@@ -57,7 +57,7 @@ func TestAssignment(t *testing.T) {
 			RunAndReturn(func(_ context.Context, objList client.ObjectList, options ...client.ListOption) error {
 				l := objList.(*v1alpha1.AssignmentList)
 				l.Items = []v1alpha1.Assignment{{Spec: v1alpha1.AssignmentSpec{
-					ProfileName: expectedProfile,
+					ProfileName: expectedAssignment.ProfileName,
 				}}}
 
 				return nil
@@ -68,7 +68,11 @@ func TestAssignment(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			defer setup(t)()
 
-			expectedProfile = uuid.New().String()
+			expectedAssignment = types.Assignment{
+				Name:        "",
+				ProfileName: uuid.New().String(),
+			}
+
 			expectedListOptions = []interface{}{
 				client.HasLabels{expectedBuildarchLabelSelector},
 				client.HasLabels{v1alpha1.DefaultAssignmentLabel},
@@ -78,7 +82,7 @@ func TestAssignment(t *testing.T) {
 
 			actual, err := assignment.FindDefaultByBuildarch(ctx, inputBuildarch)
 			assert.NoError(t, err)
-			assert.Equal(t, expectedProfile, actual)
+			assert.Equal(t, expectedAssignment, actual)
 		})
 
 		t.Run("Failure", func(t *testing.T) {
@@ -109,9 +113,12 @@ func TestAssignment(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			defer setup(t)()
 
-			expectedProfile = uuid.New().String()
-			id := uuid.New()
+			expectedAssignment = types.Assignment{
+				Name:        "",
+				ProfileName: uuid.New().String(),
+			}
 
+			id := uuid.New()
 			selectors := types.IpxeSelectors{
 				UUID:      id,
 				Buildarch: inputBuildarch,
@@ -126,7 +133,7 @@ func TestAssignment(t *testing.T) {
 
 			actual, err := assignment.FindBySelectors(ctx, selectors)
 			assert.NoError(t, err)
-			assert.Equal(t, expectedProfile, actual)
+			assert.Equal(t, expectedAssignment, actual)
 		})
 
 		t.Run("Failure", func(t *testing.T) {
