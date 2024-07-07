@@ -5,6 +5,7 @@ package controller_test
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
@@ -17,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIpxe_FindProfileAndRender(t *testing.T) {
+func TestIPXE_FindProfileAndRender(t *testing.T) {
 	var (
 		ctx            context.Context
 		inputSelectors types.IpxeSelectors
@@ -76,7 +77,12 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 					Once()
 
 				mux.EXPECT().
-					ResolveAndTransformBatch(ctx, expectedProfile.AdditionalContent, inputSelectors).
+					ResolveAndTransformBatch(
+						ctx,
+						expectedProfile.AdditionalContent,
+						inputSelectors,
+						mock.AnythingOfType("controller.ResolveTransformBatchOption"), // -> controller.ReturnExposedContentURL
+					).
 					Return(expectedResolvedAndTransformedContent, nil).
 					Once()
 
@@ -133,10 +139,10 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 								expectedResolvedAndTransformedContent[name] = []byte("resolved and transformed")
 							}
 
-							expectedProfile.IPXETemplate = fmt.Sprintf("%s {{ .%s }}",
+							expectedProfile.IPXETemplate = fmt.Sprintf("%s --additional-config-url {{ .%s }}",
 								expectedProfile.IPXETemplate, name)
 
-							expected = append(expected, byte(' '))
+							expected = append(expected, []byte(" --additional-config-url ")...)
 							expected = append(expected, expectedResolvedAndTransformedContent[name]...)
 
 							expectedProfile.AdditionalContent[name] = content
@@ -158,7 +164,12 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 							Once()
 
 						mux.EXPECT().
-							ResolveAndTransformBatch(ctx, expectedProfile.AdditionalContent, inputSelectors).
+							ResolveAndTransformBatch(
+								ctx,
+								expectedProfile.AdditionalContent,
+								inputSelectors,
+								mock.AnythingOfType("controller.ResolveTransformBatchOption"), // -> controller.ReturnExposedContentURL
+							).
 							Return(expectedResolvedAndTransformedContent, nil).
 							Once()
 
@@ -175,7 +186,7 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 
 			expectedDefaultProfileName := "default-profile-arm64"
 			expectedDefaultProfile := types.Profile{
-				IPXETemplate: "this is the default profile with {{ .anAdditionalContent }}",
+				IPXETemplate: "this is the default profile with {{ .mustBeReturned }}",
 				AdditionalContent: map[string]types.Content{
 					mustBeReturned: {
 						Name: mustBeReturned,
@@ -210,7 +221,12 @@ func TestIpxe_FindProfileAndRender(t *testing.T) {
 				Once()
 
 			mux.EXPECT().
-				ResolveAndTransformBatch(ctx, expectedDefaultProfile.AdditionalContent, inputSelectors).
+				ResolveAndTransformBatch(
+					ctx,
+					expectedDefaultProfile.AdditionalContent,
+					inputSelectors,
+					mock.AnythingOfType("controller.ResolveTransformBatchOption"), // -> controller.ReturnExposedContentURL
+				).
 				Return(expectedResolvedAndTransformedAdditionalBatch, nil).
 				Once()
 
