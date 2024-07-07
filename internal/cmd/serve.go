@@ -77,13 +77,3 @@ func runBulk(servers map[int]*echo.Echo, wg *sync.WaitGroup, f func(int, *echo.E
 		go f(port, e)
 	}
 }
-
-func inSlice[T comparable](v T, sl []T) bool {
-	for i := range sl {
-		if v == sl[i] {
-			return true
-		}
-	}
-
-	return false
-}

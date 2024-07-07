@@ -17,13 +17,13 @@ var (
 	ErrProfileNotFound = errors.New("profile not found")
 	errProfileGet      = errors.New("error getting profile")
 
-	errProfileListByConfigID = errors.New("listing profile by config id")
+	errProfileListByContentID = errors.New("listing profile by content id")
 
 	// Conversions
 
-	errConvertingProfile                     = errors.New("converting profile")
-	errToProfileID                           = errors.New("converting to profile uuid")
-	errExposedAdditionalContentCannotBeFound = errors.New("profile cannot be found in exposed additional content")
+	errConvertingProfile           = errors.New("converting profile")
+	errAddContExposedButNoUUID     = errors.New("additional content is exposed but doesn't have a UUID")
+	errConvertingTransformerConfig = errors.New("converting transformer config")
 )
 
 // --------------------------------------------------- INTERFACES --------------------------------------------------- //
@@ -73,24 +73,22 @@ func (p *v1a1Profile) Get(ctx context.Context, name string) (types.Profile, erro
 
 // --------------------------------------------- ListByContentID ------------------------------------------------------ //
 
-// ListByConfigID retrieve at most one Profile by a config ID. The nature of UUIDs and the defaulting webhook driver
+// ListByContentID retrieve at most one Profile by a config ID. The nature of UUIDs and the defaulting webhook driver
 // ensures the list contains at most 1 ID.
 func (p *v1a1Profile) ListByContentID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error) {
 	// list profiles
 	obj := new(v1alpha1.ProfileList)
-	if err := p.client.List(ctx, obj,
-		uuidLabelSelector(configID),
-	); apierrors.IsNotFound(err) || len(obj.Items) == 0 {
-		return nil, errors.Join(err, ErrProfileNotFound, errProfileListByConfigID)
+	if err := p.client.List(ctx, obj, uuidLabelSelector(configID)); apierrors.IsNotFound(err) || len(obj.Items) == 0 {
+		return nil, errors.Join(err, ErrProfileNotFound, errProfileListByContentID)
 	} else if err != nil {
-		return nil, errors.Join(err, errProfileListByConfigID)
+		return nil, errors.Join(err, errProfileListByContentID)
 	}
 
 	out := make([]types.Profile, 0, len(obj.Items))
 	for i := range obj.Items {
 		profile, err := fromV1alpha1.toProfile(&obj.Items[i])
 		if err != nil {
-			return nil, errors.Join(err, errProfileListByConfigID)
+			return nil, errors.Join(err, errProfileListByContentID)
 		}
 
 		out = append(out, profile)
@@ -108,7 +106,7 @@ type ipxev1a1 struct{}
 func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 	idNameMap, rev, err := v1alpha1.UUIDLabelSelectors(input.Labels)
 	if err != nil {
-		return types.Profile{}, err // TODO: wrap err
+		return types.Profile{}, errors.Join(err, errConvertingProfile)
 	}
 
 	out := types.Profile{
@@ -127,7 +125,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 
 			id, ok := rev[name]
 			if !ok {
-				return types.Profile{}, errors.New("additional content is exposed but doesn't have a UUID") // TODO: err + wrap err
+				return types.Profile{}, errors.Join(errAddContExposedButNoUUID, errConvertingProfile)
 			}
 
 			content.ExposedUUID = id
@@ -136,7 +134,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 		// 2. Post transformers.
 		transformers, err := fromV1alpha1.toTransformerConfig(c.PostTransformations)
 		if err != nil {
-			return types.Profile{}, err // TODO: wrap err
+			return types.Profile{}, errors.Join(err, errConvertingProfile)
 		}
 
 		content.PostTransformers = transformers
@@ -149,7 +147,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 		case c.ObjectRef != nil:
 			ref, err := fromV1alpha1.toObjectRef(c.ObjectRef)
 			if err != nil {
-				return types.Profile{}, err // TODO: wrap err
+				return types.Profile{}, errors.Join(err, errConvertingProfile)
 			}
 
 			content.ResolverKind = types.ObjectRefResolverKind
@@ -157,7 +155,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 		case c.Webhook != nil:
 			cfg, err := fromV1alpha1.toWebhookConfig(c.Webhook)
 			if err != nil {
-				return types.Profile{}, err // TODO: wrap err
+				return types.Profile{}, errors.Join(err, errConvertingProfile)
 			}
 
 			content.ResolverKind = types.WebhookResolverKind
@@ -171,10 +169,12 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 	return out, nil
 }
 
+var errConvertingObjectRef = errors.New("converting object ref")
+
 func (ipxev1a1) toObjectRef(objectRef *v1alpha1.ObjectRef) (types.ObjectRef, error) {
 	jp, err := toJSONPath(objectRef.JSONPath)
 	if err != nil {
-		return types.ObjectRef{}, err // TODO: wrap err
+		return types.ObjectRef{}, errors.Join(err, errConvertingObjectRef)
 	}
 
 	return types.ObjectRef{
@@ -199,7 +199,7 @@ func (ipxev1a1) toTransformerConfig(input []v1alpha1.Transformer) ([]types.Trans
 		case t.Webhook != nil:
 			typesCfg, err := fromV1alpha1.toWebhookConfig(t.Webhook)
 			if err != nil {
-				return nil, err // TODO: wrap err
+				return nil, errors.Join(errConvertingTransformerConfig)
 			}
 
 			cfg.Kind = types.WebhookTransformerKind
@@ -212,6 +212,8 @@ func (ipxev1a1) toTransformerConfig(input []v1alpha1.Transformer) ([]types.Trans
 	return out, nil
 }
 
+var errConvertingWebhookConfig = errors.New("converting webhook config")
+
 func (ipxev1a1) toWebhookConfig(input *v1alpha1.WebhookConfig) (types.WebhookConfig, error) {
 	out := types.WebhookConfig{}
 	out.URL = input.URL
@@ -219,7 +221,7 @@ func (ipxev1a1) toWebhookConfig(input *v1alpha1.WebhookConfig) (types.WebhookCon
 	if input.MTLSObjectRef != nil {
 		ref, err := fromV1alpha1.toMTLSObjectRef(input.MTLSObjectRef)
 		if err != nil {
-			return types.WebhookConfig{}, err // TODO: wrap err
+			return types.WebhookConfig{}, errors.Join(err, errConvertingWebhookConfig)
 		}
 
 		out.MTLSObjectRef = ref
@@ -228,7 +230,7 @@ func (ipxev1a1) toWebhookConfig(input *v1alpha1.WebhookConfig) (types.WebhookCon
 	if input.BasicAuthObjectRef != nil {
 		ref, err := fromV1alpha1.toBasicAuthObjectRef(input.BasicAuthObjectRef)
 		if err != nil {
-			return types.WebhookConfig{}, err // TODO: wrap err
+			return types.WebhookConfig{}, errors.Join(err, errConvertingWebhookConfig)
 		}
 
 		out.BasicAuthObjectRef = ref
@@ -237,20 +239,22 @@ func (ipxev1a1) toWebhookConfig(input *v1alpha1.WebhookConfig) (types.WebhookCon
 	return out, nil
 }
 
+var errConvertingMTLSObjectRef = errors.New("converting mtls object ref")
+
 func (ipxev1a1) toMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) (*types.MTLSObjectRef, error) {
 	ckjp, err := toJSONPath(ref.ClientKeyJSONPath)
 	if err != nil {
-		return nil, err // TODO: wrap err
+		return nil, errors.Join(err, errConvertingMTLSObjectRef)
 	}
 
 	ccjp, err := toJSONPath(ref.ClientCertJSONPath)
 	if err != nil {
-		return nil, err // TODO: wrap err
+		return nil, errors.Join(err, errConvertingMTLSObjectRef)
 	}
 
 	cbjp, err := toJSONPath(ref.CaBundleJSONPath)
 	if err != nil {
-		return nil, err // TODO: wrap err
+		return nil, errors.Join(err, errConvertingMTLSObjectRef)
 	}
 
 	return &types.MTLSObjectRef{
@@ -268,15 +272,17 @@ func (ipxev1a1) toMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) (*types.MTLSObjectR
 	}, nil
 }
 
+var errConvertingBasicAuthObjectRef = errors.New("converting basic auth object ref")
+
 func (ipxev1a1) toBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) (*types.BasicAuthObjectRef, error) {
 	ujp, err := toJSONPath(ref.UsernameJSONPath)
 	if err != nil {
-		return nil, err // TODO: wrap err
+		return nil, errors.Join(err, errConvertingBasicAuthObjectRef)
 	}
 
 	pjp, err := toJSONPath(ref.PasswordJSONPath)
 	if err != nil {
-		return nil, err // TODO: wrap err
+		return nil, errors.Join(err, errConvertingBasicAuthObjectRef)
 	}
 
 	return &types.BasicAuthObjectRef{
@@ -292,10 +298,12 @@ func (ipxev1a1) toBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) (*types.B
 	}, nil
 }
 
+var errConvertingStringToJSONPath = errors.New("converting string to JSONPath")
+
 func toJSONPath(s string) (*jsonpath.JSONPath, error) {
 	jp := jsonpath.New("")
 	if err := jp.Parse(s); err != nil {
-		return nil, err // TODO: wrap err
+		return nil, errors.Join(err, errConvertingStringToJSONPath)
 	}
 
 	return jp, nil

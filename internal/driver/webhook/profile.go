@@ -201,7 +201,7 @@ func validateWebhookConfig(cfg *v1alpha1.WebhookConfig) error {
 
 func validateTransformer(transformer v1alpha1.Transformer) error {
 	if transformer.Webhook != nil {
-		if transformer.ButaneToIgnition == true {
+		if transformer.ButaneToIgnition {
 			return errors.New("a transformer must either enable butaneToIgnition or specify a webhook") // TODO: wrap err
 		}
 

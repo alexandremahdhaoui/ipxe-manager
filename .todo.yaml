@@ -44,7 +44,10 @@ test:
       - config
     driver:
       server:
+        - server
       webhook:
+        - assignment
+        - profile
 
   integration:
     TODO:
