@@ -103,21 +103,32 @@ generate: ## Generate REST API server/client code, CRDs and other go generators.
 	$(CLEAN_MOCKS)
 	$(MOCKERY)
 
-# ------------------------------------------------------- BUILD ------------------------------------------------------ #
+# ------------------------------------------------------- BUILD BINARIES --------------------------------------------- #
+
+.PHONY: build-binary
+build-binary: generate
+	GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) ./hack/build-binary.sh "${BINARY_NAME}"
 
 .PHONY: build-binaries
 build-binaries: generate ## Build the binaries.
 	echo $(CMDS) | \
-	  GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) \
-	  xargs -n1 ./hack/build-binary.sh
+		GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) \
+		xargs -n1 ./hack/build-binary.sh
+
+# ------------------------------------------------------- BUILD CONTAINERS -------------------------------------------- #
+
+.PHONY: build-container
+build-container: generate
+	CONTAINER_ENGINE=$(CONTAINER_ENGINE) GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) VERSION=$(VERSION) \
+		./hack/build-container.sh "${CONTAINER_NAME}"
 
 .PHONY: build-containers
 build-containers: generate
 	echo $(CONTAINERS) | \
-	  CONTAINER_ENGINE=$(CONTAINER_ENGINE) \
-	  GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) \
-	  VERSION=$(VERSION) \
-	  xargs -n1 ./hack/build-container.sh
+		CONTAINER_ENGINE=$(CONTAINER_ENGINE) \
+		GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) \
+		VERSION=$(VERSION) \
+		xargs -n1 ./hack/build-container.sh
 
 # ------------------------------------------------------- FMT -------------------------------------------------------- #
 
@@ -141,15 +152,16 @@ test-unit:
 test-integration:
 	$(GOTESTSUM) --junitfile .ignore.test-integration.xml -- -tags integration -race ./... -count=1 -short -cover -coverprofile .ignore.test-integration-coverage.out ./...
 
+.PHONY: test-functional
+test-functional:
+	echo TODO: test-functional
+
 .PHONY: test-e2e
 test-e2e:
-	go run -v ./test/e2e
+	echo TODO: test-e2e
 
 .PHONY: test
-test: test-unit test-integration
-
-.PHONY: test-all
-test-all: test-unit test-integration test-e2e
+test: test-unit test-integration test-functional
 
 # ------------------------------------------------------- PRE-PUSH --------------------------------------------------- #
 
