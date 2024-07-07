@@ -19,6 +19,7 @@ require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.298 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/caarlos0/env/v11 v11.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/clarketm/json v1.17.1 // indirect
 	github.com/coreos/go-json v0.0.0-20230131223807-18775e0fb4fb // indirect

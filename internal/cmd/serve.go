@@ -4,76 +4,60 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
+	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
-// Serve takes a map of Port to Echo servers, starts the server and gracefully shutdown the servers if any error or
-// SIGINT occurs.
-func Serve(portServerMap map[int]*echo.Echo) error {
-	errChan := make(chan error, 1)
+func Serve(portServerMap map[int]*echo.Echo, gs *gracefulshutdown.GracefulShutdown) {
+	// 1. Run the servers.
+	for port, server := range portServerMap {
+		port, server := port, server
+		addr := fmt.Sprintf(":%d", port)
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	runBulk(portServerMap, nil, func(port int, e *echo.Echo) {
-		if err := e.Start(fmt.Sprintf(":%d", port)); err != nil {
-			e.Logger.Error(err)
-			errChan <- err
+		// sets the base context to be the GracefulShutdown's context.
+		server.Server.BaseContext = func(_ net.Listener) context.Context {
+			return gs.Context()
 		}
-	})
 
-	select {
-	case err := <-errChan:
-		return errors.Join(err, awaitShutdown(portServerMap))
-	case <-ctx.Done():
-		return awaitShutdown(portServerMap)
-	}
-}
+		go func() {
+			gs.WaitGroup().Add(1)
 
-func awaitShutdown(servers map[int]*echo.Echo) error {
-	var errs error
+			if err := server.Start(addr); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				server.Logger.Errorf("❌ received error: %s", err.Error())
+				gs.WaitGroup().Done()
+				gs.Shutdown(1) // Initiate a graceful shutdown.
+				return
+			}
 
-	wg := new(sync.WaitGroup)
-	errChan := make(chan error, len(servers))
+			gs.WaitGroup().Done()
 
-	runBulk(servers, wg, func(i int, e *echo.Echo) {
-		defer wg.Done()
-
-		e.Logger.Info("shutting down server")
-		switch err := e.Shutdown(context.Background()); {
-		case err == nil:
-			e.Logger.Info("successfully shutdown server")
-		case errors.Is(err, http.ErrServerClosed):
-			e.Logger.Info("server already shut down")
-		default:
-			e.Logger.Errorf("error while shutting down server: %q", err.Error())
-			errChan <- err
-		}
-	})
-
-	wg.Wait()
-	close(errChan)
-
-	for err := range errChan {
-		errs = errors.Join(errs, err)
+			// The server stopped running without errors, thus we initiate a graceful shutdown if none was previously
+			// initiated.
+			gs.Shutdown(0)
+		}()
 	}
 
-	return errs
-}
+	// 2. Await context is done.
+	<-gs.Context().Done()
 
-func runBulk(servers map[int]*echo.Echo, wg *sync.WaitGroup, f func(int, *echo.Echo)) {
-	for port, e := range servers {
-		if wg != nil {
-			wg.Add(1)
-		}
+	// 3. Gracefully shutdown each server.
+	for _, server := range portServerMap {
+		server := server
 
-		port, e := port, e
+		go func() {
+			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Minute))
+			defer cancel()
 
-		go f(port, e)
+			if err := server.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				server.Logger.Errorf("❌ received error while shutting down server: %s", err.Error())
+				return
+			}
+
+			server.Logger.Info("✅ server shut down successfully")
+		}()
 	}
 }

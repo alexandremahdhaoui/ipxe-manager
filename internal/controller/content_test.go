@@ -48,7 +48,7 @@ func TestContent(t *testing.T) {
 
 		profile = mockadapter.NewMockProfile(t)
 		mux = mockcontroller.NewMockResolveTransformerMux(t)
-		content = controller.NewConfig(profile, mux)
+		content = controller.NewContent(profile, mux)
 
 		expectedProfileResult = nil
 		expectedProfileErr = nil

@@ -24,7 +24,7 @@ type Content interface {
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
-func NewConfig(profile adapter.Profile, mux ResolveTransformerMux) Content {
+func NewContent(profile adapter.Profile, mux ResolveTransformerMux) Content {
 	return &content{
 		profile: profile,
 		mux:     mux,

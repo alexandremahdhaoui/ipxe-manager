@@ -1,24 +1,27 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-
-	"github.com/labstack/echo-contrib/echoprometheus"
-	"github.com/labstack/echo/v4"
-	"k8s.io/client-go/dynamic"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
 	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
+	"github.com/labstack/echo-contrib/echoprometheus"
+	"github.com/labstack/echo/v4"
+	"k8s.io/client-go/dynamic"
+	"log/slog"
+	"net/http"
+	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	Name = "ipxer-api"
+	Name             = "ipxer-api"
+	ConfigPathEnvKey = "IPXER_CONFIG_PATH"
 )
 
 var (
@@ -27,26 +30,63 @@ var (
 	BuildTimestamp = "n/a" //nolint:gochecknoglobals // set by ldflags
 )
 
+type Config struct {
+	KubeconfigPath string `json:"kubeconfigPath"`
+
+	// adapters
+
+	AssignmentNamespace string `json:"assignmentNamespace"`
+	ProfileNamespace    string `json:"profileNamespace"`
+
+	// APIServer
+	APIServer struct {
+		Port int `json:"port"`
+	} `json:"apiServer"`
+
+	// MetricsServer
+	MetricsServer struct {
+		Port int    `json:"port"`
+		Path string `json:"path"`
+	} `json:"metricsServer"`
+
+	// ProbesServer
+	ProbesServer struct {
+		Port          int    `json:"port"`
+		LivenessPath  string `json:"livenessPath"`
+		ReadinessPath string `json:"readinessPath"`
+	}
+}
+
 // ------------------------------------------------- Main ----------------------------------------------------------- //
 
 func main() {
 	fmt.Printf("Starting %s version %s (%s) %s\n", Name, Version, CommitSHA, BuildTimestamp)
 
+	gs := gracefulshutdown.New(Name)
+	ctx := gs.Context()
+
 	// --------------------------------------------- Config --------------------------------------------------------- //
 
-	// TODO: specify all those values through config file
-	//      which should derive from a k8s manifests/helmchart values.
-	var (
-		assignmentNamespace string
-		profileNamespace    string
+	ipxerConfigPath := os.Getenv(ConfigPathEnvKey)
+	if ipxerConfigPath == "" {
+		slog.ErrorContext(ctx, fmt.Sprintf("environment variable %q must be set", ConfigPathEnvKey))
+		gs.Shutdown(1)
+		return
+	}
 
-		appServerPort     = 8080
-		metricsServerPort = 8081
-		probesServerPort  = 8082
-		metricsPath       = "/metrics"
-		probesHealthPath  = "/healthz"
-		probesReadyPath   = "/readyz"
-	)
+	b, err := os.ReadFile(ipxerConfigPath)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error(), "reading ipxer-api configuration file")
+		gs.Shutdown(1)
+		return
+	}
+
+	config := new(Config)
+	if err := json.Unmarshal(b, config); err != nil {
+		slog.ErrorContext(ctx, err.Error(), "parsing ipxer-api configuration")
+		gs.Shutdown(1)
+		return
+	}
 
 	// --------------------------------------------- Client --------------------------------------------------------- //
 
@@ -55,8 +95,8 @@ func main() {
 
 	// --------------------------------------------- Adapter -------------------------------------------------------- //
 
-	assignment := adapter.NewAssignment(cl, assignmentNamespace)
-	profile := adapter.NewProfile(cl, profileNamespace)
+	assignment := adapter.NewAssignment(cl, config.AssignmentNamespace)
+	profile := adapter.NewProfile(cl, config.ProfileNamespace)
 
 	inlineResolver := adapter.NewInlineResolver()
 	objectRefResolver := adapter.NewObjectRefResolver(dynCl)
@@ -82,11 +122,11 @@ func main() {
 	)
 
 	ipxe := controller.NewIPXE(assignment, profile, mux)
-	config := controller.NewConfig(profile, mux)
+	content := controller.NewContent(profile, mux)
 
 	// --------------------------------------------- App ------------------------------------------------------------ //
 
-	handler := server.New(ipxe, config)
+	handler := server.New(ipxe, content)
 
 	app := echo.New()
 	app.Use(echoprometheus.NewMiddleware(Name))
@@ -95,31 +135,31 @@ func main() {
 	// --------------------------------------------- Metrics -------------------------------------------------------- //
 
 	metrics := echo.New()
-	metrics.GET(metricsPath, echoprometheus.NewHandler())
+	metrics.GET(config.MetricsServer.Path, echoprometheus.NewHandler())
 
 	// --------------------------------------------- Probes --------------------------------------------------------- //
 
 	// TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
 
 	probes := echo.New()
-	probes.GET(probesHealthPath, func(c echo.Context) error {
-		return wrapErr(c.NoContent(http.StatusOK), "health probe error")
+	probes.GET(config.ProbesServer.LivenessPath, func(c echo.Context) error {
+		return wrapErr(c.NoContent(http.StatusOK), "liveness probe error")
 	})
-	probes.GET(probesReadyPath, func(c echo.Context) error {
+	probes.GET(config.ProbesServer.ReadinessPath, func(c echo.Context) error {
 		return wrapErr(c.NoContent(http.StatusOK), "readiness probe error")
 	})
 
 	// --------------------------------------------- Run Server ----------------------------------------------------- //
 
-	if err := cmd.Serve(map[int]*echo.Echo{
-		appServerPort:     app,
-		metricsServerPort: metrics,
-		probesServerPort:  probes,
-	}); err != nil {
-		app.Logger.Fatal(err)
+	servers := map[int]*echo.Echo{
+		config.APIServer.Port:     app,
+		config.MetricsServer.Port: metrics,
+		config.ProbesServer.Port:  probes,
 	}
 
-	app.Logger.Infof("Successfully stopped %s server", Name)
+	cmd.Serve(servers, gs)
+
+	app.Logger.Infof("✅ successfully stopped %s", Name)
 }
 
 // --------------------------------------------- UTILS -------------------------------------------------------------- //
