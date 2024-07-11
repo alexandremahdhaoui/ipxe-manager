@@ -4,18 +4,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
 	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
+
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"k8s.io/client-go/dynamic"
-	"log/slog"
-	"net/http"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -76,14 +78,14 @@ func main() {
 
 	b, err := os.ReadFile(ipxerConfigPath)
 	if err != nil {
-		slog.ErrorContext(ctx, err.Error(), "reading ipxer-api configuration file")
+		slog.ErrorContext(ctx, "reading ipxer-api configuration file", "error", err.Error())
 		gs.Shutdown(1)
 		return
 	}
 
 	config := new(Config)
 	if err := json.Unmarshal(b, config); err != nil {
-		slog.ErrorContext(ctx, err.Error(), "parsing ipxer-api configuration")
+		slog.ErrorContext(ctx, "parsing ipxer-api configuration", "error", err.Error())
 		gs.Shutdown(1)
 		return
 	}
@@ -166,7 +168,7 @@ func main() {
 
 func wrapErr(err error, s string) error {
 	if err != nil {
-		return errors.Join(err, errors.New(s))
+		return errors.Join(err, errors.New(s)) //nolint: goerr113
 	}
 
 	return nil
