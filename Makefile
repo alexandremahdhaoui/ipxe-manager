@@ -154,7 +154,7 @@ test-integration:
 
 .PHONY: test-functional
 test-functional:
-	echo TODO: test-functional
+	$(GOTESTSUM) --junitfile .ignore.test-functional.xml -- -tags functional -race ./... -count=1 -short -cover -coverprofile .ignore.test-functional-coverage.out ./...
 
 .PHONY: test-e2e
 test-e2e:
