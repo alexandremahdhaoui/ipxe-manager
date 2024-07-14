@@ -1,1 +1,4 @@
 name: ipxer
+
+kindenv:
+  kubeconfigpath: .kindenv.kubeconfig.yaml

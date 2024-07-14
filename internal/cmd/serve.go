@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
 
 	"github.com/labstack/echo/v4"
 )

@@ -1,38 +1,29 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"github.com/caarlos0/env/v11"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
+	"reflect"
+	"strings"
 )
 
 const (
-	projectConfigPath      = ".project.yaml"
-	kubeconfigPathTemplate = "%s/.testenv-kubeconifg.yaml"
+	projectConfigPath = ".project.yaml"
+	kubeconfigPath    = ".kindenv.kubeconfig.yaml" // TODO: Specify the kubeconfig path in the project config.
 
 	// Available commands
 	setupCommand    = "setup"
 	teardownCommand = "teardown"
-	helpCommand     = "help"
+	helpCommand     = "usage"
 )
-
-// ----------------------------------------------------- CONFIG ----------------------------------------------------- //
-
-type projectConfig struct {
-	Name string `json:"name"`
-}
-
-type config struct {
-	ContainerRegistryBaseURL string `env:"CONTAINER_REGISTRY_BASE_URL,required"`
-	KindBinary               string `env:"KIND_BINARY,required"`
-}
 
 // ----------------------------------------------------- USAGE ------------------------------------------------------ //
 
 const (
-	banner = "# KINDENV\n\n"
-	usage  = `## Usage
+	banner        = "# KINDENV\n\n"
+	usageTemplate = `## Usage
 
 %s [command]
 
@@ -42,15 +33,33 @@ Available commands:
 `
 )
 
+func usage() error {
+	arg0 := fmt.Sprintf("go run \"%s/hack/kindenv\"", os.Getenv("PWD"))
+	_, _ = fmt.Fprintf(os.Stdout, usageTemplate, arg0, setupCommand, teardownCommand)
+
+	return nil
+}
+
+// ----------------------------------------------------- CONFIG ----------------------------------------------------- //
+
+type projectConfig struct {
+	Name string `json:"name"`
+
+	Kindenv struct {
+		KubeconfigPath string `json:"kubeconfigPath"`
+	} `json:"kindenv"`
+}
+
 // ----------------------------------------------------- MAIN ------------------------------------------------------- //
 
 func main() {
-	_, _ = fmt.Fprintf(os.Stdout, banner)
+	_, _ = fmt.Fprint(os.Stdout, banner)
 
-	// 1. Print usage or
+	// 1. Print usageTemplate or
 
-	if len(os.Args) < 2 { //nolint:gomnd // if no specified subcommand then print usage and exit.
-		_ = help()
+	if len(os.Args) < 2 { //nolint:gomnd // if no specified subcommand then print usageTemplate and exit.
+		_ = usage()
+
 		os.Exit(1)
 	}
 
@@ -64,7 +73,7 @@ func main() {
 	case teardownCommand:
 		command = teardown
 	case helpCommand:
-		command = help
+		command = usage
 	}
 
 	// 3. Execute command
@@ -75,45 +84,6 @@ func main() {
 	}
 
 	os.Exit(0)
-}
-
-// ----------------------------------------------------- SETUP ------------------------------------------------------ //
-
-func setup() error {
-	// 1. read project config.
-	projectCfg, err := readProjectConfig()
-	if err != nil {
-		return err // TODO: wrap err
-	}
-
-	_, _ = fmt.Fprintf(os.Stdout, "Setting up kindenv %q\n", projectCfg.Name)
-
-	// 2. read kindenv config
-	cfg, err := readConfig()
-	if err != nil {
-		return err
-	}
-
-	_, _ = fmt.Fprintf(os.Stdout, "%#v\n", cfg)
-
-	// 3. do stuff
-
-	return nil
-}
-
-// ----------------------------------------------------- TEARDOWN --------------------------------------------------- //
-
-func teardown() error {
-	return nil
-}
-
-// ----------------------------------------------------- HELPERS ---------------------------------------------------- //
-
-func help() error {
-	arg0 := fmt.Sprintf("go run \"%s/hack/kindenv\"", os.Getenv("PWD"))
-	_, _ = fmt.Fprintf(os.Stdout, usage, arg0, setupCommand, teardownCommand)
-
-	return nil
 }
 
 // ----------------------------------------------------- HELPERS ---------------------------------------------------- //
@@ -130,15 +100,63 @@ func readProjectConfig() (projectConfig, error) {
 		return projectConfig{}, err // TODO: wrap err
 	}
 
-	return out, nil
-}
-
-func readConfig() (config, error) {
-	out := config{}
-
-	if err := env.Parse(&out); err != nil {
-		return config{}, err // TODO: wrap err
+	err = nil
+	for key, rule := range map[string]bool{
+		"name":                   out.Name == "",
+		"kindenv.kubeconfigPath": out.Kindenv.KubeconfigPath == "",
+	} {
+		if rule {
+			err = errors.Join(err, fmt.Errorf("%s must be specified in %s", key, projectConfigPath))
+		}
+	}
+	if err != nil {
+		return projectConfig{}, err // TODO: wrap error.
 	}
 
 	return out, nil
+}
+
+func formatExpectedEnvList[T any]() string {
+	optionalEnvs := make([]string, 0)
+	requiredEnvs := make([]string, 0)
+
+	observedMaxStrLen := 0
+
+	rt := reflect.TypeFor[T]()
+	for i := range rt.NumField() {
+		field := rt.Field(i)
+		val, ok := field.Tag.Lookup("env")
+		if !ok {
+			continue
+		}
+
+		substr := strings.Split(val, ",")
+		switch len(substr) {
+		case 0:
+			continue
+		case 1:
+			optionalEnvs = append(optionalEnvs, substr[0])
+		default:
+			requiredEnvs = append(requiredEnvs, substr[0])
+		}
+
+		if envStrLen := len(substr[0]); envStrLen > observedMaxStrLen {
+			observedMaxStrLen = envStrLen
+		}
+	}
+
+	envs := ""
+	for _, s := range requiredEnvs {
+		envs = fmt.Sprintf("%s- %s %s[Required]\n", envs, s, fmtSpaces(s, observedMaxStrLen))
+	}
+
+	for _, s := range optionalEnvs {
+		envs = fmt.Sprintf("%s- %s %s[Optional]\n", envs, s, fmtSpaces(s, observedMaxStrLen))
+	}
+
+	return envs
+}
+
+func fmtSpaces(s string, maxLen int) string {
+	return strings.Repeat(" ", maxLen-len(s))
 }

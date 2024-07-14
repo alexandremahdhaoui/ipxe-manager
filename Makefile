@@ -73,6 +73,8 @@ OAPI_WEBHOOK_TRANSFORMER_CLIENT_FILE := ./pkg/generated/transformerclient/zz_gen
 OAPI_WEBHOOK_TRANSFORMER_SERVER_PKG  := transformerserver
 OAPI_WEBHOOK_TRANSFORMER_SERVER_FILE := ./pkg/generated/transformerserver/zz_generated.transformerserver.go
 
+# TODO: simplify the OAPI code generation. Use a yaml config file and create a script.
+
 .PHONY: generate
 generate: ## Generate REST API server/client code, CRDs and other go generators.
 	mkdir -p $$(dirname $(OAPI_IPXER_SERVER_FILE)) $$(dirname $(OAPI_IPXER_CLIENT_FILE))
@@ -171,4 +173,4 @@ githooks: ## Initializes Git hooks to run before a push.
 
 .PHONY: pre-push
 pre-push: generate fmt lint test
-	git status
+	git status --porcelain
