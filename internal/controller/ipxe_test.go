@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"testing"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
@@ -22,7 +24,7 @@ import (
 func TestIPXE_FindProfileAndRender(t *testing.T) {
 	var (
 		ctx            context.Context
-		inputSelectors types.IpxeSelectors
+		inputSelectors types.IPXESelectors
 
 		assignment *mockadapter.MockAssignment
 		profile    *mockadapter.MockProfile
@@ -35,7 +37,7 @@ func TestIPXE_FindProfileAndRender(t *testing.T) {
 		t.Helper()
 
 		ctx = context.Background()
-		inputSelectors = types.IpxeSelectors{UUID: uuid.New(), Buildarch: "arm64"}
+		inputSelectors = types.IPXESelectors{UUID: uuid.New(), Buildarch: "arm64"}
 
 		assignment = mockadapter.NewMockAssignment(t)
 		profile = mockadapter.NewMockProfile(t)
@@ -126,7 +128,7 @@ func TestIPXE_FindProfileAndRender(t *testing.T) {
 									Kind: types.ButaneTransformerKind,
 								}, {
 									Kind:    types.WebhookTransformerKind,
-									Webhook: types.Ptr(testutil.NewTypesWebhookConfig()),
+									Webhook: ptr.To(testutil.NewTypesWebhookConfig()),
 								}},
 								ResolverKind: types.ResolverKind(i),
 							}
@@ -245,7 +247,8 @@ func TestIPXE_FindProfileAndRender(t *testing.T) {
 }
 
 func TestIpxe_Bootstrap(t *testing.T) {
-	assert.Equal(t, []byte(`#!ipxe
-chain ipxe?uuid=${uuid}&buildarch=${buildarch:uristring}
-`), controller.NewIPXE(nil, nil, nil).Boostrap())
+	expected := "#!ipxe\nchain ipxe?uuid=${uuid}&buildarch=${buildarch:uristring}\n"
+	actual := controller.NewIPXE(nil, nil, nil).Boostrap()
+
+	assert.Equal(t, expected, string(actual))
 }

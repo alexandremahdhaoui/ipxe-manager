@@ -2,11 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/alexandremahdhaoui/ipxer/pkg/generated/ipxerserver"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
@@ -15,8 +18,6 @@ import (
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
 
-	"github.com/labstack/echo-contrib/echoprometheus"
-	"github.com/labstack/echo/v4"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -128,48 +129,54 @@ func main() {
 
 	// --------------------------------------------- App ------------------------------------------------------------ //
 
-	handler := server.New(ipxe, content)
+	ipxerHandler := ipxerserver.Handler(ipxerserver.NewStrictHandler(
+		server.New(ipxe, content),
+		nil, // TODO: prometheus middleware
+	))
 
-	app := echo.New()
-	app.Use(echoprometheus.NewMiddleware(Name))
-	server.RegisterHandlers(app, handler)
+	ipxerServer := &http.Server{ //nolint:exhaustruct
+		Addr:              fmt.Sprintf(":%d", config.APIServer.Port),
+		Handler:           ipxerHandler,
+		ReadHeaderTimeout: time.Second,
+		// TODO: set fields etc...
+	}
 
 	// --------------------------------------------- Metrics -------------------------------------------------------- //
 
-	metrics := echo.New()
-	metrics.GET(config.MetricsServer.Path, echoprometheus.NewHandler())
+	metricsHandler := http.NewServeMux()
+	metricsHandler.Handle(config.MetricsServer.Path, promhttp.Handler())
+
+	metrics := &http.Server{ //nolint:exhaustruct
+		Addr:              fmt.Sprintf(":%d", config.MetricsServer.Port),
+		Handler:           metricsHandler,
+		ReadHeaderTimeout: time.Second,
+	}
 
 	// --------------------------------------------- Probes --------------------------------------------------------- //
 
-	// TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
+	probesHandler := http.NewServeMux()
+	probesHandler.Handle(config.ProbesServer.LivenessPath, http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+	probesHandler.Handle(config.ProbesServer.ReadinessPath, http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
 
-	probes := echo.New()
-	probes.GET(config.ProbesServer.LivenessPath, func(c echo.Context) error {
-		return wrapErr(c.NoContent(http.StatusOK), "liveness probe error")
-	})
-	probes.GET(config.ProbesServer.ReadinessPath, func(c echo.Context) error {
-		return wrapErr(c.NoContent(http.StatusOK), "readiness probe error")
-	})
+	probes := &http.Server{ //nolint:exhaustruct
+		Addr:              fmt.Sprintf(":%d", config.ProbesServer.Port),
+		Handler:           probesHandler,
+		ReadHeaderTimeout: time.Second,
+	}
 
 	// --------------------------------------------- Run Server ----------------------------------------------------- //
 
-	servers := map[int]*echo.Echo{
-		config.APIServer.Port:     app,
-		config.MetricsServer.Port: metrics,
-		config.ProbesServer.Port:  probes,
-	}
+	cmd.Serve(map[string]*http.Server{
+		"ipxer":   ipxerServer,
+		"metrics": metrics,
+		"probes":  probes,
+	}, gs)
 
-	cmd.Serve(servers, gs)
-
-	app.Logger.Infof("✅ successfully stopped %s", Name)
-}
-
-// --------------------------------------------- UTILS -------------------------------------------------------------- //
-
-func wrapErr(err error, s string) error {
-	if err != nil {
-		return errors.Join(err, errors.New(s)) //nolint: goerr113
-	}
-
-	return nil
+	slog.Info("✅ gracefully stopped %s", "binary", Name)
 }

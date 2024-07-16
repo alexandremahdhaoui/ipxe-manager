@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -xe
+set -o errexit
+set -o nounset
 
 __usage() {
   cat <<EOF

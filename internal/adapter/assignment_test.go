@@ -120,7 +120,7 @@ func TestAssignment(t *testing.T) {
 			}
 
 			id := uuid.New()
-			selectors := types.IpxeSelectors{
+			selectors := types.IPXESelectors{
 				UUID:      id,
 				Buildarch: inputBuildarch,
 			}
@@ -143,7 +143,7 @@ func TestAssignment(t *testing.T) {
 
 				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(assert.AnError)
 
-				actual, err := assignment.FindBySelectors(ctx, types.IpxeSelectors{})
+				actual, err := assignment.FindBySelectors(ctx, types.IPXESelectors{})
 				assert.ErrorIs(t, err, assert.AnError)
 				assert.Empty(t, actual)
 			})
@@ -154,7 +154,7 @@ func TestAssignment(t *testing.T) {
 				// No assignment found.
 				cl.EXPECT().List(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-				actual, err := assignment.FindBySelectors(ctx, types.IpxeSelectors{})
+				actual, err := assignment.FindBySelectors(ctx, types.IPXESelectors{})
 				assert.ErrorIs(t, err, adapter.ErrAssignmentNotFound)
 				assert.Empty(t, actual)
 			})

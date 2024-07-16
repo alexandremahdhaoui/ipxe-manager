@@ -23,7 +23,7 @@ func (_m *MockAssignment) EXPECT() *MockAssignment_Expecter {
 }
 
 // FindBySelectors provides a mock function with given fields: ctx, selectors
-func (_m *MockAssignment) FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
+func (_m *MockAssignment) FindBySelectors(ctx context.Context, selectors types.IPXESelectors) (types.Assignment, error) {
 	ret := _m.Called(ctx, selectors)
 
 	if len(ret) == 0 {
@@ -32,16 +32,16 @@ func (_m *MockAssignment) FindBySelectors(ctx context.Context, selectors types.I
 
 	var r0 types.Assignment
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) (types.Assignment, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.IPXESelectors) (types.Assignment, error)); ok {
 		return rf(ctx, selectors)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) types.Assignment); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.IPXESelectors) types.Assignment); ok {
 		r0 = rf(ctx, selectors)
 	} else {
 		r0 = ret.Get(0).(types.Assignment)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.IpxeSelectors) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, types.IPXESelectors) error); ok {
 		r1 = rf(ctx, selectors)
 	} else {
 		r1 = ret.Error(1)
@@ -57,14 +57,14 @@ type MockAssignment_FindBySelectors_Call struct {
 
 // FindBySelectors is a helper method to define mock.On call
 //   - ctx context.Context
-//   - selectors types.IpxeSelectors
+//   - selectors types.IPXESelectors
 func (_e *MockAssignment_Expecter) FindBySelectors(ctx interface{}, selectors interface{}) *MockAssignment_FindBySelectors_Call {
 	return &MockAssignment_FindBySelectors_Call{Call: _e.mock.On("FindBySelectors", ctx, selectors)}
 }
 
-func (_c *MockAssignment_FindBySelectors_Call) Run(run func(ctx context.Context, selectors types.IpxeSelectors)) *MockAssignment_FindBySelectors_Call {
+func (_c *MockAssignment_FindBySelectors_Call) Run(run func(ctx context.Context, selectors types.IPXESelectors)) *MockAssignment_FindBySelectors_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(types.IpxeSelectors))
+		run(args[0].(context.Context), args[1].(types.IPXESelectors))
 	})
 	return _c
 }
@@ -74,7 +74,7 @@ func (_c *MockAssignment_FindBySelectors_Call) Return(_a0 types.Assignment, _a1 
 	return _c
 }
 
-func (_c *MockAssignment_FindBySelectors_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) (types.Assignment, error)) *MockAssignment_FindBySelectors_Call {
+func (_c *MockAssignment_FindBySelectors_Call) RunAndReturn(run func(context.Context, types.IPXESelectors) (types.Assignment, error)) *MockAssignment_FindBySelectors_Call {
 	_c.Call.Return(run)
 	return _c
 }

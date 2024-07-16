@@ -1,4 +1,4 @@
-package resolverserverfake
+package transformerserverfake
 
 import (
 	"context"
@@ -9,45 +9,43 @@ import (
 	"testing"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/util/certutil"
-	"github.com/alexandremahdhaoui/ipxer/pkg/generated/resolverserver"
-	"github.com/labstack/echo/v4"
+	"github.com/alexandremahdhaoui/ipxer/pkg/generated/transformerserver"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-type Expectation = func(echo.Context, resolverserver.ResolveParams) error
+type Expectation = func(
+	ctx context.Context,
+	request transformerserver.TransformRequestObject,
+) (transformerserver.TransformResponseObject, error)
 
 type Fake struct {
 	t            *testing.T
 	expectations []Expectation
 	counter      int
-	server       http.Server
 
-	CA   *certutil.CA
-	Echo *echo.Echo
+	Server http.Server
+	CA     *certutil.CA
 }
 
-func (f *Fake) Resolve(ctx echo.Context, _ resolverserver.AnyRoutes, params resolverserver.ResolveParams) error {
+func (f *Fake) Transform( //nolint:ireturn
+	ctx context.Context,
+	request transformerserver.TransformRequestObject,
+) (transformerserver.TransformResponseObject, error) {
 	f.t.Helper()
 
 	counter := f.counter
-	f.counter += 1
+	f.counter++
 
-	return f.expectations[counter](ctx, params)
+	return f.expectations[counter](ctx, request)
 }
 
 func (f *Fake) Start() *Fake {
 	go func() {
-		if err := f.server.ListenAndServeTLS("", ""); !errors.Is(err, http.ErrServerClosed) {
+		if err := f.Server.ListenAndServeTLS("", ""); !errors.Is(err, http.ErrServerClosed) {
 			require.NoError(f.t, err)
 		}
 	}()
-
-	return f
-}
-
-func (f *Fake) PrependExpectation(expectation Expectation) *Fake {
-	f.expectations = append([]Expectation{expectation}, f.expectations...)
 
 	return f
 }
@@ -64,7 +62,7 @@ func (f *Fake) AssertExpectationsAndShutdown() *Fake {
 	ctx := context.Background()
 
 	assert.Equal(f.t, f.counter, len(f.expectations))
-	require.NoError(f.t, f.server.Shutdown(ctx))
+	require.NoError(f.t, f.Server.Shutdown(ctx))
 
 	return f
 }
@@ -81,33 +79,32 @@ func New(t *testing.T, addr string) *Fake {
 	serverKey, serverCrt, err := ca.NewCertifiedKeyPEM(serverName)
 	require.NoError(t, err)
 
-	echoServer := echo.New()
 	fake := &Fake{
 		t:            t,
 		expectations: make([]Expectation, 0),
 		counter:      0,
 
-		CA:   ca,
-		Echo: echoServer,
+		CA: ca,
 	}
 
-	resolverserver.RegisterHandlers(echoServer, fake)
+	handler := transformerserver.Handler(transformerserver.NewStrictHandler(fake, nil))
 
 	tlsKeyPair, err := tls.X509KeyPair(serverCrt, serverKey)
 	require.NoError(t, err)
 
-	fake.server = http.Server{
+	fake.Server = http.Server{
 		Addr:    addr,
-		Handler: echoServer, // set Echo as handler
-		TLSConfig: &tls.Config{
+		Handler: handler,
+		TLSConfig: &tls.Config{ // nolint: exhaust
+			MinVersion:   tls.VersionTLS13,
 			Certificates: []tls.Certificate{tlsKeyPair},
 			RootCAs:      ca.Pool(),
 			ServerName:   serverName,
 			ClientAuth:   tls.RequireAndVerifyClientCert,
 			ClientCAs:    ca.Pool(),
-			// TODO: Parameterize InsecureSkipVerify to test use cases where use would allow self-signed certs.
+			// TODO: Parameterize InsecureSkipVerify to test use cases when a user would allow self-signed certs.
 			//      We may also have to update the RootCAs var.
-			InsecureSkipVerify: false,
+			InsecureSkipVerify: false, // TODO?
 		},
 	}
 

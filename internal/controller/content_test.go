@@ -25,7 +25,7 @@ func TestContent(t *testing.T) {
 		ctx context.Context
 
 		inputConfigID uuid.UUID
-		ipxeSelectors types.IpxeSelectors
+		ipxeSelectors types.IPXESelectors
 
 		expectedProfileResult []types.Profile
 		expectedProfileErr    error
@@ -44,7 +44,7 @@ func TestContent(t *testing.T) {
 		ctx = context.Background()
 
 		inputConfigID = uuid.New()
-		ipxeSelectors = types.IpxeSelectors{}
+		ipxeSelectors = types.IPXESelectors{}
 
 		profile = mockadapter.NewMockProfile(t)
 		mux = mockcontroller.NewMockResolveTransformerMux(t)
@@ -103,7 +103,7 @@ func TestContent(t *testing.T) {
 			expectProfile()
 			expectMux()
 
-			actual, err := content.GetByID(ctx, inputConfigID, types.IpxeSelectors{})
+			actual, err := content.GetByID(ctx, inputConfigID, types.IPXESelectors{})
 			assert.NoError(t, err)
 			assert.Equal(t, expected, actual)
 		})

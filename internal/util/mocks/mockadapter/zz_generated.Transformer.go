@@ -23,7 +23,7 @@ func (_m *MockTransformer) EXPECT() *MockTransformer_Expecter {
 }
 
 // Transform provides a mock function with given fields: ctx, cfg, content, selectors
-func (_m *MockTransformer) Transform(ctx context.Context, cfg types.TransformerConfig, content []byte, selectors types.IpxeSelectors) ([]byte, error) {
+func (_m *MockTransformer) Transform(ctx context.Context, cfg types.TransformerConfig, content []byte, selectors types.IPXESelectors) ([]byte, error) {
 	ret := _m.Called(ctx, cfg, content, selectors)
 
 	if len(ret) == 0 {
@@ -32,10 +32,10 @@ func (_m *MockTransformer) Transform(ctx context.Context, cfg types.TransformerC
 
 	var r0 []byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.TransformerConfig, []byte, types.IpxeSelectors) ([]byte, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.TransformerConfig, []byte, types.IPXESelectors) ([]byte, error)); ok {
 		return rf(ctx, cfg, content, selectors)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.TransformerConfig, []byte, types.IpxeSelectors) []byte); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.TransformerConfig, []byte, types.IPXESelectors) []byte); ok {
 		r0 = rf(ctx, cfg, content, selectors)
 	} else {
 		if ret.Get(0) != nil {
@@ -43,7 +43,7 @@ func (_m *MockTransformer) Transform(ctx context.Context, cfg types.TransformerC
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.TransformerConfig, []byte, types.IpxeSelectors) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, types.TransformerConfig, []byte, types.IPXESelectors) error); ok {
 		r1 = rf(ctx, cfg, content, selectors)
 	} else {
 		r1 = ret.Error(1)
@@ -61,14 +61,14 @@ type MockTransformer_Transform_Call struct {
 //   - ctx context.Context
 //   - cfg types.TransformerConfig
 //   - content []byte
-//   - selectors types.IpxeSelectors
+//   - selectors types.IPXESelectors
 func (_e *MockTransformer_Expecter) Transform(ctx interface{}, cfg interface{}, content interface{}, selectors interface{}) *MockTransformer_Transform_Call {
 	return &MockTransformer_Transform_Call{Call: _e.mock.On("Transform", ctx, cfg, content, selectors)}
 }
 
-func (_c *MockTransformer_Transform_Call) Run(run func(ctx context.Context, cfg types.TransformerConfig, content []byte, selectors types.IpxeSelectors)) *MockTransformer_Transform_Call {
+func (_c *MockTransformer_Transform_Call) Run(run func(ctx context.Context, cfg types.TransformerConfig, content []byte, selectors types.IPXESelectors)) *MockTransformer_Transform_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(types.TransformerConfig), args[2].([]byte), args[3].(types.IpxeSelectors))
+		run(args[0].(context.Context), args[1].(types.TransformerConfig), args[2].([]byte), args[3].(types.IPXESelectors))
 	})
 	return _c
 }
@@ -78,7 +78,7 @@ func (_c *MockTransformer_Transform_Call) Return(_a0 []byte, _a1 error) *MockTra
 	return _c
 }
 
-func (_c *MockTransformer_Transform_Call) RunAndReturn(run func(context.Context, types.TransformerConfig, []byte, types.IpxeSelectors) ([]byte, error)) *MockTransformer_Transform_Call {
+func (_c *MockTransformer_Transform_Call) RunAndReturn(run func(context.Context, types.TransformerConfig, []byte, types.IPXESelectors) ([]byte, error)) *MockTransformer_Transform_Call {
 	_c.Call.Return(run)
 	return _c
 }

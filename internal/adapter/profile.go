@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"github.com/google/uuid"
@@ -203,7 +205,7 @@ func (ipxev1a1) toTransformerConfig(input []v1alpha1.Transformer) ([]types.Trans
 			}
 
 			cfg.Kind = types.WebhookTransformerKind
-			cfg.Webhook = types.Ptr(typesCfg)
+			cfg.Webhook = ptr.To(typesCfg)
 		}
 
 		out = append(out, cfg)

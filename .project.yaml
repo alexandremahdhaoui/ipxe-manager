@@ -2,3 +2,5 @@ name: ipxer
 
 kindenv:
   kubeconfigpath: .kindenv.kubeconfig.yaml
+
+localContainerRegistry: {} # TODO

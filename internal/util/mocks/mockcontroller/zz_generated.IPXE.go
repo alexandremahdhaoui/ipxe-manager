@@ -71,7 +71,7 @@ func (_c *MockIPXE_Boostrap_Call) RunAndReturn(run func() []byte) *MockIPXE_Boos
 }
 
 // FindProfileAndRender provides a mock function with given fields: ctx, selectors
-func (_m *MockIPXE) FindProfileAndRender(ctx context.Context, selectors types.IpxeSelectors) ([]byte, error) {
+func (_m *MockIPXE) FindProfileAndRender(ctx context.Context, selectors types.IPXESelectors) ([]byte, error) {
 	ret := _m.Called(ctx, selectors)
 
 	if len(ret) == 0 {
@@ -80,10 +80,10 @@ func (_m *MockIPXE) FindProfileAndRender(ctx context.Context, selectors types.Ip
 
 	var r0 []byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) ([]byte, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.IPXESelectors) ([]byte, error)); ok {
 		return rf(ctx, selectors)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.IpxeSelectors) []byte); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.IPXESelectors) []byte); ok {
 		r0 = rf(ctx, selectors)
 	} else {
 		if ret.Get(0) != nil {
@@ -91,7 +91,7 @@ func (_m *MockIPXE) FindProfileAndRender(ctx context.Context, selectors types.Ip
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.IpxeSelectors) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, types.IPXESelectors) error); ok {
 		r1 = rf(ctx, selectors)
 	} else {
 		r1 = ret.Error(1)
@@ -107,14 +107,14 @@ type MockIPXE_FindProfileAndRender_Call struct {
 
 // FindProfileAndRender is a helper method to define mock.On call
 //   - ctx context.Context
-//   - selectors types.IpxeSelectors
+//   - selectors types.IPXESelectors
 func (_e *MockIPXE_Expecter) FindProfileAndRender(ctx interface{}, selectors interface{}) *MockIPXE_FindProfileAndRender_Call {
 	return &MockIPXE_FindProfileAndRender_Call{Call: _e.mock.On("FindProfileAndRender", ctx, selectors)}
 }
 
-func (_c *MockIPXE_FindProfileAndRender_Call) Run(run func(ctx context.Context, selectors types.IpxeSelectors)) *MockIPXE_FindProfileAndRender_Call {
+func (_c *MockIPXE_FindProfileAndRender_Call) Run(run func(ctx context.Context, selectors types.IPXESelectors)) *MockIPXE_FindProfileAndRender_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(types.IpxeSelectors))
+		run(args[0].(context.Context), args[1].(types.IPXESelectors))
 	})
 	return _c
 }
@@ -124,7 +124,7 @@ func (_c *MockIPXE_FindProfileAndRender_Call) Return(_a0 []byte, _a1 error) *Moc
 	return _c
 }
 
-func (_c *MockIPXE_FindProfileAndRender_Call) RunAndReturn(run func(context.Context, types.IpxeSelectors) ([]byte, error)) *MockIPXE_FindProfileAndRender_Call {
+func (_c *MockIPXE_FindProfileAndRender_Call) RunAndReturn(run func(context.Context, types.IPXESelectors) ([]byte, error)) *MockIPXE_FindProfileAndRender_Call {
 	_c.Call.Return(run)
 	return _c
 }

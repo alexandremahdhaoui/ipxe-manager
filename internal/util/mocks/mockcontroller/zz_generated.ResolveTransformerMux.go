@@ -25,7 +25,7 @@ func (_m *MockResolveTransformerMux) EXPECT() *MockResolveTransformerMux_Expecte
 }
 
 // ResolveAndTransform provides a mock function with given fields: ctx, content, selectors
-func (_m *MockResolveTransformerMux) ResolveAndTransform(ctx context.Context, content types.Content, selectors types.IpxeSelectors) ([]byte, error) {
+func (_m *MockResolveTransformerMux) ResolveAndTransform(ctx context.Context, content types.Content, selectors types.IPXESelectors) ([]byte, error) {
 	ret := _m.Called(ctx, content, selectors)
 
 	if len(ret) == 0 {
@@ -34,10 +34,10 @@ func (_m *MockResolveTransformerMux) ResolveAndTransform(ctx context.Context, co
 
 	var r0 []byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.Content, types.IpxeSelectors) ([]byte, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.Content, types.IPXESelectors) ([]byte, error)); ok {
 		return rf(ctx, content, selectors)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.Content, types.IpxeSelectors) []byte); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.Content, types.IPXESelectors) []byte); ok {
 		r0 = rf(ctx, content, selectors)
 	} else {
 		if ret.Get(0) != nil {
@@ -45,7 +45,7 @@ func (_m *MockResolveTransformerMux) ResolveAndTransform(ctx context.Context, co
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.Content, types.IpxeSelectors) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, types.Content, types.IPXESelectors) error); ok {
 		r1 = rf(ctx, content, selectors)
 	} else {
 		r1 = ret.Error(1)
@@ -62,14 +62,14 @@ type MockResolveTransformerMux_ResolveAndTransform_Call struct {
 // ResolveAndTransform is a helper method to define mock.On call
 //   - ctx context.Context
 //   - content types.Content
-//   - selectors types.IpxeSelectors
+//   - selectors types.IPXESelectors
 func (_e *MockResolveTransformerMux_Expecter) ResolveAndTransform(ctx interface{}, content interface{}, selectors interface{}) *MockResolveTransformerMux_ResolveAndTransform_Call {
 	return &MockResolveTransformerMux_ResolveAndTransform_Call{Call: _e.mock.On("ResolveAndTransform", ctx, content, selectors)}
 }
 
-func (_c *MockResolveTransformerMux_ResolveAndTransform_Call) Run(run func(ctx context.Context, content types.Content, selectors types.IpxeSelectors)) *MockResolveTransformerMux_ResolveAndTransform_Call {
+func (_c *MockResolveTransformerMux_ResolveAndTransform_Call) Run(run func(ctx context.Context, content types.Content, selectors types.IPXESelectors)) *MockResolveTransformerMux_ResolveAndTransform_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(types.Content), args[2].(types.IpxeSelectors))
+		run(args[0].(context.Context), args[1].(types.Content), args[2].(types.IPXESelectors))
 	})
 	return _c
 }
@@ -79,13 +79,13 @@ func (_c *MockResolveTransformerMux_ResolveAndTransform_Call) Return(_a0 []byte,
 	return _c
 }
 
-func (_c *MockResolveTransformerMux_ResolveAndTransform_Call) RunAndReturn(run func(context.Context, types.Content, types.IpxeSelectors) ([]byte, error)) *MockResolveTransformerMux_ResolveAndTransform_Call {
+func (_c *MockResolveTransformerMux_ResolveAndTransform_Call) RunAndReturn(run func(context.Context, types.Content, types.IPXESelectors) ([]byte, error)) *MockResolveTransformerMux_ResolveAndTransform_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ResolveAndTransformBatch provides a mock function with given fields: ctx, batch, selectors, options
-func (_m *MockResolveTransformerMux) ResolveAndTransformBatch(ctx context.Context, batch map[string]types.Content, selectors types.IpxeSelectors, options ...controller.ResolveTransformBatchOption) (map[string][]byte, error) {
+func (_m *MockResolveTransformerMux) ResolveAndTransformBatch(ctx context.Context, batch map[string]types.Content, selectors types.IPXESelectors, options ...controller.ResolveTransformBatchOption) (map[string][]byte, error) {
 	_va := make([]interface{}, len(options))
 	for _i := range options {
 		_va[_i] = options[_i]
@@ -101,10 +101,10 @@ func (_m *MockResolveTransformerMux) ResolveAndTransformBatch(ctx context.Contex
 
 	var r0 map[string][]byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, map[string]types.Content, types.IpxeSelectors, ...controller.ResolveTransformBatchOption) (map[string][]byte, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]types.Content, types.IPXESelectors, ...controller.ResolveTransformBatchOption) (map[string][]byte, error)); ok {
 		return rf(ctx, batch, selectors, options...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, map[string]types.Content, types.IpxeSelectors, ...controller.ResolveTransformBatchOption) map[string][]byte); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]types.Content, types.IPXESelectors, ...controller.ResolveTransformBatchOption) map[string][]byte); ok {
 		r0 = rf(ctx, batch, selectors, options...)
 	} else {
 		if ret.Get(0) != nil {
@@ -112,7 +112,7 @@ func (_m *MockResolveTransformerMux) ResolveAndTransformBatch(ctx context.Contex
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, map[string]types.Content, types.IpxeSelectors, ...controller.ResolveTransformBatchOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, map[string]types.Content, types.IPXESelectors, ...controller.ResolveTransformBatchOption) error); ok {
 		r1 = rf(ctx, batch, selectors, options...)
 	} else {
 		r1 = ret.Error(1)
@@ -129,14 +129,14 @@ type MockResolveTransformerMux_ResolveAndTransformBatch_Call struct {
 // ResolveAndTransformBatch is a helper method to define mock.On call
 //   - ctx context.Context
 //   - batch map[string]types.Content
-//   - selectors types.IpxeSelectors
+//   - selectors types.IPXESelectors
 //   - options ...controller.ResolveTransformBatchOption
 func (_e *MockResolveTransformerMux_Expecter) ResolveAndTransformBatch(ctx interface{}, batch interface{}, selectors interface{}, options ...interface{}) *MockResolveTransformerMux_ResolveAndTransformBatch_Call {
 	return &MockResolveTransformerMux_ResolveAndTransformBatch_Call{Call: _e.mock.On("ResolveAndTransformBatch",
 		append([]interface{}{ctx, batch, selectors}, options...)...)}
 }
 
-func (_c *MockResolveTransformerMux_ResolveAndTransformBatch_Call) Run(run func(ctx context.Context, batch map[string]types.Content, selectors types.IpxeSelectors, options ...controller.ResolveTransformBatchOption)) *MockResolveTransformerMux_ResolveAndTransformBatch_Call {
+func (_c *MockResolveTransformerMux_ResolveAndTransformBatch_Call) Run(run func(ctx context.Context, batch map[string]types.Content, selectors types.IPXESelectors, options ...controller.ResolveTransformBatchOption)) *MockResolveTransformerMux_ResolveAndTransformBatch_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		variadicArgs := make([]controller.ResolveTransformBatchOption, len(args)-3)
 		for i, a := range args[3:] {
@@ -144,7 +144,7 @@ func (_c *MockResolveTransformerMux_ResolveAndTransformBatch_Call) Run(run func(
 				variadicArgs[i] = a.(controller.ResolveTransformBatchOption)
 			}
 		}
-		run(args[0].(context.Context), args[1].(map[string]types.Content), args[2].(types.IpxeSelectors), variadicArgs...)
+		run(args[0].(context.Context), args[1].(map[string]types.Content), args[2].(types.IPXESelectors), variadicArgs...)
 	})
 	return _c
 }
@@ -154,7 +154,7 @@ func (_c *MockResolveTransformerMux_ResolveAndTransformBatch_Call) Return(_a0 ma
 	return _c
 }
 
-func (_c *MockResolveTransformerMux_ResolveAndTransformBatch_Call) RunAndReturn(run func(context.Context, map[string]types.Content, types.IpxeSelectors, ...controller.ResolveTransformBatchOption) (map[string][]byte, error)) *MockResolveTransformerMux_ResolveAndTransformBatch_Call {
+func (_c *MockResolveTransformerMux_ResolveAndTransformBatch_Call) RunAndReturn(run func(context.Context, map[string]types.Content, types.IPXESelectors, ...controller.ResolveTransformBatchOption) (map[string][]byte, error)) *MockResolveTransformerMux_ResolveAndTransformBatch_Call {
 	_c.Call.Return(run)
 	return _c
 }

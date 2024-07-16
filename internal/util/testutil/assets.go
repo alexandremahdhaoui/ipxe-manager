@@ -3,6 +3,8 @@ package testutil
 import (
 	"fmt"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	"github.com/google/uuid"
@@ -40,7 +42,7 @@ func NewV1alpha1AdditionalContentInline() v1alpha1.AdditionalContent {
 	return v1alpha1.AdditionalContent{
 		Exposed:             false,
 		PostTransformations: nil,
-		Inline:              types.Ptr(inlineContent),
+		Inline:              ptr.To(inlineContent),
 	}
 }
 
@@ -124,7 +126,7 @@ func NewTypesContentObjectRef() types.Content {
 		Name:             objectRefName,
 		PostTransformers: []types.TransformerConfig{},
 		ResolverKind:     types.ObjectRefResolverKind,
-		ObjectRef:        types.Ptr(NewTypesObjectRef()),
+		ObjectRef:        ptr.To(NewTypesObjectRef()),
 	}
 }
 
@@ -144,14 +146,14 @@ func NewTypesContentWebhook() types.Content {
 		Name:             webhookName,
 		PostTransformers: []types.TransformerConfig{},
 		ResolverKind:     types.WebhookResolverKind,
-		WebhookConfig:    types.Ptr(NewTypesWebhookConfig()),
+		WebhookConfig:    ptr.To(NewTypesWebhookConfig()),
 	}
 }
 
 func NewTypesTransformerConfigWebhook() types.TransformerConfig {
 	return types.TransformerConfig{
 		Kind:    types.WebhookTransformerKind,
-		Webhook: types.Ptr(NewTypesWebhookConfig()),
+		Webhook: ptr.To(NewTypesWebhookConfig()),
 	}
 }
 

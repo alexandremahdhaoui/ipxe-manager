@@ -26,7 +26,7 @@ func (_m *MockContent) EXPECT() *MockContent_Expecter {
 }
 
 // GetByID provides a mock function with given fields: ctx, contentID, attributes
-func (_m *MockContent) GetByID(ctx context.Context, contentID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error) {
+func (_m *MockContent) GetByID(ctx context.Context, contentID uuid.UUID, attributes types.IPXESelectors) ([]byte, error) {
 	ret := _m.Called(ctx, contentID, attributes)
 
 	if len(ret) == 0 {
@@ -35,10 +35,10 @@ func (_m *MockContent) GetByID(ctx context.Context, contentID uuid.UUID, attribu
 
 	var r0 []byte
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, types.IpxeSelectors) ([]byte, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, types.IPXESelectors) ([]byte, error)); ok {
 		return rf(ctx, contentID, attributes)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, types.IpxeSelectors) []byte); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, types.IPXESelectors) []byte); ok {
 		r0 = rf(ctx, contentID, attributes)
 	} else {
 		if ret.Get(0) != nil {
@@ -46,7 +46,7 @@ func (_m *MockContent) GetByID(ctx context.Context, contentID uuid.UUID, attribu
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, types.IpxeSelectors) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, types.IPXESelectors) error); ok {
 		r1 = rf(ctx, contentID, attributes)
 	} else {
 		r1 = ret.Error(1)
@@ -63,14 +63,14 @@ type MockContent_GetByID_Call struct {
 // GetByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - contentID uuid.UUID
-//   - attributes types.IpxeSelectors
+//   - attributes types.IPXESelectors
 func (_e *MockContent_Expecter) GetByID(ctx interface{}, contentID interface{}, attributes interface{}) *MockContent_GetByID_Call {
 	return &MockContent_GetByID_Call{Call: _e.mock.On("GetByID", ctx, contentID, attributes)}
 }
 
-func (_c *MockContent_GetByID_Call) Run(run func(ctx context.Context, contentID uuid.UUID, attributes types.IpxeSelectors)) *MockContent_GetByID_Call {
+func (_c *MockContent_GetByID_Call) Run(run func(ctx context.Context, contentID uuid.UUID, attributes types.IPXESelectors)) *MockContent_GetByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(types.IpxeSelectors))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(types.IPXESelectors))
 	})
 	return _c
 }
@@ -80,7 +80,7 @@ func (_c *MockContent_GetByID_Call) Return(_a0 []byte, _a1 error) *MockContent_G
 	return _c
 }
 
-func (_c *MockContent_GetByID_Call) RunAndReturn(run func(context.Context, uuid.UUID, types.IpxeSelectors) ([]byte, error)) *MockContent_GetByID_Call {
+func (_c *MockContent_GetByID_Call) RunAndReturn(run func(context.Context, uuid.UUID, types.IPXESelectors) ([]byte, error)) *MockContent_GetByID_Call {
 	_c.Call.Return(run)
 	return _c
 }

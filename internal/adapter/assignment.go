@@ -23,7 +23,7 @@ var (
 
 type Assignment interface {
 	FindDefaultByBuildarch(ctx context.Context, buildarch string) (types.Assignment, error)
-	FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error)
+	FindBySelectors(ctx context.Context, selectors types.IPXESelectors) (types.Assignment, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -68,7 +68,7 @@ func (a *assignment) FindDefaultByBuildarch(ctx context.Context, buildarch strin
 
 // --------------------------------------------- FindBySelectors --------------------------------------------- //
 
-func (a *assignment) FindBySelectors(ctx context.Context, selectors types.IpxeSelectors) (types.Assignment, error) {
+func (a *assignment) FindBySelectors(ctx context.Context, selectors types.IPXESelectors) (types.Assignment, error) {
 	// list assignment
 	list := new(v1alpha1.AssignmentList)
 	if err := a.client.List(ctx, list,

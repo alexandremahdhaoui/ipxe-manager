@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"testing"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
@@ -20,7 +22,7 @@ import (
 func TestResolveTransformerMux(t *testing.T) {
 	var (
 		ctx            context.Context
-		inputSelectors types.IpxeSelectors
+		inputSelectors types.IPXESelectors
 		inputBatch     map[string]types.Content
 
 		inlineResolver    *mockadapter.MockResolver
@@ -42,7 +44,7 @@ func TestResolveTransformerMux(t *testing.T) {
 		t.Helper()
 
 		ctx = context.Background()
-		inputSelectors = types.IpxeSelectors{
+		inputSelectors = types.IPXESelectors{
 			UUID:      uuid.New(),
 			Buildarch: "arm64",
 		}
@@ -99,12 +101,12 @@ func TestResolveTransformerMux(t *testing.T) {
 								Kind: types.ButaneTransformerKind,
 							}, {
 								Kind:    types.WebhookTransformerKind,
-								Webhook: types.Ptr(testutil.NewTypesWebhookConfig()),
+								Webhook: ptr.To(testutil.NewTypesWebhookConfig()),
 							}},
 							ResolverKind:  kind,
 							Inline:        "this is an inline content",
-							ObjectRef:     types.Ptr(testutil.NewTypesObjectRef()),
-							WebhookConfig: types.Ptr(testutil.NewTypesWebhookConfig()),
+							ObjectRef:     ptr.To(testutil.NewTypesObjectRef()),
+							WebhookConfig: ptr.To(testutil.NewTypesWebhookConfig()),
 						}
 
 						inputBatch[inputContent.Name] = inputContent

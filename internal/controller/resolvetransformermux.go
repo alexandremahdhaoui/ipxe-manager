@@ -24,12 +24,12 @@ var (
 // ---------------------------------------------------- INTERFACES -------------------------------------------------- //
 
 type ResolveTransformerMux interface {
-	ResolveAndTransform(ctx context.Context, content types.Content, selectors types.IpxeSelectors) ([]byte, error)
+	ResolveAndTransform(ctx context.Context, content types.Content, selectors types.IPXESelectors) ([]byte, error)
 
 	ResolveAndTransformBatch(
 		ctx context.Context,
 		batch map[string]types.Content,
-		selectors types.IpxeSelectors,
+		selectors types.IPXESelectors,
 		options ...ResolveTransformBatchOption,
 	) (map[string][]byte, error)
 }
@@ -60,7 +60,7 @@ type resolveTransformerMux struct {
 func (r *resolveTransformerMux) ResolveAndTransform(
 	ctx context.Context,
 	content types.Content,
-	selectors types.IpxeSelectors,
+	selectors types.IPXESelectors,
 ) ([]byte, error) {
 	resolver, ok := r.resolvers[content.ResolverKind]
 	if !ok {
@@ -98,7 +98,7 @@ func (r *resolveTransformerMux) ResolveAndTransform(
 func (r *resolveTransformerMux) ResolveAndTransformBatch(
 	ctx context.Context,
 	batch map[string]types.Content,
-	selectors types.IpxeSelectors,
+	selectors types.IPXESelectors,
 	options ...ResolveTransformBatchOption,
 ) (map[string][]byte, error) {
 	opts := new(ResolveTransformBatchOptions).apply(options...)

@@ -19,7 +19,7 @@ var (
 // ---------------------------------------------------- INTERFACE --------------------------------------------------- //
 
 type Content interface {
-	GetByID(ctx context.Context, contentID uuid.UUID, attributes types.IpxeSelectors) ([]byte, error)
+	GetByID(ctx context.Context, contentID uuid.UUID, attributes types.IPXESelectors) ([]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -41,7 +41,7 @@ type content struct {
 func (c *content) GetByID(
 	ctx context.Context,
 	contentID uuid.UUID,
-	attributes types.IpxeSelectors,
+	attributes types.IPXESelectors,
 ) ([]byte, error) {
 	if contentID == uuid.Nil {
 		return nil, errors.Join(errUUIDCannotBeNil, ErrContentGetById)
@@ -58,7 +58,7 @@ func (c *content) GetByID(
 	// TODO: to choose b/w template exposed-content as a URL with ID or resolving+transforming:
 	//       - add a boolean param to `mux` to either return a URL or a template.
 	//       - add a parameter to `mux` for the baseURL.
-	out, err := c.mux.ResolveAndTransform(ctx, cont, types.IpxeSelectors{
+	out, err := c.mux.ResolveAndTransform(ctx, cont, types.IPXESelectors{
 		UUID:      contentID, // the contentID takes precedence, thus should always overwrite the attribute uuid.
 		Buildarch: attributes.Buildarch,
 	})

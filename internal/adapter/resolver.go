@@ -36,7 +36,7 @@ type Resolver interface {
 	Resolve(
 		ctx context.Context,
 		content types.Content,
-		attributes types.IpxeSelectors,
+		attributes types.IPXESelectors,
 	) ([]byte, error)
 }
 
@@ -61,7 +61,7 @@ type inlineResolver struct{}
 func (r *inlineResolver) Resolve(
 	_ context.Context,
 	content types.Content,
-	_ types.IpxeSelectors,
+	_ types.IPXESelectors,
 ) ([]byte, error) {
 	return []byte(content.Inline), nil
 }
@@ -79,7 +79,7 @@ type objectRefResolver struct {
 func (r *objectRefResolver) Resolve(
 	ctx context.Context,
 	content types.Content,
-	_ types.IpxeSelectors,
+	_ types.IPXESelectors,
 ) ([]byte, error) {
 	if content.ObjectRef == nil {
 		return nil, errors.Join(errObjectRefMustBeSpecified, ErrResolverResolve)
@@ -152,7 +152,7 @@ type webhookResolver struct {
 func (r *webhookResolver) Resolve(
 	ctx context.Context,
 	content types.Content,
-	attributes types.IpxeSelectors,
+	attributes types.IPXESelectors,
 ) ([]byte, error) {
 	// TODO: make use of content.WebhookConfig.MTLSObjectRef.TLSInsecureSkipVerify
 

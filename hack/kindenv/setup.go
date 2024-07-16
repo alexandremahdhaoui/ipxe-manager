@@ -3,10 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/caarlos0/env/v11"
-	"io"
 	"os"
 	"os/exec"
+
+	"github.com/caarlos0/env/v11"
 )
 
 // ----------------------------------------------------- USAGE ------------------------------------------------------ //
@@ -66,7 +66,7 @@ func setup() error {
 
 	// 3. Do
 	if err := doSetup(projectCfg, cfg); err != nil {
-		return errors.Join(err, doTeardown())
+		return errors.Join(err, doTeardown(projectCfg, cfg))
 	}
 
 	return nil
@@ -83,36 +83,7 @@ func doSetup(pCfg projectConfig, cfg setupConfig) error {
 		"--wait", "5m",
 	)
 
-	errChan := make(chan error)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err // TODO: wrap error
-	}
-
-	go func() {
-		if _, err := io.Copy(os.Stdout, stdout); err != nil {
-			errChan <- err
-		}
-	}()
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return err // TODO: wrap error
-	}
-
-	go func() {
-		if _, err := io.Copy(os.Stderr, stderr); err != nil {
-			errChan <- err
-		}
-	}()
-
-	if err := cmd.Run(); err != nil {
-		return err // TODO: wrap error
-	}
-
-	close(errChan)
-	if err := <-errChan; err != nil {
+	if err := runCmdWithStdPipes(cmd); err != nil {
 		return err // TODO: wrap error
 	}
 

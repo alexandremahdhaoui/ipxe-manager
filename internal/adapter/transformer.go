@@ -23,7 +23,7 @@ var ErrTransformerTransform = errors.New("transforming content")
 // --------------------------------------------------- INTERFACE ---------------------------------------------------- //
 
 type Transformer interface {
-	Transform(ctx context.Context, cfg types.TransformerConfig, content []byte, selectors types.IpxeSelectors) ([]byte, error)
+	Transform(ctx context.Context, cfg types.TransformerConfig, content []byte, selectors types.IPXESelectors) ([]byte, error)
 }
 
 // ----------------------------------------------- BUTANE TRANSFORMER ----------------------------------------------- //
@@ -38,7 +38,7 @@ func (t *butaneTransformer) Transform(
 	_ context.Context,
 	_ types.TransformerConfig,
 	content []byte,
-	_ types.IpxeSelectors,
+	_ types.IPXESelectors,
 ) ([]byte, error) {
 	b, _, err := butaneconfig.TranslateBytes(content, butanecommon.TranslateBytesOptions{Raw: true})
 	if err != nil {
@@ -67,7 +67,7 @@ func (t *webhookTransformer) Transform(
 	ctx context.Context,
 	cfg types.TransformerConfig,
 	content []byte,
-	attributes types.IpxeSelectors,
+	attributes types.IPXESelectors,
 ) ([]byte, error) {
 	if cfg.Webhook == nil {
 		return nil, errors.New("TODO") // TODO: err & wrap err

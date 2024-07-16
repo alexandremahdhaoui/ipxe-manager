@@ -3,34 +3,35 @@ package cmd
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
-
-	"github.com/labstack/echo/v4"
+	"github.com/alexandremahdhaoui/ipxer/pkg/constants"
 )
 
-func Serve(portServerMap map[int]*echo.Echo, gs *gracefulshutdown.GracefulShutdown) {
+func Serve(servers map[string]*http.Server, gs *gracefulshutdown.GracefulShutdown) {
 	// 1. Run the servers.
-	for port, server := range portServerMap {
-		port, server := port, server
-		addr := fmt.Sprintf(":%d", port)
+	for name, server := range servers {
+		ctx := context.WithValue(gs.Context(), constants.ServerNameContextKey, name)
 
 		// sets the base context to be the GracefulShutdown's context.
-		server.Server.BaseContext = func(_ net.Listener) context.Context {
-			return gs.Context()
+		server.BaseContext = func(_ net.Listener) context.Context {
+			return ctx
 		}
 
-		go func() {
-			gs.WaitGroup().Add(1)
+		gs.WaitGroup().Add(1)
 
-			if err := server.Start(addr); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				server.Logger.Errorf("❌ received error: %s", err.Error())
+		go func() {
+			if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				slog.ErrorContext(ctx, "❌ received error", "error", err)
+
+				// we need to call Done() before requesting the shutdown. Otherwise, the WaitGroup will never decrement.
 				gs.WaitGroup().Done()
-				gs.Shutdown(1) // Initiate a graceful shutdown.
+				gs.Shutdown(1) // Initiate a graceful shutdown. This call is blocking and awaits for wg.
+
 				return
 			}
 
@@ -46,19 +47,20 @@ func Serve(portServerMap map[int]*echo.Echo, gs *gracefulshutdown.GracefulShutdo
 	<-gs.Context().Done()
 
 	// 3. Gracefully shutdown each server.
-	for _, server := range portServerMap {
-		server := server
-
+	for name, server := range servers {
 		go func() {
-			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Minute))
+			ctx := context.WithValue(context.Background(), constants.ServerNameContextKey, name)
+
+			ctx, cancel := context.WithDeadline(ctx, time.Now().Add(1*time.Minute)) // 1 min deadline.
 			defer cancel()
 
 			if err := server.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				server.Logger.Errorf("❌ received error while shutting down server: %s", err.Error())
+				slog.ErrorContext(ctx, "❌ received error while shutting down server", "error", err)
+
 				return
 			}
 
-			server.Logger.Info("✅ server shut down successfully")
+			slog.Info("✅ gracefully shut down server")
 		}()
 	}
 }

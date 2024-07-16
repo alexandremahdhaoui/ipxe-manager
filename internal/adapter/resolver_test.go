@@ -5,16 +5,19 @@ package adapter_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/fakes/resolverserverfake"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/httputil"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
-	"github.com/alexandremahdhaoui/ipxer/pkg/fakes/resolverserverfake"
-	resolverserver2 "github.com/alexandremahdhaoui/ipxer/pkg/generated/resolverserver"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/alexandremahdhaoui/ipxer/pkg/generated/resolverserver"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -22,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic/fake"
 	k8stesting "k8s.io/client-go/testing"
+	"k8s.io/utils/ptr"
 )
 
 func TestInlineResolver(t *testing.T) {
@@ -37,7 +41,7 @@ func TestInlineResolver(t *testing.T) {
 		expected := []byte("test")
 
 		content := types.Content{Inline: string(expected)}
-		ipxeSelectors := types.IpxeSelectors{}
+		ipxeSelectors := types.IPXESelectors{}
 
 		out, err := resolver.Resolve(nil, content, ipxeSelectors)
 		assert.NoError(t, err)
@@ -51,7 +55,7 @@ func TestObjectRefResolver(t *testing.T) {
 
 		expected      []byte
 		content       types.Content
-		ipxeSelectors types.IpxeSelectors
+		ipxeSelectors types.IPXESelectors
 		object        *unstructured.Unstructured
 
 		cl       *fake.FakeDynamicClient
@@ -80,7 +84,7 @@ func TestObjectRefResolver(t *testing.T) {
 		cl = fake.NewSimpleDynamicClient(runtime.NewScheme(), object)
 		resolver = adapter.NewObjectRefResolver(cl)
 
-		ipxeSelectors = types.IpxeSelectors{}
+		ipxeSelectors = types.IPXESelectors{}
 	}
 
 	t.Run("Resolve", func(t *testing.T) {
@@ -103,12 +107,12 @@ func TestWebhookResolver(t *testing.T) {
 	var (
 		ctx context.Context
 
-		expected []byte
+		expected string
 
 		basicAuthObject *unstructured.Unstructured
 		mtlsObject      *unstructured.Unstructured
 		content         types.Content
-		ipxeSelectors   types.IpxeSelectors
+		ipxeSelectors   types.IPXESelectors
 
 		mock *resolverserverfake.Fake
 
@@ -130,7 +134,10 @@ func TestWebhookResolver(t *testing.T) {
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.ClientCertJSONPath.Parse(`{.data.client\.crt}`))
 		require.NoError(t, content.WebhookConfig.MTLSObjectRef.CaBundleJSONPath.Parse(`{.data.ca\.crt}`))
 
-		ipxeSelectors = types.IpxeSelectors{}
+		ipxeSelectors = types.IPXESelectors{
+			Buildarch: string(resolverserver.Arm64),
+			UUID:      uuid.New(),
+		}
 
 		// -------------------------------------------------- Webhook Server  --------------------------------------- //
 
@@ -144,11 +151,13 @@ func TestWebhookResolver(t *testing.T) {
 		// -------------------------------------------------- Basic Auth -------------------------------------------- //
 
 		username, password := "qwe123", "321ewq"
-		mock.Echo.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-			Validator: func(u string, p string, _ echo.Context) (bool, error) {
+
+		currentHandler := mock.Server.Handler
+		mock.Server.Handler = httputil.BasicAuth(currentHandler,
+			func(u, p string, _ *http.Request) (bool, error) {
 				return u == username && p == password, nil
 			},
-		}))
+		)
 
 		basicAuthObject = &unstructured.Unstructured{}
 		basicAuthObject.SetUnstructuredContent(map[string]any{"data": map[string]any{
@@ -201,23 +210,27 @@ func TestWebhookResolver(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			defer setup(t)()
 
-			mock.AppendExpectation(func(e echo.Context, params resolverserver2.ResolveParams) error {
-				expected = []byte(fmt.Sprintf("hello world: %s + %s", params.Buildarch, params.Uuid.String()))
-				e.Response().Write(expected)
-				return nil
+			expected = fmt.Sprintf("{\"data\":\"%s + %s\"}\n", ipxeSelectors.Buildarch, ipxeSelectors.UUID.String())
+
+			mock.AppendExpectation(func(_ context.Context, request resolverserver.ResolveRequestObject) (resolverserver.ResolveResponseObject, error) { //nolint:lll
+				return resolverserver.Resolve200JSONResponse{
+					ResolveRespJSONResponse: resolverserver.ResolveRespJSONResponse{
+						Data: ptr.To(fmt.Sprintf(`%s + %s`, request.Params.Buildarch, request.Params.Uuid.String())),
+					},
+				}, nil
 			})
 
-			cl.PrependReactor("get", "YourSecret", func(_ k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			cl.PrependReactor("get", "YourSecret", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, basicAuthObject, nil
 			})
 
-			cl.PrependReactor("get", "Secret", func(_ k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			cl.PrependReactor("get", "Secret", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, mtlsObject, nil
 			})
 
 			actual, err := resolver.Resolve(ctx, content, ipxeSelectors)
-			assert.NoError(t, err)
-			assert.Equal(t, expected, actual)
+			require.NoError(t, err)
+			assert.Equal(t, expected, string(actual))
 		})
 
 		t.Run("Fail", func(t *testing.T) {
@@ -236,12 +249,12 @@ func TestWebhookResolver(t *testing.T) {
 				return true, mtlsObject, nil
 			})
 
-			expected = []byte(`{"message":"Unauthorized"}`)
-			expected = append(expected, byte(0x0a))
+			expected = `{"message":"Unauthorized"}`
+			expected = string(append([]byte(expected), byte(0x0a)))
 
 			actual, err := resolver.Resolve(ctx, content, ipxeSelectors)
-			assert.NoError(t, err)
-			assert.Equal(t, expected, actual)
+			require.NoError(t, err)
+			assert.Equal(t, expected, string(actual))
 		})
 	})
 }

@@ -5,20 +5,23 @@ package adapter_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/fakes/transformerserverfake"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/httputil"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/mocks/mockadapter"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/testutil"
-	"github.com/alexandremahdhaoui/ipxer/pkg/fakes/transformerserverfake"
+	"github.com/alexandremahdhaoui/ipxer/pkg/generated/transformerserver"
+
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"k8s.io/utils/ptr"
 )
 
 func TestButaneTransformer(t *testing.T) {
@@ -42,7 +45,7 @@ passwd:
     - name: core
 `)
 
-		inputSelectors := types.IpxeSelectors{
+		inputSelectors := types.IPXESelectors{
 			UUID:      uuid.New(),
 			Buildarch: "arm64",
 		}
@@ -59,11 +62,11 @@ passwd:
 func TestWebhookTransformer(t *testing.T) {
 	var (
 		ctx      context.Context
-		expected []byte
+		expected string
 
 		inputConfig     types.TransformerConfig
 		inputContent    []byte
-		inputAttributes types.IpxeSelectors
+		inputAttributes types.IPXESelectors
 
 		objectRefResolver *mockadapter.MockObjectRefResolver
 		transformer       adapter.Transformer
@@ -74,15 +77,15 @@ func TestWebhookTransformer(t *testing.T) {
 		t.Helper()
 
 		ctx = context.Background()
-		id := uuid.New()
+		id := uuid.New() //nolint:varnamelen
 		buildarch := "arm64"
-		expected = []byte(fmt.Sprintf("this has been templated: %s, %s", id.String(), buildarch))
+		expected = fmt.Sprintf("this has been templated: %s, %s", id.String(), buildarch)
 
 		// -------------------------------------------------- Inputs ------------------------------------------------ //
 
 		inputConfig = testutil.NewTypesTransformerConfigWebhook()
 		inputContent = []byte("this should be templated: {{ .uuid }}, {{ .buildarch }}")
-		inputAttributes = types.IpxeSelectors{
+		inputAttributes = types.IPXESelectors{
 			UUID:      id,
 			Buildarch: buildarch,
 		}
@@ -111,11 +114,11 @@ func TestWebhookTransformer(t *testing.T) {
 		// -------------------------------------------------- Basic Auth -------------------------------------------- //
 
 		username, password := "qwe123", "321ewq"
-		serverMock.Echo.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-			Validator: func(u string, p string, _ echo.Context) (bool, error) {
-				return u == username && p == password, nil
-			},
-		}))
+
+		currentHandler := serverMock.Server.Handler
+		httputil.BasicAuth(currentHandler, func(u, p string, _ *http.Request) (bool, error) {
+			return u == username && p == password, nil
+		})
 
 		objectRefResolver.EXPECT().
 			ResolvePaths(mock.Anything, mock.Anything, mock.Anything).
@@ -124,7 +127,7 @@ func TestWebhookTransformer(t *testing.T) {
 
 		// -------------------------------------------------- Teardown  --------------------------------------------- //
 
-		return func() {
+		return func() { //nolint:contextcheck
 			t.Helper()
 
 			objectRefResolver.AssertExpectations(t)
@@ -136,31 +139,42 @@ func TestWebhookTransformer(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			defer setup(t)()
 
-			serverMock.AppendExpectation(func(e echo.Context) error {
-				_, err := e.Response().Write(expected)
-				require.NoError(t, err)
-				return nil
+			expected = fmt.Sprintf("{\"data\":\"%s + %s\"}\n", inputAttributes.Buildarch, inputAttributes.UUID.String())
+
+			serverMock.AppendExpectation(func(_ context.Context, request transformerserver.TransformRequestObject) (transformerserver.TransformResponseObject, error) { //nolint:lll
+				t.Helper()
+
+				return transformerserver.Transform200JSONResponse{
+					TransformRespJSONResponse: transformerserver.TransformRespJSONResponse{
+						Data: ptr.To(fmt.Sprintf("%s + %s", request.Body.Attributes.Buildarch, request.Body.Attributes.Uuid.String())), //nolint:lll
+					},
+				}, nil
 			})
 
 			actual, err := transformer.Transform(ctx, inputConfig, inputContent, inputAttributes)
-			assert.NoError(t, err)
-			assert.Equal(t, expected, actual)
+			require.NoError(t, err)
+			assert.Equal(t, expected, string(actual))
 		})
 
 		t.Run("Failure", func(t *testing.T) {
 			defer setup(t)()
 
-			expected = []byte(`{"code":400,"message":"error"}`)
+			expected = "{\"code\":400,\"message\":\"error\"}\n"
 
-			serverMock.AppendExpectation(func(e echo.Context) error {
-				e.Response().Status = 400
-				e.Response().Write(expected)
-				return nil
+			serverMock.AppendExpectation(func(_ context.Context, _ transformerserver.TransformRequestObject) (transformerserver.TransformResponseObject, error) { //nolint:lll
+				t.Helper()
+
+				return transformerserver.Transform400JSONResponse{
+					N400JSONResponse: transformerserver.N400JSONResponse{
+						Code:    400,
+						Message: "error",
+					},
+				}, nil
 			})
 
 			actual, err := transformer.Transform(ctx, inputConfig, inputContent, inputAttributes)
-			assert.NoError(t, err)
-			assert.Equal(t, expected, actual)
+			require.NoError(t, err)
+			assert.Equal(t, expected, string(actual))
 		})
 	})
 }

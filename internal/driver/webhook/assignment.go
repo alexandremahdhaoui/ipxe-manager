@@ -234,12 +234,12 @@ func (a *Assignment) validateUUIDAssignmentIsUnique(ctx context.Context, obj run
 
 	// 1. Assignment should be mutually exclusive.
 	// 1.a. Build list of selectors
-	selectorsList := make([]types.IpxeSelectors, 0)
+	selectorsList := make([]types.IPXESelectors, 0)
 	// this is extremely inefficient
 	for _, id := range assignment.Spec.SubjectSelectors.UUIDList {
 		parsed, _ := uuid.Parse(id) // safely ignoring err because it has already been validated.
 
-		selectorsList = append(selectorsList, types.IpxeSelectors{
+		selectorsList = append(selectorsList, types.IPXESelectors{
 			UUID: parsed,
 		})
 	}
