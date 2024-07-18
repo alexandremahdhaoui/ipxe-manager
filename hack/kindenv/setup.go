@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/alexandremahdhaoui/ipxer/hack/internal"
 	"os"
 	"os/exec"
 
@@ -49,7 +50,7 @@ func readSetupConfig() (setupConfig, error) {
 
 func setup() error {
 	// 1. read project setupConfig.
-	projectCfg, err := readProjectConfig()
+	projectCfg, err := internal.ReadProjectConfig()
 	if err != nil {
 		return err // TODO: wrap err
 	}
@@ -72,7 +73,7 @@ func setup() error {
 	return nil
 }
 
-func doSetup(pCfg projectConfig, cfg setupConfig) error {
+func doSetup(pCfg internal.ProjectConfig, cfg setupConfig) error {
 	// 1. kind create cluster and wait.
 	cmd := exec.Command(
 		cfg.KindBinary,
@@ -83,7 +84,7 @@ func doSetup(pCfg projectConfig, cfg setupConfig) error {
 		"--wait", "5m",
 	)
 
-	if err := runCmdWithStdPipes(cmd); err != nil {
+	if err := internal.RunCmdWithStdPipes(cmd); err != nil {
 		return err // TODO: wrap error
 	}
 

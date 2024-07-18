@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/alexandremahdhaoui/ipxer/hack/internal"
 	"os"
 	"os/exec"
 )
@@ -10,7 +11,7 @@ import (
 
 func teardown() error {
 	// 1. read project setupConfig.
-	projectCfg, err := readProjectConfig()
+	projectCfg, err := internal.ReadProjectConfig()
 	if err != nil {
 		return err // TODO: wrap err
 	}
@@ -33,7 +34,7 @@ func teardown() error {
 	return nil
 }
 
-func doTeardown(pCfg projectConfig, cfg setupConfig) error {
+func doTeardown(pCfg internal.ProjectConfig, cfg setupConfig) error {
 	// 1. kind create cluster and wait.
 	cmd := exec.Command(
 		cfg.KindBinary,
@@ -42,7 +43,7 @@ func doTeardown(pCfg projectConfig, cfg setupConfig) error {
 		"--name", pCfg.Name,
 	)
 
-	if err := runCmdWithStdPipes(cmd); err != nil {
+	if err := internal.RunCmdWithStdPipes(cmd); err != nil {
 		return err // TODO: wrap error
 	}
 

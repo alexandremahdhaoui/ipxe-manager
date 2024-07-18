@@ -1,19 +1,13 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
 	"reflect"
 	"strings"
-
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 const (
-	projectConfigPath = ".project.yaml"
 
 	// Available commands
 	setupCommand    = "setup"
@@ -40,16 +34,6 @@ func usage() error {
 	_, _ = fmt.Fprintf(os.Stdout, usageTemplate, arg0, setupCommand, teardownCommand)
 
 	return nil
-}
-
-// ----------------------------------------------------- CONFIG ----------------------------------------------------- //
-
-type projectConfig struct {
-	Name string `json:"name"`
-
-	Kindenv struct {
-		KubeconfigPath string `json:"kubeconfigPath"`
-	} `json:"kindenv"`
 }
 
 // ----------------------------------------------------- MAIN ------------------------------------------------------- //
@@ -89,34 +73,6 @@ func main() {
 }
 
 // ----------------------------------------------------- HELPERS ---------------------------------------------------- //
-
-func readProjectConfig() (projectConfig, error) {
-	b, err := os.ReadFile(projectConfigPath) //nolint:varnamelen
-	if err != nil {
-		return projectConfig{}, err // TODO: wrap err
-	}
-
-	out := projectConfig{} //nolint:exhaustruct // unmarshal
-
-	if err := yaml.Unmarshal(b, &out); err != nil {
-		return projectConfig{}, err // TODO: wrap err
-	}
-
-	err = nil
-	for key, rule := range map[string]bool{
-		"name":                   out.Name == "",
-		"kindenv.kubeconfigPath": out.Kindenv.KubeconfigPath == "",
-	} {
-		if rule {
-			err = errors.Join(err, fmt.Errorf("%s must be specified in %s", key, projectConfigPath))
-		}
-	}
-	if err != nil {
-		return projectConfig{}, err // TODO: wrap error.
-	}
-
-	return out, nil
-}
 
 func formatExpectedEnvList[T any]() string {
 	optionalEnvs := make([]string, 0)
@@ -161,45 +117,4 @@ func formatExpectedEnvList[T any]() string {
 
 func fmtSpaces(s string, maxLen int) string {
 	return strings.Repeat(" ", maxLen-len(s))
-}
-
-func runCmdWithStdPipes(cmd *exec.Cmd) error {
-	errChan := make(chan error)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		if _, err := io.Copy(os.Stdout, stdout); err != nil {
-			errChan <- err
-		}
-	}()
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		if written, err := io.Copy(os.Stderr, stderr); err != nil {
-			errChan <- err
-
-			if written > 0 {
-				errChan <- fmt.Errorf("%d bytes written to stderr", written) // TODO: wrap err
-			}
-		}
-	}()
-
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	close(errChan)
-	if err := <-errChan; err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -1,6 +1,19 @@
 name: ipxer
 
 kindenv:
-  kubeconfigpath: .kindenv.kubeconfig.yaml
+  kubeconfigPath: .ignore.kindenv.kubeconfig.yaml
 
-localContainerRegistry: {} # TODO
+# -- localContainerRegistry will create if enabled a container registry in the kindenv using the kubeconfig which path
+#    is defined by {.kindenv.kubeconfigPath}.
+localContainerRegistry: # TODO
+  # -- enabled defines whether the local container registry must be created or not.
+  enabled: true
+
+  # -- creadentialPath defines the output file containing the container registry credentials.
+  credentialPath: .ignore.local-container-registry.yaml
+
+  # -- path to CA certificate.
+  caCrtPath: .ignore.ca.crt
+
+  # -- namespace where the local container registry will be deployed.
+  namespace: local-container-registry
