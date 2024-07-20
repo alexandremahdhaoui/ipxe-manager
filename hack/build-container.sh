@@ -10,16 +10,14 @@ USAGE:
 ${0} [BINARY_NAME]
 
 Required environment variables:
-    CONTAINER_ENGINE   container engine such as podman or docker.
-    GO_BUILD_LDFLAGS    go linker flags.
-    VERSION             tag semver.
+    CONTAINER_ENGINE    Container engine such as podman or docker.
+    GO_BUILD_LDFLAGS    Go linker flags.
+    VERSION             Semver tag.
 EOF
   exit 1
 }
 
-[ -z "${1}" ] && __usage
-[ -z "${CONTAINER_ENGINE}" ] && __usage
-[ -z "${GO_BUILD_LDFLAGS}" ] && __usage
+trap __usage EXIT
 
 BINARY_NAME="${1}"
 
@@ -29,3 +27,5 @@ BINARY_NAME="${1}"
   --build-arg "GO_BUILD_LDFLAGS=${GO_BUILD_LDFLAGS}" \
   -t "${BINARY_NAME}:${VERSION}" \
   -f "./containers/${BINARY_NAME}/Containerfile"
+
+trap 'echo "✅ Container image \"${BINARY_NAME}\" built successfully"' EXIT

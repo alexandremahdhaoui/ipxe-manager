@@ -15,8 +15,7 @@ EOF
   exit 1
 }
 
-[ -z "${1}" ] && __usage
-[ -z "${GO_BUILD_LDFLAGS}" ] && __usage
+trap __usage EXIT
 
 BINARY_NAME="${1}"
 
@@ -26,3 +25,5 @@ go build \
   -ldflags "${GO_BUILD_LDFLAGS}" \
   -o "build/bin/${BINARY_NAME}" \
   "./cmd/${BINARY_NAME}"
+
+trap 'echo "✅ Binary \"${BINARY_NAME}\" built successfully"' EXIT

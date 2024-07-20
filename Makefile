@@ -24,8 +24,10 @@ GOLANGCI_LINT_VERSION  := v1.59.1
 GOTESTSUM_VERSION      := v1.12.0
 # renovate: datasource=github-release depName=vektra/mockery
 MOCKERY_VERSION        := v2.42.0
+# renovate: datasource=github-release depName=alexandremahdhaoui/tooling
+OAPI_CODEGEN_HELPER_VERSION   := latest
 # renovate: datasource=github-release depName=oapi-codegen/oapi-codegen
-OAPI_CODEGEN_VERSION   := v2.3.0
+OAPI_CODEGEN_VERSION          := v2.3.0
 
 # ------------------------------------------------------- TOOLS ------------------------------------------------------ #
 
@@ -40,7 +42,7 @@ GOLANGCI_LINT       := go run github.com/golangci/golangci-lint/cmd/golangci-lin
 GOTESTSUM           := go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format pkgname
 MOCKERY             := go run github.com/vektra/mockery/v2@$(MOCKERY_VERSION)
 OAPI_CODEGEN        := go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@$(OAPI_CODEGEN_VERSION)
-OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" go run ./hack/oapi-codegen-helper
+OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" go run github.com/alexandremahdhaoui/tooling/cmd/oapi-codegen-helper@$(OAPI_CODEGEN_HELPER_VERSION)
 
 CLEAN_MOCKS := rm -rf ./internal/util/mocks
 
@@ -107,17 +109,21 @@ lint:
 
 # ------------------------------------------------------- TEST ------------------------------------------------------- #
 
+.PHONY: test-chart
+test-chart:
+	echo TODO: implement 'make `test-chart`'.
+
 .PHONY: test-unit
 test-unit:
-	$(GOTESTSUM) --junitfile .ignore.test-unit.xml -- -tags unit -race ./... -count=1 -short -cover -coverprofile .ignore.test-unit-coverage.out ./...
+	GOTESTSUM="$(GOTESTSUM)" TEST_TAG=unit ./hack/test-go.sh
 
 .PHONY: test-integration
 test-integration:
-	$(GOTESTSUM) --junitfile .ignore.test-integration.xml -- -tags integration -race ./... -count=1 -short -cover -coverprofile .ignore.test-integration-coverage.out ./...
+	GOTESTSUM="$(GOTESTSUM)" TEST_TAG=integration ./hack/test-go.sh
 
 .PHONY: test-functional
 test-functional:
-	$(GOTESTSUM) --junitfile .ignore.test-functional.xml -- -tags functional -race ./... -count=1 -short -cover -coverprofile .ignore.test-functional-coverage.out ./...
+	GOTESTSUM="$(GOTESTSUM)" TEST_TAG=functional ./hack/test-go.sh
 
 .PHONY: test-e2e
 test-e2e:
@@ -137,7 +143,7 @@ test: test-unit test-setup test-integration test-functional test-teardown
 # ------------------------------------------------------- PRE-PUSH --------------------------------------------------- #
 
 .PHONY: githooks
-githooks: ## Initializes Git hooks to run before a push.
+githooks: ## Set up git hooks to run before a push.
 	git config core.hooksPath .githooks
 
 .PHONY: pre-push
