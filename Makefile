@@ -24,25 +24,28 @@ GOLANGCI_LINT_VERSION  := v1.59.1
 GOTESTSUM_VERSION      := v1.12.0
 # renovate: datasource=github-release depName=vektra/mockery
 MOCKERY_VERSION        := v2.42.0
-# renovate: datasource=github-release depName=alexandremahdhaoui/tooling
-OAPI_CODEGEN_HELPER_VERSION   := latest
 # renovate: datasource=github-release depName=oapi-codegen/oapi-codegen
-OAPI_CODEGEN_VERSION          := v2.3.0
+OAPI_CODEGEN_VERSION   := v2.3.0
+# renovate: datasource=github-release depName=alexandremahdhaoui/tooling
+TOOLING_VERSION        := latest
 
 # ------------------------------------------------------- TOOLS ------------------------------------------------------ #
 
 CONTAINER_ENGINE ?= podman
-KIND_BINARY ?= kind
+KIND_BINARY      ?= kind
+
+TOOLING := go run github.com/alexandremahdhaoui/tooling/cmd
 
 CONTROLLER_GEN      := go run sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
-KINDENV				:= KIND_BINARY="$(KIND_BINARY)" go run ./hack/kindenv
+KINDENV				:= KIND_BINARY="$(KIND_BINARY)" $(TOOLING)/kindenv@$(TOOLING_VERSION)
 GO_GEN              := go generate
 GOFUMPT             := go run mvdan.cc/gofumpt@$(GOFUMPT_VERSION)
 GOLANGCI_LINT       := go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 GOTESTSUM           := go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format pkgname
+LOCAL_CONTAINER_REG := $(TOOLING)/local-container-registry@$(TOOLING_VERSION)
 MOCKERY             := go run github.com/vektra/mockery/v2@$(MOCKERY_VERSION)
 OAPI_CODEGEN        := go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@$(OAPI_CODEGEN_VERSION)
-OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" go run github.com/alexandremahdhaoui/tooling/cmd/oapi-codegen-helper@$(OAPI_CODEGEN_HELPER_VERSION)
+OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" $(TOOLING)/oapi-codegen-helper@$(TOOLING_VERSION)
 
 CLEAN_MOCKS := rm -rf ./internal/util/mocks
 

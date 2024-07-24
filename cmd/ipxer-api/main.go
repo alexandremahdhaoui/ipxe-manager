@@ -3,28 +3,34 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/httputil"
+	ipxerv1alpha1 "github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"log/slog"
 	"net/http"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 
 	"github.com/alexandremahdhaoui/ipxer/pkg/generated/ipxerserver"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
-	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
 	"github.com/alexandremahdhaoui/ipxer/internal/controller"
 	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
 	"github.com/alexandremahdhaoui/ipxer/internal/types"
 	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
-
-	"k8s.io/client-go/dynamic"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
 	Name             = "ipxer-api"
 	ConfigPathEnvKey = "IPXER_CONFIG_PATH"
+
+	KubeconfigFromServiceAccount = ">>> Kubeconfig From Service Account"
 )
 
 var (
@@ -57,13 +63,13 @@ type Config struct {
 		Port          int    `json:"port"`
 		LivenessPath  string `json:"livenessPath"`
 		ReadinessPath string `json:"readinessPath"`
-	}
+	} `json:"probesServer"`
 }
 
 // ------------------------------------------------- Main ----------------------------------------------------------- //
 
 func main() {
-	fmt.Printf("Starting %s version %s (%s) %s\n", Name, Version, CommitSHA, BuildTimestamp)
+	_, _ = fmt.Fprintf(os.Stdout, "Starting %s version %s (%s) %s\n", Name, Version, CommitSHA, BuildTimestamp)
 
 	gs := gracefulshutdown.New(Name)
 	ctx := gs.Context()
@@ -74,6 +80,7 @@ func main() {
 	if ipxerConfigPath == "" {
 		slog.ErrorContext(ctx, fmt.Sprintf("environment variable %q must be set", ConfigPathEnvKey))
 		gs.Shutdown(1)
+
 		return
 	}
 
@@ -81,6 +88,7 @@ func main() {
 	if err != nil {
 		slog.ErrorContext(ctx, "reading ipxer-api configuration file", "error", err.Error())
 		gs.Shutdown(1)
+
 		return
 	}
 
@@ -88,13 +96,35 @@ func main() {
 	if err := json.Unmarshal(b, config); err != nil {
 		slog.ErrorContext(ctx, "parsing ipxer-api configuration", "error", err.Error())
 		gs.Shutdown(1)
+
 		return
 	}
 
 	// --------------------------------------------- Client --------------------------------------------------------- //
 
-	var cl client.Client        // TODO
-	var dynCl dynamic.Interface // TODO
+	restConfig, err := newKubeRestConfig(config.KubeconfigPath)
+	if err != nil {
+		slog.ErrorContext(ctx, "creating kube rest config", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
+
+	cl, err := newKubeClient(restConfig)
+	if err != nil {
+		slog.ErrorContext(ctx, "creating kube client", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
+
+	dynCl, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		slog.ErrorContext(ctx, "creating dynamic client", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
 
 	// --------------------------------------------- Adapter -------------------------------------------------------- //
 
@@ -155,12 +185,14 @@ func main() {
 	// --------------------------------------------- Probes --------------------------------------------------------- //
 
 	probesHandler := http.NewServeMux()
+
 	probesHandler.Handle(config.ProbesServer.LivenessPath, http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
+		func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		}))
+
 	probesHandler.Handle(config.ProbesServer.ReadinessPath, http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
+		func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		}))
 
@@ -172,11 +204,50 @@ func main() {
 
 	// --------------------------------------------- Run Server ----------------------------------------------------- //
 
-	cmd.Serve(map[string]*http.Server{
+	httputil.Serve(map[string]*http.Server{
 		"ipxer":   ipxerServer,
 		"metrics": metrics,
 		"probes":  probes,
 	}, gs)
 
 	slog.Info("✅ gracefully stopped %s", "binary", Name)
+}
+
+// ------------------------------------------------- Helpers -------------------------------------------------------- //
+
+func newKubeRestConfig(kubeconfigPath string) (*rest.Config, error) {
+	if kubeconfigPath == KubeconfigFromServiceAccount {
+		return rest.InClusterConfig() // TODO: wrap err
+	}
+
+	b, err := os.ReadFile(kubeconfigPath)
+	if err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	restConfig, err := clientcmd.RESTConfigFromKubeConfig(b)
+	if err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	return restConfig, nil
+}
+
+func newKubeClient(restConfig *rest.Config) (client.Client, error) { //nolint:ireturn
+	sch := runtime.NewScheme()
+
+	if err := corev1.AddToScheme(sch); err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	if err := ipxerv1alpha1.AddToScheme(sch); err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	cl, err := client.New(restConfig, client.Options{Scheme: sch}) //nolint:exhaustruct
+	if err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	return cl, nil
 }

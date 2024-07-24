@@ -19,17 +19,16 @@ misc:
     - allow caching for objectRef and webhook content.
     - create multiple caching strategies such as lru, timeout and allow users to choose between multiple strategies.
     - the NoCache policy should be enabled by default. Users who wants to optimize can optimize.
-    - NB: implement the cache as lru or a ring buffer of marshalled results (or a LRU+ring buffer) to avoid uncontrolled
+    - NB: implement the cache as lru or a ring buffer of marshalled results (or a LRU+Ring) to avoid uncontrolled
           mem consumptions.
           Also allow other strategies such as timeouts e.g. by creating a small DS to store pointers to cache entries 
           that should be deleted after a timestamp.
 
 impl:
-  cmd:
-    - config
-  driver/webhook:
-    - assignment
-    - profile
+  - ./cmd/ipxer-webhook:
+  - ./internal/driver/webhook:
+      - assignment
+      - profile
 
 fakes:
   adapterfake:
@@ -44,9 +43,6 @@ test:
     controller:
 
   unit:
-    cmd:
-      - cmd
-      - config
     driver:
       server:
         - server

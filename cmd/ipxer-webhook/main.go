@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 const (
 	Name = "ipxer-webhook"
@@ -15,5 +18,8 @@ var (
 // ------------------------------------------------- Main ----------------------------------------------------------- //
 
 func main() {
-	fmt.Printf("Starting %s version %s (%s) %s\n", Name, Version, CommitSHA, BuildTimestamp)
+	_, _ = fmt.Fprintf(os.Stdout, "Starting %s version %s (%s) %s\n", Name, Version, CommitSHA, BuildTimestamp)
+
+	// TODO: implement me
+	panic("implement me")
 }
