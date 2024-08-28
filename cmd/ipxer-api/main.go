@@ -3,6 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/alexandremahdhaoui/ipxer/internal/util/httputil"
 	ipxerv1alpha1 "github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -10,11 +15,8 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"log/slog"
-	"net/http"
-	"os"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 
 	"github.com/alexandremahdhaoui/ipxer/pkg/generated/ipxerserver"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -69,7 +71,14 @@ type Config struct {
 // ------------------------------------------------- Main ----------------------------------------------------------- //
 
 func main() {
-	_, _ = fmt.Fprintf(os.Stdout, "Starting %s version %s (%s) %s\n", Name, Version, CommitSHA, BuildTimestamp)
+	_, _ = fmt.Fprintf(
+		os.Stdout,
+		"Starting %s version %s (%s) %s\n",
+		Name,
+		Version,
+		CommitSHA,
+		BuildTimestamp,
+	)
 
 	gs := gracefulshutdown.New(Name)
 	ctx := gs.Context()
