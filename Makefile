@@ -130,7 +130,7 @@ test-functional:
 
 .PHONY: test-e2e
 test-e2e:
-	echo TODO: test-e2e
+	./e2e/main.sh full-test
 
 .PHONY: test-setup
 test-setup:
