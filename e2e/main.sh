@@ -43,7 +43,7 @@ function __setup() {
 
   # -- Create bridge interface.
   sudo ip l add dev "${BRIDGE_IFACE}" type bridge
-  sudo ip a add 172.16.0.1/24 dev "${BRIDGE_IFACE}"
+  sudo ip a add 172.16.0.1/24 brd + dev "${BRIDGE_IFACE}"
   sudo ip l set dev "${BRIDGE_IFACE}" up
 
   # -- Create tap device for client.
