@@ -19,7 +19,6 @@ EOF
 }
 
 BRIDGE_IFACE=e2e0br0
-DUMMY_IFACE=e2edummy0
 TAP_IFACE=e2e0tap0
 
 WDIR="$(git rev-parse --show-toplevel)"
@@ -46,9 +45,6 @@ function __setup() {
   sudo ip l add dev "${BRIDGE_IFACE}" type bridge
   sudo ip a add 172.16.0.1/24 dev "${BRIDGE_IFACE}"
   sudo ip l set dev "${BRIDGE_IFACE}" up
-
-  # -- Create dummy interface.
-  sudo ip link add name "${DUMMY_IFACE}" up master "${BRIDGE_IFACE}" type dummy
 
   # -- Create tap device for client.
   sudo ip tuntap add "${TAP_IFACE}" mode tap
@@ -80,7 +76,6 @@ function __teardown() {
 
   echo "⏳ Deleting network interfaces \"${BRIDGE_IFACE}\"..."
   sudo ip l del dev "${BRIDGE_IFACE}"
-  sudo ip l del dev "${DUMMY_IFACE}"
   sudo ip l del dev "${TAP_IFACE}"
 
   echo "✅ Successfully deleted e2e environment!"
