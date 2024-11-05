@@ -18,8 +18,9 @@ Available commands:
 EOF
 }
 
-BRIDGE_IFACE=e2e0br0
-TAP_IFACE=e2e0tap0
+BRIDGE_IFACE=e2e-br0
+VETH_BRIDGE=e2e-veth0br0
+VETH_CLIENT=e2e-veth0client
 
 WDIR="$(git rev-parse --show-toplevel)"
 TEMPDIR="${WDIR}/.tmp/e2e"
@@ -46,10 +47,10 @@ function __setup() {
   sudo ip a add 172.16.0.1/24 brd + dev "${BRIDGE_IFACE}"
   sudo ip l set dev "${BRIDGE_IFACE}" up
 
-  # -- Create tap device for client.
-  sudo ip tuntap add "${TAP_IFACE}" mode tap
-  sudo ip l set dev "${TAP_IFACE}" master "${BRIDGE_IFACE}"
-  sudo ip l set dev "${TAP_IFACE}" up
+  # -- Create a veth
+  sudo ip link add "${VETH_BRIDGE}" type veth peer name "${VETH_CLIENT}"
+  sudo ip l set "${VETH_BRIDGE}" master "${BRIDGE_IFACE}"
+  sudo ip l set dev "${VETH_BRIDGE}" up
 
   # -- Run dnsmasq.
   echo "⏳ Starting dhcp server..."
@@ -62,7 +63,7 @@ function __setup() {
 
 function __run() {
   echo "TODO: run command"
-  sudo dhclient -v -s 172.16.0.255 "${BRIDGE_IFACE}"
+  sudo dhclient -v "${VETH_CLIENT}"
 }
 
 function __teardown() {
@@ -75,8 +76,8 @@ function __teardown() {
   rm "${DNSMASQ_PID_FILE}"
 
   echo "⏳ Deleting network interfaces \"${BRIDGE_IFACE}\"..."
+  sudo ip l del "${VETH_CLIENT}"
   sudo ip l del dev "${BRIDGE_IFACE}"
-  sudo ip l del dev "${TAP_IFACE}"
 
   echo "✅ Successfully deleted e2e environment!"
   set -o errexit
