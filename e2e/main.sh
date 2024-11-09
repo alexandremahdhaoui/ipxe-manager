@@ -83,7 +83,7 @@ function __teardown() {
   set -o errexit
 }
 
-trap usage EXIT
+trap __usage EXIT
 CMD="${1}"
 trap : EXIT
 
