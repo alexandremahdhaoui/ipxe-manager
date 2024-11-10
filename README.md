@@ -105,6 +105,19 @@ kubernetes resources (CRs or CMs) and distribute them into multiple Kubernetes c
 Replicas of the REST API queries the datastructures maintained by the controllers. These communications are performed
 via mTLS. Hence, cert-manager is required for a production deployment.
 
+## Development
+
+### Testing ipxer
+
+#### Running the binary in the reproducible test environment
+
+```shell
+. .envrc.example
+make test-setup
+
+go run ./cmd/ipxer-api
+```
+
 ## Next features
 
 - MTLS auth (ipxer side): https://ipxe.org/crypto

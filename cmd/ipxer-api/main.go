@@ -42,30 +42,32 @@ var (
 )
 
 type Config struct {
-	KubeconfigPath string `json:"kubeconfigPath"`
-
-	// adapters
+	// Adapters
 
 	AssignmentNamespace string `json:"assignmentNamespace"`
 	ProfileNamespace    string `json:"profileNamespace"`
+
+	// Kubeconfig
+
+	KubeconfigPath string `json:"kubeconfigPath"`
+
+	// ProbesServer
+	ProbesServer struct {
+		LivenessPath  string `json:"livenessPath"`
+		ReadinessPath string `json:"readinessPath"`
+		Port          int    `json:"port"`
+	} `json:"probesServer"`
+
+	// MetricsServer
+	MetricsServer struct {
+		Path string `json:"path"`
+		Port int    `json:"port"`
+	} `json:"metricsServer"`
 
 	// APIServer
 	APIServer struct {
 		Port int `json:"port"`
 	} `json:"apiServer"`
-
-	// MetricsServer
-	MetricsServer struct {
-		Port int    `json:"port"`
-		Path string `json:"path"`
-	} `json:"metricsServer"`
-
-	// ProbesServer
-	ProbesServer struct {
-		Port          int    `json:"port"`
-		LivenessPath  string `json:"livenessPath"`
-		ReadinessPath string `json:"readinessPath"`
-	} `json:"probesServer"`
 }
 
 // ------------------------------------------------- Main ----------------------------------------------------------- //
@@ -102,7 +104,7 @@ func main() {
 	}
 
 	config := new(Config)
-	if err := json.Unmarshal(b, config); err != nil {
+	if err = json.Unmarshal(b, config); err != nil {
 		slog.ErrorContext(ctx, "parsing ipxer-api configuration", "error", err.Error())
 		gs.Shutdown(1)
 
@@ -219,7 +221,7 @@ func main() {
 		"probes":  probes,
 	}, gs)
 
-	slog.Info("✅ gracefully stopped %s", "binary", Name)
+	slog.Info("✅ gracefully stopped", "binary", Name)
 }
 
 // ------------------------------------------------- Helpers -------------------------------------------------------- //

@@ -51,6 +51,7 @@ function __setup() {
   sudo ip link add "${VETH_BRIDGE}" type veth peer name "${VETH_CLIENT}"
   sudo ip l set "${VETH_BRIDGE}" master "${BRIDGE_IFACE}"
   sudo ip l set dev "${VETH_BRIDGE}" up
+  sudo ip l set dev "${VETH_CLIENT}" up
 
   # -- Run dnsmasq.
   echo "⏳ Starting dhcp server..."
@@ -95,7 +96,9 @@ function main() {
     ;;
 
   run)
+    trap __teardown EXIT
     __run
+    trap : EXIT
     exit 0
     ;;
 

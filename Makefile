@@ -27,17 +27,20 @@ MOCKERY_VERSION        := v2.42.0
 # renovate: datasource=github-release depName=oapi-codegen/oapi-codegen
 OAPI_CODEGEN_VERSION   := v2.3.0
 # renovate: datasource=github-release depName=alexandremahdhaoui/tooling
-TOOLING_VERSION        := latest
+TOOLING_VERSION        := v0.1.4
 
 # ------------------------------------------------------- TOOLS ------------------------------------------------------ #
 
-CONTAINER_ENGINE ?= docker
-KIND_BINARY      ?= kind
+CONTAINER_ENGINE   ?= docker
+KIND_BINARY        ?= kind
+KIND_BINARY_PREFIX ?= sudo
+
+KINDENV_ENVS := KIND_BINARY_PREFIX="$(KIND_BINARY_PREFIX)" KIND_BINARY="$(KIND_BINARY)"
 
 TOOLING := go run github.com/alexandremahdhaoui/tooling/cmd
 
 CONTROLLER_GEN      := go run sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
-KINDENV				:= KIND_BINARY="$(KIND_BINARY)" $(TOOLING)/kindenv@$(TOOLING_VERSION)
+KINDENV				      := $(KINDENV_ENVS) $(TOOLING)/kindenv@$(TOOLING_VERSION)
 GO_GEN              := go generate
 GOFUMPT             := go run mvdan.cc/gofumpt@$(GOFUMPT_VERSION)
 GOLANGCI_LINT       := go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
@@ -50,7 +53,6 @@ OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" $(TOOLING)/oapi-codegen-he
 CLEAN_MOCKS := rm -rf ./internal/util/mocks
 
 # ------------------------------------------------------- GENERATE --------------------------------------------------- #
-
 
 .PHONY: generate
 generate: ## Generate REST API server/client code, CRDs and other go generators.
