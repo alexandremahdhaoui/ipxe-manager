@@ -31,7 +31,7 @@ TOOLING_VERSION        := latest
 
 # ------------------------------------------------------- TOOLS ------------------------------------------------------ #
 
-CONTAINER_ENGINE ?= podman
+CONTAINER_ENGINE ?= docker
 KIND_BINARY      ?= kind
 
 TOOLING := go run github.com/alexandremahdhaoui/tooling/cmd
