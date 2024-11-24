@@ -12,6 +12,8 @@ CMDS       := $(shell ./hack/list-subprojects.sh cmd)
 
 GO_BUILD_LDFLAGS ?= "-X main.BuildTimestamp=$(TIMESTAMP) -X main.CommitSHA=$(COMMIT_SHA) -X main.Version=$(VERSION)"
 
+KUBECONFIG := $(shell yq '.kindenv.kubeconfigPath' .project.yaml)
+
 # ------------------------------------------------------- VERSIONS --------------------------------------------------- #
 
 # renovate: datasource=github-release depName=kubernetes-sigs/controller-tools
@@ -137,6 +139,9 @@ test-e2e:
 .PHONY: test-setup
 test-setup:
 	$(KINDENV) setup
+	@echo "Applying crds..."
+	KUBECONFIG=$(KUBECONFIG) kubectl apply -f ./charts/ipxer/templates/crds/
+	@echo "\nPlease run the following command to set up your kubeconfig:\n    export KUBECONFIG=$(KUBECONFIG)\n"
 
 .PHONY: test-teardown
 test-teardown:
