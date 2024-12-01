@@ -12,8 +12,6 @@ CMDS       := $(shell ./hack/list-subprojects.sh cmd)
 
 GO_BUILD_LDFLAGS ?= "-X main.BuildTimestamp=$(TIMESTAMP) -X main.CommitSHA=$(COMMIT_SHA) -X main.Version=$(VERSION)"
 
-KUBECONFIG := $(shell yq '.kindenv.kubeconfigPath' .project.yaml)
-
 # ------------------------------------------------------- VERSIONS --------------------------------------------------- #
 
 # renovate: datasource=github-release depName=kubernetes-sigs/controller-tools
@@ -30,6 +28,8 @@ MOCKERY_VERSION        := v2.42.0
 OAPI_CODEGEN_VERSION   := v2.3.0
 # renovate: datasource=github-release depName=alexandremahdhaoui/tooling
 TOOLING_VERSION        := v0.1.4
+# renovate: datasource=github-release depName=mikefarah/yq
+YQ_VERSION             := v4.44.5
 
 # ------------------------------------------------------- TOOLS ------------------------------------------------------ #
 
@@ -41,6 +41,7 @@ KINDENV_ENVS := KIND_BINARY_PREFIX="$(KIND_BINARY_PREFIX)" KIND_BINARY="$(KIND_B
 
 TOOLING := go run github.com/alexandremahdhaoui/tooling/cmd
 
+YQ                  := go run github.com/mikefarah/yq/v4@$(YQ_VERSION)
 CONTROLLER_GEN      := go run sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
 KINDENV				      := $(KINDENV_ENVS) $(TOOLING)/kindenv@$(TOOLING_VERSION)
 GO_GEN              := go generate
@@ -53,6 +54,8 @@ OAPI_CODEGEN        := go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-c
 OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" $(TOOLING)/oapi-codegen-helper@$(TOOLING_VERSION)
 
 CLEAN_MOCKS := rm -rf ./internal/util/mocks
+
+KUBECONFIG := $(shell $(YQ) '.kindenv.kubeconfigPath' .project.yaml)
 
 # ------------------------------------------------------- GENERATE --------------------------------------------------- #
 
