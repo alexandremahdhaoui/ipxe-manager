@@ -2,18 +2,20 @@ filename: "zz_generated.{{ .InterfaceName }}.go"
 with-expecter: true
 
 packages:
-  # internal/
-  github.com/alexandremahdhaoui/ipxer/internal/adapters:
-    config:
-      all: true
-      dir: internal/util/mocks/mockadapters
-      outpkg: mockadapters
 
-  github.com/alexandremahdhaoui/ipxer/internal/controllers:
+  # internal/adapter
+  github.com/alexandremahdhaoui/ipxer/internal/adapter:
     config:
       all: true
-      dir: internal/util/mocks/mockcontrollers
-      outpkg: mockcontrollers
+      dir: internal/util/mocks/mockadapter
+      outpkg: mockadapter
+
+  # internal/controller
+  github.com/alexandremahdhaoui/ipxer/internal/controller:
+    config:
+      all: true
+      dir: internal/util/mocks/mockcontroller
+      outpkg: mockcontroller
 
   # controller-runtime/
   sigs.k8s.io/controller-runtime/pkg/client:

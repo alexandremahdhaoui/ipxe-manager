@@ -33,7 +33,7 @@ paths:
               $ref: '#/components/schemas/TransformRequest'
       responses:
         200:
-          $ref: '#/components/responses/TransformResponse'
+          $ref: '#/components/responses/TransformResp'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -114,8 +114,8 @@ components:
   # ---------------------------------------------------------- RESPONSES -----------------------------------------------
   responses:
 
-    # -------------------------------------------------------- TransformResponse ---------------------------------------
-    TransformResponse:
+    # -------------------------------------------------------- TransformResp -------------------------------------------
+    TransformResp:
       description: the expected transform response
       content:
         application/json:

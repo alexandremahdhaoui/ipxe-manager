@@ -1,46 +1,67 @@
-PROJECT := ipxer
+# ------------------------------------------------------- ENVS ------------------------------------------------------- #
 
-OAPI_IPXER_SPEC        := ./api/ipxer.v1.yaml
-OAPI_IPXER_SERVER_PKG  := server
-OAPI_IPXER_SERVER_FILE := ./internal/drivers/server/zz_generated.server.go
-OAPI_IPXER_CLIENT_PKG  := ipxerclient
-OAPI_IPXER_CLIENT_FILE := ./pkg/ipxerclient/zz_generated.ipxerclient.go
+PROJECT    := ipxer
 
-OAPI_WEBHOOK_RESOLVER_SPEC        := ./api/ipxer-webhook-resolver.v1.yaml
-OAPI_WEBHOOK_RESOLVER_CLIENT_PKG  := resolverclient
-OAPI_WEBHOOK_RESOLVER_CLIENT_FILE := ./pkg/resolverclient/zz_generated.resolverclient.go
-OAPI_WEBHOOK_RESOLVER_SERVER_PKG  := resolverserver
-OAPI_WEBHOOK_RESOLVER_SERVER_FILE := ./pkg/resolverserver/zz_generated.resolverserver.go
+COMMIT_SHA := $(shell git rev-parse --short HEAD)
+TIMESTAMP  := $(shell date --utc --iso-8601=seconds)
+VERSION    ?= $(shell git describe --tags --always --dirty)
 
-OAPI_WEBHOOK_TRANSFORMER_SPEC        := ./api/ipxer-webhook-transformer.v1.yaml
-OAPI_WEBHOOK_TRANSFORMER_CLIENT_PKG  := transformerclient
-OAPI_WEBHOOK_TRANSFORMER_CLIENT_FILE := ./pkg/transformerclient/zz_generated.transformerclient.go
-OAPI_WEBHOOK_TRANSFORMER_SERVER_PKG  := transformerserver
-OAPI_WEBHOOK_TRANSFORMER_SERVER_FILE := ./pkg/transformerserver/zz_generated.transformerserver.go
+CHARTS     := $(shell ./hack/list-subprojects.sh charts)
+CONTAINERS := $(shell ./hack/list-subprojects.sh containers)
+CMDS       := $(shell ./hack/list-subprojects.sh cmd)
 
-GO_GEN         := go generate
-CONTROLLER_GEN := go run sigs.k8s.io/controller-tools/cmd/controller-gen@latest
-OAPI_CODEGEN   := go run github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@latest
+GO_BUILD_LDFLAGS ?= "-X main.BuildTimestamp=$(TIMESTAMP) -X main.CommitSHA=$(COMMIT_SHA) -X main.Version=$(VERSION)"
 
-MOCKS_CLEAN   := rm -rf ./internal/util/mocks
-MOCKS_INSTALL := go install github.com/vektra/mockery/v2@v2.42.0
-MOCKS_GEN     := mockery
+# ------------------------------------------------------- VERSIONS --------------------------------------------------- #
+
+# renovate: datasource=github-release depName=kubernetes-sigs/controller-tools
+CONTROLLER_GEN_VERSION := v0.14.0
+# renovate: datasource=github-release depName=mvdan/gofumpt
+GOFUMPT_VERSION        := v0.6.0
+# renovate: datasource=github-release depName=golangci/golangci-lint
+GOLANGCI_LINT_VERSION  := v1.59.1
+# renovate: datasource=github-release depName=gotestyourself/gotestsum
+GOTESTSUM_VERSION      := v1.12.0
+# renovate: datasource=github-release depName=vektra/mockery
+MOCKERY_VERSION        := v2.42.0
+# renovate: datasource=github-release depName=oapi-codegen/oapi-codegen
+OAPI_CODEGEN_VERSION   := v2.3.0
+# renovate: datasource=github-release depName=alexandremahdhaoui/tooling
+TOOLING_VERSION        := v0.1.4
+# renovate: datasource=github-release depName=mikefarah/yq
+YQ_VERSION             := v4.44.5
+
+# ------------------------------------------------------- TOOLS ------------------------------------------------------ #
+
+CONTAINER_ENGINE   ?= docker
+KIND_BINARY        ?= kind
+KIND_BINARY_PREFIX ?= sudo
+
+KINDENV_ENVS := KIND_BINARY_PREFIX="$(KIND_BINARY_PREFIX)" KIND_BINARY="$(KIND_BINARY)"
+
+TOOLING := go run github.com/alexandremahdhaoui/tooling/cmd
+
+YQ                  := go run github.com/mikefarah/yq/v4@$(YQ_VERSION)
+CONTROLLER_GEN      := go run sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
+KINDENV				      := $(KINDENV_ENVS) $(TOOLING)/kindenv@$(TOOLING_VERSION)
+GO_GEN              := go generate
+GOFUMPT             := go run mvdan.cc/gofumpt@$(GOFUMPT_VERSION)
+GOLANGCI_LINT       := go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+GOTESTSUM           := go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format pkgname
+LOCAL_CONTAINER_REG := $(TOOLING)/local-container-registry@$(TOOLING_VERSION)
+MOCKERY             := go run github.com/vektra/mockery/v2@$(MOCKERY_VERSION)
+OAPI_CODEGEN        := go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@$(OAPI_CODEGEN_VERSION)
+OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" $(TOOLING)/oapi-codegen-helper@$(TOOLING_VERSION)
+
+CLEAN_MOCKS := rm -rf ./internal/util/mocks
+
+KUBECONFIG := $(shell $(YQ) '.kindenv.kubeconfigPath' .project.yaml)
+
+# ------------------------------------------------------- GENERATE --------------------------------------------------- #
 
 .PHONY: generate
 generate: ## Generate REST API server/client code, CRDs and other go generators.
-	mkdir -p $$(dirname $(OAPI_IPXER_SERVER_FILE)) $$(dirname $(OAPI_IPXER_CLIENT_FILE))
-	$(OAPI_CODEGEN) -generate types,server,spec -package $(OAPI_IPXER_SERVER_PKG) -o $(OAPI_IPXER_SERVER_FILE) $(OAPI_IPXER_SPEC) || exit 1
-	$(OAPI_CODEGEN) -generate types,client -package $(OAPI_IPXER_CLIENT_PKG) -o $(OAPI_IPXER_CLIENT_FILE) $(OAPI_IPXER_SPEC) || exit 1
-
-
-	mkdir -p $$(dirname $(OAPI_WEBHOOK_RESOLVER_SERVER_FILE)) $$(dirname $(OAPI_WEBHOOK_RESOLVER_CLIENT_FILE))
-	$(OAPI_CODEGEN) -generate types,server,spec -package $(OAPI_WEBHOOK_RESOLVER_SERVER_PKG) -o $(OAPI_WEBHOOK_RESOLVER_SERVER_FILE) $(OAPI_WEBHOOK_RESOLVER_SPEC) || exit 1
-	$(OAPI_CODEGEN) -generate types,client -package $(OAPI_WEBHOOK_RESOLVER_CLIENT_PKG) -o $(OAPI_WEBHOOK_RESOLVER_CLIENT_FILE) $(OAPI_WEBHOOK_RESOLVER_SPEC) || exit 1
-
-	mkdir -p $$(dirname $(OAPI_WEBHOOK_TRANSFORMER_SERVER_FILE)) $$(dirname $(OAPI_WEBHOOK_TRANSFORMER_CLIENT_FILE))
-	$(OAPI_CODEGEN) -generate types,server,spec -package $(OAPI_WEBHOOK_TRANSFORMER_SERVER_PKG) -o $(OAPI_WEBHOOK_TRANSFORMER_SERVER_FILE) $(OAPI_WEBHOOK_TRANSFORMER_SPEC) || exit 1
-	$(OAPI_CODEGEN) -generate types,client -package $(OAPI_WEBHOOK_TRANSFORMER_CLIENT_PKG) -o $(OAPI_WEBHOOK_TRANSFORMER_CLIENT_FILE) $(OAPI_WEBHOOK_TRANSFORMER_SPEC) || exit 1
-
+	$(OAPI_CODEGEN_HELPER)
 	$(GO_GEN) "./..."
 
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
@@ -49,11 +70,95 @@ generate: ## Generate REST API server/client code, CRDs and other go generators.
 		output:crd:artifacts:config=charts/$(PROJECT)/templates/crds
 
 	$(CONTROLLER_GEN) paths="./..." \
-		rbac:roleName=$(PROJCET) \
+		rbac:roleName=$(PROJECT) \
 		webhook \
 		output:rbac:dir=charts/$(PROJECT)/templates/rbac \
 		output:webhook:dir=charts/$(PROJECT)/templates/webhook
 
-	$(MOCKS_CLEAN)
-	$(MOCKS_INSTALL)
-	$(MOCKS_GEN)
+	$(CLEAN_MOCKS)
+	$(MOCKERY)
+
+# ------------------------------------------------------- BUILD BINARIES --------------------------------------------- #
+
+.PHONY: build-binary
+build-binary: generate
+	GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) ./hack/build-binary.sh "${BINARY_NAME}"
+
+.PHONY: build-binaries
+build-binaries: generate ## Build the binaries.
+	echo $(CMDS) | \
+		GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) \
+		xargs -n1 ./hack/build-binary.sh
+
+# ------------------------------------------------------- BUILD CONTAINERS -------------------------------------------- #
+
+.PHONY: build-container
+build-container: generate
+	CONTAINER_ENGINE=$(CONTAINER_ENGINE) GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) VERSION=$(VERSION) \
+		./hack/build-container.sh "${CONTAINER_NAME}"
+
+.PHONY: build-containers
+build-containers: generate
+	echo $(CONTAINERS) | \
+		CONTAINER_ENGINE=$(CONTAINER_ENGINE) \
+		GO_BUILD_LDFLAGS=$(GO_BUILD_LDFLAGS) \
+		VERSION=$(VERSION) \
+		xargs -n1 ./hack/build-container.sh
+
+# ------------------------------------------------------- FMT -------------------------------------------------------- #
+
+.PHONY: fmt
+fmt:
+	$(GOFUMPT) -w .
+
+# ------------------------------------------------------- LINT ------------------------------------------------------- #
+
+.PHONY: lint
+lint:
+	$(GOLANGCI_LINT) run --fix
+
+# ------------------------------------------------------- TEST ------------------------------------------------------- #
+
+.PHONY: test-chart
+test-chart:
+	echo TODO: implement 'make `test-chart`'.
+
+.PHONY: test-unit
+test-unit:
+	GOTESTSUM="$(GOTESTSUM)" TEST_TAG=unit ./hack/test-go.sh
+
+.PHONY: test-integration
+test-integration:
+	GOTESTSUM="$(GOTESTSUM)" TEST_TAG=integration ./hack/test-go.sh
+
+.PHONY: test-functional
+test-functional:
+	GOTESTSUM="$(GOTESTSUM)" TEST_TAG=functional ./hack/test-go.sh
+
+.PHONY: test-e2e
+test-e2e:
+	./test/e2e/main.sh full-test
+
+.PHONY: test-setup
+test-setup:
+	$(KINDENV) setup
+	@echo "Applying crds..."
+	KUBECONFIG=$(KUBECONFIG) kubectl apply -f ./charts/ipxer/templates/crds/
+	@echo "\nPlease run the following command to set up your kubeconfig:\n    export KUBECONFIG=$(KUBECONFIG)\n"
+
+.PHONY: test-teardown
+test-teardown:
+	$(KINDENV) teardown
+
+.PHONY: test
+test: test-unit test-setup test-integration test-functional test-teardown
+
+# ------------------------------------------------------- PRE-PUSH --------------------------------------------------- #
+
+.PHONY: githooks
+githooks: ## Set up git hooks to run before a push.
+	git config core.hooksPath .githooks
+
+.PHONY: pre-push
+pre-push: generate fmt lint test
+	git status --porcelain

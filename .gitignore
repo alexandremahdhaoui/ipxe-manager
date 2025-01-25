@@ -19,3 +19,10 @@
 
 # Go workspace file
 go.work
+
+build/*
+.ignore*
+.kindenv.kubeconfig.yaml
+.tmp*
+
+.envrc

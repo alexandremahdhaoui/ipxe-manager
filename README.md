@@ -1,11 +1,8 @@
 # ipxer
 
-`ipxer` is a kubernetes based iPXE server.
+IPXER leverages Kubernetes to assign and expose fine-grained server configurations.
 
-## TODO
-
-- implement OAPI spec for webhook resolver and transformers.
-- generate client & server packages.
+[This document](./.todo.yaml) lists tasks to be done.
 
 ## iPXE booting workflow
 
@@ -107,6 +104,19 @@ kubernetes resources (CRs or CMs) and distribute them into multiple Kubernetes c
 
 Replicas of the REST API queries the datastructures maintained by the controllers. These communications are performed
 via mTLS. Hence, cert-manager is required for a production deployment.
+
+## Development
+
+### Testing ipxer
+
+#### Running the binary in the reproducible test environment
+
+```shell
+. .envrc.example
+make test-setup
+
+go run ./cmd/ipxer-api
+```
 
 ## Next features
 

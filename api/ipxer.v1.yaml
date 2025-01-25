@@ -14,9 +14,9 @@ info:
 
 servers: []
 
-# ------------------------------------------------------------ PATHS ---------------------------------------------------
+# ------------------------------------------------------------ PATHS ------------------------------------------------- #
 paths:
-  # ---------------------------------------------------------- /boot.ipxe ----------------------------------------------
+  # ---------------------------------------------------------- /boot.ipxe -------------------------------------------- #
   /boot.ipxe:
     get:
       summary: Retrieve an iPXE config to chainload to "/ipxe?labels=values"
@@ -41,14 +41,14 @@ paths:
 
   # /boot.ipxe.0:
 
-  # ---------------------------------------------------------- /ipxe ---------------------------------------------------
+  # ---------------------------------------------------------- /ipxe ------------------------------------------------- #
   /ipxe:  # what about required parameters such as Arch/Location...
           # -> location maybe specified by an authoritative process, such as the iPXE server itself.
           # NB: a lot of information cannot be obtained on pxe boot and require the physical server to pass information,
           #     during the registration phase, to the state of the PSM.
     get:
       summary: Retrieve an iPXE manifest by selectors
-      operationId: getIpxeBySelectors
+      operationId: getIPXEBySelectors
       tags:
         - ipxe
       parameters:
@@ -70,23 +70,17 @@ paths:
         503:
           $ref: '#/components/responses/503'
 
-  # ---------------------------------------------------------- /profile/{profileID}/config/{configID} ------------------
-  /profile/{profileName}/config/{configID}:
+  # ---------------------------------------------------------- /content/{contentID} ---------------- #
+  /content/{contentID}:
     get:
-      summary: Retrieve dynamically a configuration file by its profile name and config ID.
-      operationId: getConfigByID
+      summary: Retrieve dynamically a content by its ID.
+      operationId: getContentByID
       tags:
-        - config
+        - content
       parameters:
         - in: path
-          name: profileName
-          description: Unique identifier of the profile.
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: configID
-          description: Unique identifier of the config.
+          name: contentID
+          description: Unique identifier of the content.
           required: true
           schema:
             $ref: '#/components/schemas/UUID'
@@ -94,7 +88,7 @@ paths:
         - $ref: '#/components/parameters/buildarchSelector'
       responses:
         200:
-          $ref: '#/components/responses/config'
+          $ref: '#/components/responses/content'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -108,13 +102,13 @@ paths:
         503:
           $ref: '#/components/responses/503'
 
-# ------------------------------------------------------------ API -----------------------------------------------------
+# ------------------------------------------------------------ API --------------------------------------------------- #
 components:
 
-  # ---------------------------------------------------------- PARAMETERS ----------------------------------------------
+  # ---------------------------------------------------------- PARAMETERS -------------------------------------------- #
   parameters:
 
-    # -------------------------------------------------------- uuidSelector --------------------------------------------
+    # -------------------------------------------------------- uuidSelector ------------------------------------------ #
     uuidSelector:
       in: query
       name: uuid
@@ -122,7 +116,7 @@ components:
         $ref: '#/components/schemas/UUID'
       required: true
 
-    # -------------------------------------------------------- buildarchSelector ---------------------------------------
+    # -------------------------------------------------------- buildarchSelector ------------------------------------- #
     buildarchSelector:
       in: query
       name: buildarch
@@ -135,10 +129,10 @@ components:
           - arm64
       required: true
 
-  # ---------------------------------------------------------- SCHEMAS -------------------------------------------------
+  # ---------------------------------------------------------- SCHEMAS ----------------------------------------------- #
   schemas:
 
-    # -------------------------------------------------------- iPXE ----------------------------------------------------
+    # -------------------------------------------------------- iPXE -------------------------------------------------- #
     iPXE:
       type: string
       description: An iPXE manifest.
@@ -156,10 +150,10 @@ components:
         
         boot
 
-    #--------------------------------------------------------- CONFIG --------------------------------------------------
-    config:
+    # --------------------------------------------------------- CONTENT ---------------------------------------------- #
+    content:
       type: string
-      description: Any butane/ignition or cloud-init manifest.
+      description: Any content, e.g. a butane/ignition or cloud-init manifest.
       example: |
         variant: fcos
         version: 1.4.0
@@ -169,13 +163,13 @@ components:
               ssh_authorized_keys:
                 - ssh-rsa AAAA...
 
-    #--------------------------------------------------------- UUID ----------------------------------------------------
+    #--------------------------------------------------------- UUID -------------------------------------------------- #
     UUID:
       type: string
       format: uuid
       example: "123e4567-e89b-12d3-a456-426614174000"
 
-    #--------------------------------------------------------- ERROR ---------------------------------------------------
+    #--------------------------------------------------------- ERROR ------------------------------------------------- #
     Error:
       type: object
       properties:
@@ -188,10 +182,10 @@ components:
         - code
         - message
 
-  # ---------------------------------------------------------- RESPONSES -----------------------------------------------
+  # ---------------------------------------------------------- RESPONSES --------------------------------------------- #
   responses:
 
-    # -------------------------------------------------------- iPXE ----------------------------------------------------
+    # -------------------------------------------------------- iPXE -------------------------------------------------- #
     iPXE:
       description: Successfully retrieved iPXE manifest.
       content:
@@ -199,15 +193,15 @@ components:
           schema:
             $ref: '#/components/schemas/iPXE'
 
-    # -------------------------------------------------------- CONFIG --------------------------------------------------
-    config:
-      description: Successfully retrieved configuration manifest.
+    # -------------------------------------------------------- CONTENT ----------------------------------------------- #
+    content:
+      description: Successfully retrieved content.
       content:
         text/plain:
           schema:
-            $ref: '#/components/schemas/config'
+            $ref: '#/components/schemas/content'
 
-    # -------------------------------------------------------- 400 -----------------------------------------------------
+    # -------------------------------------------------------- 400 --------------------------------------------------- #
     400:
       description: Bad Request
       content:
@@ -218,7 +212,7 @@ components:
             code: 400
             message: Bad request, please check your input
 
-    # -------------------------------------------------------- 401 -----------------------------------------------------
+    # -------------------------------------------------------- 401 --------------------------------------------------- #
     401:
       description: Authorization information is missing or invalid
       content:
@@ -229,7 +223,7 @@ components:
             code: 401
             message: Unauthorized, please provide valid authentication inputs
 
-    # -------------------------------------------------------- 403 -----------------------------------------------------
+    # -------------------------------------------------------- 403 --------------------------------------------------- #
     403:
       description: Forbidden
       content:
@@ -240,7 +234,7 @@ components:
             code: 403
             message: Forbidden, you do not have permission to access this resource
 
-    # -------------------------------------------------------- 404 -----------------------------------------------------
+    # -------------------------------------------------------- 404 --------------------------------------------------- #
     404:
       description: A specified resource is not found
       content:
@@ -251,7 +245,7 @@ components:
             code: 404
             message: The requested resource was not found
 
-    # -------------------------------------------------------- 500 -----------------------------------------------------
+    # -------------------------------------------------------- 500 --------------------------------------------------- #
     500:
       description: Unexpected internal server error
       content:
@@ -262,7 +256,7 @@ components:
             code: 500
             message: Internal server error, please try again later
 
-    # -------------------------------------------------------- 503 -----------------------------------------------------
+    # -------------------------------------------------------- 503 --------------------------------------------------- #
     503:
       description: Service unavailable.
       content:

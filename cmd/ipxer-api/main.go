@@ -1,57 +1,264 @@
 package main
 
 import (
-	"errors"
-	"github.com/alexandremahdhaoui/ipxer/internal/cmd"
-	"github.com/alexandremahdhaoui/ipxer/internal/drivers/server"
-	"github.com/labstack/echo-contrib/echoprometheus"
-	"github.com/labstack/echo/v4"
+	"encoding/json"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
+	"time"
+
+	"github.com/alexandremahdhaoui/ipxer/internal/util/httputil"
+	ipxerv1alpha1 "github.com/alexandremahdhaoui/ipxer/pkg/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/alexandremahdhaoui/ipxer/pkg/generated/ipxerserver"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/alexandremahdhaoui/ipxer/internal/adapter"
+	"github.com/alexandremahdhaoui/ipxer/internal/controller"
+	"github.com/alexandremahdhaoui/ipxer/internal/driver/server"
+	"github.com/alexandremahdhaoui/ipxer/internal/types"
+	"github.com/alexandremahdhaoui/ipxer/internal/util/gracefulshutdown"
 )
 
 const (
-	Name = "ipxer"
+	Name             = "ipxer-api"
+	ConfigPathEnvKey = "IPXER_CONFIG_PATH"
 
-	APIServerPort     = 8080
-	MetricsServerPort = 8081
-	ProbesServerPort  = 8082
+	KubeconfigFromServiceAccount = ">>> Kubeconfig From Service Account"
 )
 
-func main() {
-	var handler server.ServerInterface
+var (
+	Version        = "dev" //nolint:gochecknoglobals // set by ldflags
+	CommitSHA      = "n/a" //nolint:gochecknoglobals // set by ldflags
+	BuildTimestamp = "n/a" //nolint:gochecknoglobals // set by ldflags
+)
 
-	api := echo.New()
-	api.Use(echoprometheus.NewMiddleware(Name))
-	server.RegisterHandlers(api, handler)
+type Config struct {
+	// Adapters
 
-	metrics := echo.New()
-	metrics.GET("/metrics", echoprometheus.NewHandler())
+	AssignmentNamespace string `json:"assignmentNamespace"`
+	ProfileNamespace    string `json:"profileNamespace"`
 
-	//TODO: create func initializing a probe server which returns non-200 response when server is considered Unhealthy.
+	// Kubeconfig
 
-	probes := echo.New()
-	probes.GET("/healthz", func(c echo.Context) error {
-		return wrapErr(c.NoContent(http.StatusOK), "health probe error")
-	})
-	probes.GET("/readyz", func(c echo.Context) error {
-		return wrapErr(c.NoContent(http.StatusOK), "readiness probe error")
-	})
+	KubeconfigPath string `json:"kubeconfigPath"`
 
-	if err := cmd.Serve(map[int]*echo.Echo{
-		APIServerPort:     api,
-		MetricsServerPort: metrics,
-		ProbesServerPort:  probes,
-	}); err != nil {
-		api.Logger.Fatal(err)
-	}
+	// ProbesServer
+	ProbesServer struct {
+		LivenessPath  string `json:"livenessPath"`
+		ReadinessPath string `json:"readinessPath"`
+		Port          int    `json:"port"`
+	} `json:"probesServer"`
 
-	api.Logger.Infof("Successfully stopped %s server", Name)
+	// MetricsServer
+	MetricsServer struct {
+		Path string `json:"path"`
+		Port int    `json:"port"`
+	} `json:"metricsServer"`
+
+	// APIServer
+	APIServer struct {
+		Port int `json:"port"`
+	} `json:"apiServer"`
 }
 
-func wrapErr(err error, s string) error {
-	if err != nil {
-		return errors.Join(err, errors.New(s))
+// ------------------------------------------------- Main ----------------------------------------------------------- //
+
+func main() {
+	_, _ = fmt.Fprintf(
+		os.Stdout,
+		"Starting %s version %s (%s) %s\n",
+		Name,
+		Version,
+		CommitSHA,
+		BuildTimestamp,
+	)
+
+	gs := gracefulshutdown.New(Name)
+	ctx := gs.Context()
+
+	// --------------------------------------------- Config --------------------------------------------------------- //
+
+	ipxerConfigPath := os.Getenv(ConfigPathEnvKey)
+	if ipxerConfigPath == "" {
+		slog.ErrorContext(ctx, fmt.Sprintf("environment variable %q must be set", ConfigPathEnvKey))
+		gs.Shutdown(1)
+
+		return
 	}
 
-	return nil
+	b, err := os.ReadFile(ipxerConfigPath)
+	if err != nil {
+		slog.ErrorContext(ctx, "reading ipxer-api configuration file", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
+
+	config := new(Config)
+	if err = json.Unmarshal(b, config); err != nil {
+		slog.ErrorContext(ctx, "parsing ipxer-api configuration", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
+
+	// --------------------------------------------- Client --------------------------------------------------------- //
+
+	restConfig, err := newKubeRestConfig(config.KubeconfigPath)
+	if err != nil {
+		slog.ErrorContext(ctx, "creating kube rest config", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
+
+	cl, err := newKubeClient(restConfig)
+	if err != nil {
+		slog.ErrorContext(ctx, "creating kube client", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
+
+	dynCl, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		slog.ErrorContext(ctx, "creating dynamic client", "error", err.Error())
+		gs.Shutdown(1)
+
+		return
+	}
+
+	// --------------------------------------------- Adapter -------------------------------------------------------- //
+
+	assignment := adapter.NewAssignment(cl, config.AssignmentNamespace)
+	profile := adapter.NewProfile(cl, config.ProfileNamespace)
+
+	inlineResolver := adapter.NewInlineResolver()
+	objectRefResolver := adapter.NewObjectRefResolver(dynCl)
+	webhookResolver := adapter.NewWebhookResolver(objectRefResolver)
+
+	butaneTransformer := adapter.NewButaneTransformer()
+	webhookTransformer := adapter.NewWebhookTransformer(objectRefResolver)
+
+	// --------------------------------------------- Controller ----------------------------------------------------- //
+	var baseURL string
+
+	mux := controller.NewResolveTransformerMux(
+		baseURL,
+		map[types.ResolverKind]adapter.Resolver{
+			types.InlineResolverKind:    inlineResolver,
+			types.ObjectRefResolverKind: objectRefResolver,
+			types.WebhookResolverKind:   webhookResolver,
+		},
+		map[types.TransformerKind]adapter.Transformer{
+			types.ButaneTransformerKind:  butaneTransformer,
+			types.WebhookTransformerKind: webhookTransformer,
+		},
+	)
+
+	ipxe := controller.NewIPXE(assignment, profile, mux)
+	content := controller.NewContent(profile, mux)
+
+	// --------------------------------------------- App ------------------------------------------------------------ //
+
+	ipxerHandler := ipxerserver.Handler(ipxerserver.NewStrictHandler(
+		server.New(ipxe, content),
+		nil, // TODO: prometheus middleware
+	))
+
+	ipxerServer := &http.Server{ //nolint:exhaustruct
+		Addr:              fmt.Sprintf(":%d", config.APIServer.Port),
+		Handler:           ipxerHandler,
+		ReadHeaderTimeout: time.Second,
+		// TODO: set fields etc...
+	}
+
+	// --------------------------------------------- Metrics -------------------------------------------------------- //
+
+	metricsHandler := http.NewServeMux()
+	metricsHandler.Handle(config.MetricsServer.Path, promhttp.Handler())
+
+	metrics := &http.Server{ //nolint:exhaustruct
+		Addr:              fmt.Sprintf(":%d", config.MetricsServer.Port),
+		Handler:           metricsHandler,
+		ReadHeaderTimeout: time.Second,
+	}
+
+	// --------------------------------------------- Probes --------------------------------------------------------- //
+
+	probesHandler := http.NewServeMux()
+
+	probesHandler.Handle(config.ProbesServer.LivenessPath, http.HandlerFunc(
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+	probesHandler.Handle(config.ProbesServer.ReadinessPath, http.HandlerFunc(
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+	probes := &http.Server{ //nolint:exhaustruct
+		Addr:              fmt.Sprintf(":%d", config.ProbesServer.Port),
+		Handler:           probesHandler,
+		ReadHeaderTimeout: time.Second,
+	}
+
+	// --------------------------------------------- Run Server ----------------------------------------------------- //
+
+	httputil.Serve(map[string]*http.Server{
+		"ipxer":   ipxerServer,
+		"metrics": metrics,
+		"probes":  probes,
+	}, gs)
+
+	slog.Info("✅ gracefully stopped", "binary", Name)
+}
+
+// ------------------------------------------------- Helpers -------------------------------------------------------- //
+
+func newKubeRestConfig(kubeconfigPath string) (*rest.Config, error) {
+	if kubeconfigPath == KubeconfigFromServiceAccount {
+		return rest.InClusterConfig() // TODO: wrap err
+	}
+
+	b, err := os.ReadFile(kubeconfigPath)
+	if err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	restConfig, err := clientcmd.RESTConfigFromKubeConfig(b)
+	if err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	return restConfig, nil
+}
+
+func newKubeClient(restConfig *rest.Config) (client.Client, error) { //nolint:ireturn
+	sch := runtime.NewScheme()
+
+	if err := corev1.AddToScheme(sch); err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	if err := ipxerv1alpha1.AddToScheme(sch); err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	cl, err := client.New(restConfig, client.Options{Scheme: sch}) //nolint:exhaustruct
+	if err != nil {
+		return nil, err // TODO: wrap err
+	}
+
+	return cl, nil
 }

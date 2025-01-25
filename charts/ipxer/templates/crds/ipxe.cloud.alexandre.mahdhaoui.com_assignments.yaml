@@ -37,15 +37,26 @@ spec:
             type: object
           spec:
             properties:
+              isDefault:
+                type: boolean
               profileName:
                 type: string
               subjectSelectors:
-                additionalProperties:
-                  items:
-                    type: string
-                  type: array
+                properties:
+                  buildarch:
+                    items:
+                      type: string
+                    type: array
+                  uuidList:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - buildarch
+                - uuidList
                 type: object
             required:
+            - isDefault
             - profileName
             - subjectSelectors
             type: object
