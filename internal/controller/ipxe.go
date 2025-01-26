@@ -30,7 +30,11 @@ type IPXE interface {
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
 
-func NewIPXE(assignment adapter.Assignment, profile adapter.Profile, mux ResolveTransformerMux) IPXE {
+func NewIPXE(
+	assignment adapter.Assignment,
+	profile adapter.Profile,
+	mux ResolveTransformerMux,
+) IPXE {
 	return &ipxe{
 		assignment: assignment,
 		profile:    profile,
@@ -50,15 +54,29 @@ type ipxe struct {
 
 // -------------------------------------------------------- FindProfileAndRender ------------------------------------ //
 
-func (i *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IPXESelectors) ([]byte, error) {
+func (i *ipxe) FindProfileAndRender(
+	ctx context.Context,
+	selectors types.IPXESelectors,
+) ([]byte, error) {
 	assignment, err := i.assignment.FindBySelectors(ctx, selectors)
 	if errors.Is(err, adapter.ErrAssignmentNotFound) {
 		// fallback to default profile
-		defaultAssignment, defaultErr := i.assignment.FindDefaultByBuildarch(ctx, selectors.Buildarch)
+		defaultAssignment, defaultErr := i.assignment.FindDefaultByBuildarch(
+			ctx,
+			selectors.Buildarch,
+		)
 		if defaultErr != nil {
-			return nil, errors.Join(defaultErr,
-				fmt.Errorf(fmtCannotSelectAssignmentWithSelectors, selectors.UUID, selectors.Buildarch),
-				errFallbackToDefaultAssignment, errSelectingAssignment, ErrIPXEFindProfileAndRender)
+			return nil, errors.Join(
+				defaultErr,
+				fmt.Errorf(
+					fmtCannotSelectAssignmentWithSelectors,
+					selectors.UUID,
+					selectors.Buildarch,
+				),
+				errFallbackToDefaultAssignment,
+				errSelectingAssignment,
+				ErrIPXEFindProfileAndRender,
+			)
 		}
 
 		assignment = defaultAssignment
@@ -71,7 +89,12 @@ func (i *ipxe) FindProfileAndRender(ctx context.Context, selectors types.IPXESel
 		return nil, errors.Join(err, ErrIPXEFindProfileAndRender)
 	}
 
-	data, err := i.mux.ResolveAndTransformBatch(ctx, p.AdditionalContent, selectors, ReturnExposedContentURL)
+	data, err := i.mux.ResolveAndTransformBatch(
+		ctx,
+		p.AdditionalContent,
+		selectors,
+		ReturnExposedContentURL,
+	)
 	if err != nil {
 		return nil, errors.Join(err, ErrIPXEFindProfileAndRender)
 	}
@@ -112,16 +135,18 @@ func (i *ipxe) Boostrap() []byte {
 
 	// init boostrap
 	params := ""
-	for param, paramType := range allowedParamsWithType() {
+	for _, param := range orderedAllowedParamKeys {
+		paramType := allowedParamsWithType[param]
 		if params != "" {
 			params = fmt.Sprintf("%s&", params)
 		}
 
 		if paramType == none {
 			params = fmt.Sprintf("%s%s=${%s}", params, param, param)
-		} else {
-			params = fmt.Sprintf("%s%s=${%s:%s}", params, param, param, paramType)
+			continue
 		}
+
+		params = fmt.Sprintf("%s%s=${%s:%s}", params, param, param, paramType)
 	}
 
 	i.cachedBootstrap = []byte(fmt.Sprintf(ipxeBootstrapFormat, params))
@@ -143,8 +168,13 @@ chain ipxe?%s
 
 type ipxeParamType string
 
-func allowedParamsWithType() map[string]ipxeParamType { //nolint:funlen
-	return map[string]ipxeParamType{
+var (
+	orderedAllowedParamKeys = []string{
+		types.Uuid,
+		types.Buildarch,
+	}
+
+	allowedParamsWithType = map[string]ipxeParamType{
 		// types.Mac,
 		// types.BusType,
 		// types.BusLoc,
@@ -215,4 +245,4 @@ func allowedParamsWithType() map[string]ipxeParamType { //nolint:funlen
 		// types.Version,
 		// types.Vram,
 	}
-}
+)
