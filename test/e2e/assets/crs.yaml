@@ -1,0 +1,30 @@
+---
+apiVersion: ipxe.cloud.alexandre.mahdhaoui.com/v1alpha1
+kind: Profile
+metadata:
+  name: profile-example
+  labels:
+    assignment/ipxe-buildarch: amd64
+    assignment/uuid: 7b55aad0-9ce4-4766-bb94-98f34be9db6f
+spec:
+  ipxeTemplate: |
+    command \
+      --with-parameter "{{ .AdditionalContent.parameter-0 }}" \
+      --ignition-url "{{ .AdditionalContent.ignitionFile }}" \
+      --or-cloud-init "{{ .AdditionalContent.cloudInit }}" \
+      --secret-token "{{ .AdditionalContent.secretToken }}"
+  additionalContent:
+    - name: parameter-0
+      inline: your parameter
+    # The ignition file will be rendered and exposed behind the `/config/<config-id>` endpoint.
+    # Please note this endpoint can be called with the url parameters of the servers, such as `buildarch`. The config
+    # file can be rendered using those intrinsic (ipxe) variables.
+    - name: ignitionFile
+      exposed: true
+      inline: |
+        YOUR IGNITION CONFIG HERE
+    # Here the cloud-init will not be "exposed", i.e. it will be rendered directly in the template.
+    - name: cloudInit
+      webhook:
+        url: https://example.com/YOUR_ENDPOINT
+        mtlsSecretRef: mySecret

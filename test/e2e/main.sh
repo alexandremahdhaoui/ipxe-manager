@@ -23,6 +23,7 @@ VETH_BRIDGE=e2e-veth0br0
 VETH_CLIENT=e2e-veth0client
 
 WDIR="$(git rev-parse --show-toplevel)"
+ASSETS_DIR="${WDIR}/test/e2e/assets"
 TEMPDIR="${WDIR}/.tmp/e2e"
 
 DNSMASQ_PID_FILE="${TEMPDIR}/dnsmasq.pid"
@@ -33,6 +34,14 @@ DNSMASQ_CONF_FILE="${TEMPDIR}/dnsmasq.conf"
 
 export BRIDGE_IFACE DNSMASQ_LOG DNSMASQ_TFTP_DIR DNSMASQ_PID_FILE
 
+KIND_CLUSTER_NAME="ipxer-e2e"
+KUBECONFIG="${TEMPDIR}/${KIND_CLUSTER_NAME}.kubeconfig.yaml"
+export KUBECONFIG
+
+HELM_CHART_PATH="${WDIR}/charts/ipxer"
+HELM_CHART_RELEASE_NAME="ipxer-e2e"
+HELM_CHART_VALUES_FILE="${ASSETS_DIR}/helm.values.yaml"
+
 function __setup() {
   echo "⏳ Setting up e2e environment..."
 
@@ -40,7 +49,7 @@ function __setup() {
   mkdir -p "${DNSMASQ_TFTP_DIR}"
 
   # -- Generate dnsmasq config
-  envsubst <"${WDIR}/e2e/templates/dnsmasq.conf.tmpl" | tee "${DNSMASQ_CONF_FILE}" 1>/dev/null
+  envsubst <"${ASSETS_DIR}/dnsmasq.conf.tmpl" | tee "${DNSMASQ_CONF_FILE}" 1>/dev/null
 
   # -- Create bridge interface.
   sudo ip l add dev "${BRIDGE_IFACE}" type bridge
@@ -59,6 +68,17 @@ function __setup() {
   sudo dnsmasq -d --conf-file="${DNSMASQ_CONF_FILE}" &>"${DNSMASQ_PROCESS_LOG}" &
   echo -n $! | tee "${DNSMASQ_PID_FILE}" 1>/dev/null
 
+  # -- Create a KIND Cluster.
+  echo "⏳ Starting kind cluster..."
+  sudo kind create cluster --name "${KIND_CLUSTER_NAME}" --kubeconfig "${KUBECONFIG}"
+  sudo chown "${USER}" "${KUBECONFIG}"
+
+  # -- Install helm chart in kind cluster.
+  helm install "${HELM_CHART_RELEASE_NAME}" "${HELM_CHART_PATH}" --values "${HELM_CHART_VALUES_FILE}"
+
+  # -- Create CRs.
+  kubectl apply -f "${ASSETS_DIR}/crs.yaml"
+
   echo "✅ Successfully set up e2e environment!"
 }
 
@@ -71,6 +91,9 @@ function __teardown() {
   set +o errexit
 
   echo "⏳ Tearing down e2e environment..."
+
+  echo "⏳ Deleting kind cluster..."
+  sudo kind delete cluster --name "${KIND_CLUSTER_NAME}"
 
   echo "⏳ Terminating dhcp server..."
   sudo kill -9 "$(cat "${DNSMASQ_PID_FILE}")"
