@@ -50,7 +50,7 @@ func init() {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresources:status
 
-type Profile struct { //nolint:maligned
+type Profile struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 

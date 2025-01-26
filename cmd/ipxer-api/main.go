@@ -91,24 +91,18 @@ func main() {
 	if ipxerConfigPath == "" {
 		slog.ErrorContext(ctx, fmt.Sprintf("environment variable %q must be set", ConfigPathEnvKey))
 		gs.Shutdown(1)
-
-		return
 	}
 
 	b, err := os.ReadFile(ipxerConfigPath)
 	if err != nil {
 		slog.ErrorContext(ctx, "reading ipxer-api configuration file", "error", err.Error())
 		gs.Shutdown(1)
-
-		return
 	}
 
 	config := new(Config)
 	if err = json.Unmarshal(b, config); err != nil {
 		slog.ErrorContext(ctx, "parsing ipxer-api configuration", "error", err.Error())
 		gs.Shutdown(1)
-
-		return
 	}
 
 	// --------------------------------------------- Client --------------------------------------------------------- //
@@ -117,24 +111,18 @@ func main() {
 	if err != nil {
 		slog.ErrorContext(ctx, "creating kube rest config", "error", err.Error())
 		gs.Shutdown(1)
-
-		return
 	}
 
 	cl, err := newKubeClient(restConfig)
 	if err != nil {
 		slog.ErrorContext(ctx, "creating kube client", "error", err.Error())
 		gs.Shutdown(1)
-
-		return
 	}
 
 	dynCl, err := dynamic.NewForConfig(restConfig)
 	if err != nil {
 		slog.ErrorContext(ctx, "creating dynamic client", "error", err.Error())
 		gs.Shutdown(1)
-
-		return
 	}
 
 	// --------------------------------------------- Adapter -------------------------------------------------------- //

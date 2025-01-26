@@ -19,7 +19,7 @@ CONTROLLER_GEN_VERSION := v0.14.0
 # renovate: datasource=github-release depName=mvdan/gofumpt
 GOFUMPT_VERSION        := v0.6.0
 # renovate: datasource=github-release depName=golangci/golangci-lint
-GOLANGCI_LINT_VERSION  := v1.59.1
+GOLANGCI_LINT_VERSION  := v1.63.4
 # renovate: datasource=github-release depName=gotestyourself/gotestsum
 GOTESTSUM_VERSION      := v1.12.0
 # renovate: datasource=github-release depName=vektra/mockery
@@ -56,6 +56,10 @@ OAPI_CODEGEN_HELPER := OAPI_CODEGEN="$(OAPI_CODEGEN)" $(TOOLING)/oapi-codegen-he
 CLEAN_MOCKS := rm -rf ./internal/util/mocks
 
 KUBECONFIG := $(shell $(YQ) '.kindenv.kubeconfigPath' .project.yaml)
+
+.PHONY: modules
+modules: ## Run go mod tidy
+	go mod tidy
 
 # ------------------------------------------------------- GENERATE --------------------------------------------------- #
 

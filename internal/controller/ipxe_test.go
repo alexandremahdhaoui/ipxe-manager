@@ -137,16 +137,24 @@ func TestIPXE_FindProfileAndRender(t *testing.T) {
 								id := uuid.New()
 								content.ExposedUUID = id
 								expectedResolvedAndTransformedContent[name] = []byte(fmt.Sprintf(
-									"https://localhost:30443/config/%s/%s", expectedProfileName, id.String()))
+									"https://localhost:30443/config/%s/%s",
+									expectedProfileName,
+									id.String(),
+								))
 							} else {
 								expectedResolvedAndTransformedContent[name] = []byte("resolved and transformed")
 							}
 
-							expectedProfile.IPXETemplate = fmt.Sprintf("%s --additional-config-url {{ .%s }}",
-								expectedProfile.IPXETemplate, name)
+							expectedProfile.IPXETemplate = fmt.Sprintf(
+								"%s --additional-config-url {{ .%s }}",
+								expectedProfile.IPXETemplate,
+								name,
+							)
 
 							expected = append(expected, []byte(" --additional-config-url ")...)
-							expected = append(expected, expectedResolvedAndTransformedContent[name]...)
+							expected = append(
+								expected,
+								expectedResolvedAndTransformedContent[name]...)
 
 							expectedProfile.AdditionalContent[name] = content
 						}
@@ -198,10 +206,14 @@ func TestIPXE_FindProfileAndRender(t *testing.T) {
 			}
 
 			expectedResolvedAndTransformedAdditionalBatch := map[string][]byte{
-				expectedDefaultProfile.AdditionalContent[mustBeReturned].Name: []byte("an additional content"),
+				expectedDefaultProfile.AdditionalContent[mustBeReturned].Name: []byte(
+					"an additional content",
+				),
 			}
 
-			expected := []byte(fmt.Sprintf("this is the default profile with an additional content"))
+			expected := []byte(
+				fmt.Sprintf("this is the default profile with an additional content"),
+			)
 
 			expectedDefaultAssignment := types.Assignment{
 				Name:        "a-default-assignment",

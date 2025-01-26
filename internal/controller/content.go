@@ -19,7 +19,11 @@ var (
 // ---------------------------------------------------- INTERFACE --------------------------------------------------- //
 
 type Content interface {
-	GetByID(ctx context.Context, contentID uuid.UUID, attributes types.IPXESelectors) ([]byte, error)
+	GetByID(
+		ctx context.Context,
+		contentID uuid.UUID,
+		attributes types.IPXESelectors,
+	) ([]byte, error)
 }
 
 // --------------------------------------------------- CONSTRUCTORS ------------------------------------------------- //
@@ -54,10 +58,8 @@ func (c *content) GetByID(
 
 	contentName := list[0].ContentIDToNameMap[contentID]
 	cont := list[0].AdditionalContent[contentName]
-	// TODO: create `mux.ResolveAndTransform()`.
-	// TODO: to choose b/w template exposed-content as a URL with ID or resolving+transforming:
-	//       - add a boolean param to `mux` to either return a URL or a template.
-	//       - add a parameter to `mux` for the baseURL.
+	// NB: mux.ResolveAndTransform will always render the content. Please call ResolveAndTransformBatch
+	// with the mux.ReturnExposedContentURL option to return a URL instead.
 	out, err := c.mux.ResolveAndTransform(ctx, cont, types.IPXESelectors{
 		UUID:      contentID, // the contentID takes precedence, thus should always overwrite the attribute uuid.
 		Buildarch: attributes.Buildarch,

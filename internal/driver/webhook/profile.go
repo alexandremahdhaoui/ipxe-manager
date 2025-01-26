@@ -68,7 +68,10 @@ func (p *Profile) Default(ctx context.Context, obj runtime.Object) error {
 	return nil
 }
 
-func (p *Profile) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (p *Profile) ValidateCreate(
+	ctx context.Context,
+	obj runtime.Object,
+) (admission.Warnings, error) {
 	if err := p.validateProfileStatic(ctx, obj); err != nil {
 		return nil, err // TODO: wrap err
 	}
@@ -80,7 +83,10 @@ func (p *Profile) ValidateCreate(ctx context.Context, obj runtime.Object) (admis
 	return nil, nil
 }
 
-func (p *Profile) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+func (p *Profile) ValidateUpdate(
+	ctx context.Context,
+	oldObj, newObj runtime.Object,
+) (admission.Warnings, error) {
 	if err := p.validateProfileStatic(ctx, newObj); err != nil {
 		return nil, err // TODO: wrap err
 	}
@@ -130,7 +136,7 @@ func validateAdditionalContent(ctx context.Context, obj runtime.Object) error {
 
 	for name, content := range profile.Spec.AdditionalContent {
 		if !contentNameRegex.MatchString(name) { // TODO: create the regex
-			return errors.New("TODO") // TODO: err + wrap err
+			return errors.New("invalid additionalContent name") // TODO: err + wrap err
 		}
 
 		for _, transformer := range content.PostTransformations {
@@ -151,10 +157,10 @@ func validateAdditionalContent(ctx context.Context, obj runtime.Object) error {
 		}
 
 		switch {
-		case i == 0:
-			return errors.New("TODO") // TODO: err + wrap err
-		case i > 1:
-			return errors.New("TODO") // TODO: err + wrap err
+		case i == 0 || i > 1:
+			return errors.New(
+				"additionalContent MUST contain exactly 1 content configuration",
+			) // TODO: wrap err
 		case content.Inline != nil:
 			return nil
 		case content.ObjectRef != nil:
@@ -168,7 +174,9 @@ func validateAdditionalContent(ctx context.Context, obj runtime.Object) error {
 		}
 	}
 
-	panic("open an issue on github") // this branch does not exist, open an issue if you manage to pass the above s/c.
+	panic(
+		"open an issue on github",
+	) // this branch does not exist, open an issue if you manage to pass the above s/c.
 }
 
 func validateObjectRef(ref *v1alpha1.ObjectRef) error {
@@ -200,11 +208,22 @@ func validateWebhookConfig(cfg *v1alpha1.WebhookConfig) error {
 }
 
 func validateTransformer(transformer v1alpha1.Transformer) error {
-	if transformer.Webhook != nil {
-		if transformer.ButaneToIgnition {
-			return errors.New("a transformer must either enable butaneToIgnition or specify a webhook") // TODO: wrap err
-		}
+	cfgCount := 0
+	if transformer.ButaneToIgnition {
+		cfgCount += 1
+	}
 
+	if transformer.Webhook != nil {
+		cfgCount += 1
+	}
+
+	switch {
+	case cfgCount == 0 || cfgCount > 1:
+		return errors.Join(
+			errors.New("a tranformer must either enable butaneToIgnition or specify a webhook"),
+			errors.New("a transformer MUST specify exactly one configuration"),
+		)
+	case transformer.Webhook != nil:
 		if err := validateWebhookConfig(transformer.Webhook); err != nil {
 			return err // TODO: wrap err
 		}
@@ -250,7 +269,7 @@ func validateMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) error {
 
 func validateResourceRef(ref v1alpha1.ResourceRef) error {
 	if ref.Name == "" || len(ref.Name) > 63 {
-		return errors.New("invalid name")
+		return errors.Join(errors.New("invalid name"), errors.New("invalid resource reference"))
 	}
 
 	return nil
