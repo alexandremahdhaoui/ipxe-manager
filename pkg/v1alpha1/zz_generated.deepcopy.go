@@ -263,9 +263,9 @@ func (in *ProfileSpec) DeepCopyInto(out *ProfileSpec) {
 	*out = *in
 	if in.AdditionalContent != nil {
 		in, out := &in.AdditionalContent, &out.AdditionalContent
-		*out = make(map[string]AdditionalContent, len(*in))
-		for key, val := range *in {
-			(*out)[key] = *val.DeepCopy()
+		*out = make([]AdditionalContent, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }

@@ -29,10 +29,10 @@ func NewV1alpha1Profile() v1alpha1.Profile {
 	return v1alpha1.Profile{
 		Spec: v1alpha1.ProfileSpec{
 			IPXETemplate: ipxeTemplate,
-			AdditionalContent: map[string]v1alpha1.AdditionalContent{
-				inlineName:    NewV1alpha1AdditionalContentInline(),
-				objectRefName: NewV1alpha1AdditionalContentObjectRef(),
-				webhookName:   NewV1alpha1AdditionalContentWebhook(),
+			AdditionalContent: []v1alpha1.AdditionalContent{
+				NewV1alpha1AdditionalContentInline(),
+				NewV1alpha1AdditionalContentObjectRef(),
+				NewV1alpha1AdditionalContentWebhook(),
 			},
 		},
 	}
@@ -40,6 +40,7 @@ func NewV1alpha1Profile() v1alpha1.Profile {
 
 func NewV1alpha1AdditionalContentInline() v1alpha1.AdditionalContent {
 	return v1alpha1.AdditionalContent{
+		Name:                inlineName,
 		Exposed:             false,
 		PostTransformations: nil,
 		Inline:              ptr.To(inlineContent),
@@ -48,6 +49,7 @@ func NewV1alpha1AdditionalContentInline() v1alpha1.AdditionalContent {
 
 func NewV1alpha1AdditionalContentObjectRef() v1alpha1.AdditionalContent {
 	return v1alpha1.AdditionalContent{
+		Name:                objectRefName,
 		Exposed:             false,
 		PostTransformations: nil,
 		ObjectRef: &v1alpha1.ObjectRef{
@@ -65,6 +67,7 @@ func NewV1alpha1AdditionalContentObjectRef() v1alpha1.AdditionalContent {
 
 func NewV1alpha1AdditionalContentWebhook() v1alpha1.AdditionalContent {
 	return v1alpha1.AdditionalContent{
+		Name:                webhookName,
 		Exposed:             false,
 		PostTransformations: nil,
 		Webhook: &v1alpha1.WebhookConfig{

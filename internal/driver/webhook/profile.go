@@ -55,12 +55,12 @@ func (p *Profile) Default(ctx context.Context, obj runtime.Object) error {
 	}
 
 	// 3. Set labels preserving old UUIDs. (this is a bit overengineered, but may prevent a few race conditions).
-	for name, content := range profile.Spec.AdditionalContent {
+	for _, content := range profile.Spec.AdditionalContent {
 		if content.Exposed {
-			if id, ok := reverseIDMap[name]; ok {
-				profile.Labels[id] = name
+			if id, ok := reverseIDMap[content.Name]; ok {
+				profile.Labels[id] = content.Name
 			} else {
-				profile.Labels[uuid.New().String()] = name
+				profile.Labels[uuid.New().String()] = content.Name
 			}
 		}
 	}
@@ -134,8 +134,8 @@ func validateIPXETemplate(_ context.Context, _ runtime.Object) error {
 func validateAdditionalContent(ctx context.Context, obj runtime.Object) error {
 	profile := obj.(*v1alpha1.Profile)
 
-	for name, content := range profile.Spec.AdditionalContent {
-		if !contentNameRegex.MatchString(name) { // TODO: create the regex
+	for _, content := range profile.Spec.AdditionalContent {
+		if !contentNameRegex.MatchString(content.Name) { // TODO: create the regex
 			return errors.New("invalid additionalContent name") // TODO: err + wrap err
 		}
 

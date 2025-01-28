@@ -38,7 +38,9 @@ spec:
           spec:
             properties:
               additionalContent:
-                additionalProperties:
+                description: AdditionalContent can be templated into the IPXETemplate
+                  using the content's key.
+                items:
                   properties:
                     exposed:
                       description: |-
@@ -50,6 +52,9 @@ spec:
                     inline:
                       description: Inline is used to directly template content from
                         the Custom Resource.
+                      type: string
+                    name:
+                      description: Name of this additional content.
                       type: string
                     objectRef:
                       description: |-
@@ -277,11 +282,10 @@ spec:
                       - url
                       type: object
                   required:
+                  - name
                   - postTransformations
                   type: object
-                description: AdditionalContent can be templated into the IPXETemplate
-                  using the content's key.
-                type: object
+                type: array
               ipxeTemplate:
                 type: string
             required:

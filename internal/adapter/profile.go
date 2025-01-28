@@ -23,8 +23,10 @@ var (
 
 	// Conversions
 
-	errConvertingProfile           = errors.New("converting profile")
-	errAddContExposedButNoUUID     = errors.New("additional content is exposed but doesn't have a UUID")
+	errConvertingProfile       = errors.New("converting profile")
+	errAddContExposedButNoUUID = errors.New(
+		"additional content is exposed but doesn't have a UUID",
+	)
 	errConvertingTransformerConfig = errors.New("converting transformer config")
 )
 
@@ -77,10 +79,14 @@ func (p *v1a1Profile) Get(ctx context.Context, name string) (types.Profile, erro
 
 // ListByContentID retrieve at most one Profile by a config ID. The nature of UUIDs and the defaulting webhook driver
 // ensures the list contains at most 1 ID.
-func (p *v1a1Profile) ListByContentID(ctx context.Context, configID uuid.UUID) ([]types.Profile, error) {
+func (p *v1a1Profile) ListByContentID(
+	ctx context.Context,
+	configID uuid.UUID,
+) ([]types.Profile, error) {
 	// list profiles
 	obj := new(v1alpha1.ProfileList)
-	if err := p.client.List(ctx, obj, uuidLabelSelector(configID)); apierrors.IsNotFound(err) || len(obj.Items) == 0 {
+	if err := p.client.List(ctx, obj, uuidLabelSelector(configID)); apierrors.IsNotFound(err) ||
+		len(obj.Items) == 0 {
 		return nil, errors.Join(err, ErrProfileNotFound, errProfileListByContentID)
 	} else if err != nil {
 		return nil, errors.Join(err, errProfileListByContentID)
@@ -117,17 +123,20 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 		ContentIDToNameMap: idNameMap,
 	}
 
-	for name, c := range input.Spec.AdditionalContent {
+	for _, c := range input.Spec.AdditionalContent {
 		content := types.Content{}
-		content.Name = name
+		content.Name = c.Name
 
 		// 1. Is content exposed?
 		if c.Exposed {
 			content.Exposed = true
 
-			id, ok := rev[name]
+			id, ok := rev[c.Name]
 			if !ok {
-				return types.Profile{}, errors.Join(errAddContExposedButNoUUID, errConvertingProfile)
+				return types.Profile{}, errors.Join(
+					errAddContExposedButNoUUID,
+					errConvertingProfile,
+				)
 			}
 
 			content.ExposedUUID = id
@@ -165,7 +174,7 @@ func (ipxev1a1) toProfile(input *v1alpha1.Profile) (types.Profile, error) {
 		}
 
 		// 4. Add content to the map.
-		out.AdditionalContent[name] = content
+		out.AdditionalContent[c.Name] = content
 	}
 
 	return out, nil
@@ -189,7 +198,9 @@ func (ipxev1a1) toObjectRef(objectRef *v1alpha1.ObjectRef) (types.ObjectRef, err
 	}, nil
 }
 
-func (ipxev1a1) toTransformerConfig(input []v1alpha1.Transformer) ([]types.TransformerConfig, error) {
+func (ipxev1a1) toTransformerConfig(
+	input []v1alpha1.Transformer,
+) ([]types.TransformerConfig, error) {
 	out := make([]types.TransformerConfig, 0)
 
 	for _, t := range input {
@@ -276,7 +287,9 @@ func (ipxev1a1) toMTLSObjectRef(ref *v1alpha1.MTLSObjectRef) (*types.MTLSObjectR
 
 var errConvertingBasicAuthObjectRef = errors.New("converting basic auth object ref")
 
-func (ipxev1a1) toBasicAuthObjectRef(ref *v1alpha1.BasicAuthObjectRef) (*types.BasicAuthObjectRef, error) {
+func (ipxev1a1) toBasicAuthObjectRef(
+	ref *v1alpha1.BasicAuthObjectRef,
+) (*types.BasicAuthObjectRef, error) {
 	ujp, err := toJSONPath(ref.UsernameJSONPath)
 	if err != nil {
 		return nil, errors.Join(err, errConvertingBasicAuthObjectRef)

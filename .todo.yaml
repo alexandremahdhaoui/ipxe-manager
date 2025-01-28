@@ -1,9 +1,5 @@
 ---
 FIX_ASAP:
-  - |-
-    The v1alpha1.AdditionalContent struct should have .name field
-    instead of having the name as the key to the map
-    => move from map to list.
   - Fix the CR in the E2E test
 
 refactoring:
