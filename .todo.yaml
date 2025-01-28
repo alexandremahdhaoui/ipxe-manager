@@ -1,4 +1,11 @@
 ---
+FIX_ASAP:
+  - |-
+    The v1alpha1.AdditionalContent struct should have .name field
+    instead of having the name as the key to the map
+    => move from map to list.
+  - Fix the CR in the E2E test
+
 refactoring:
   IMPORTANT: |-
     For the `/config` endpoint, don't use the profile name (only use the config UUID).
